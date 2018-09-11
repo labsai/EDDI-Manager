@@ -134,13 +134,9 @@ workflows:
   build_and_test:
     jobs:
       - lint:
-          context: org-global
       - danger:
-          context: org-global
       - test:
-          context: org-global
       - build-and-push-image:
-          context: org-global
           filters: *filter-only-master
           requires:
             - lint
