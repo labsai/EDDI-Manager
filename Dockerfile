@@ -3,7 +3,7 @@ FROM node:8.9.4
 ARG NPM_TOKEN
 ARG EDDI_API_URL="http://localhost:7070"
 ENV EDDI_API_URL=$EDDI_API_URL
-ARG PORT=3000
+ARG PORT=7071
 ENV PORT=$PORT
 RUN JOBS=MAX npm set progress=false && npm config set depth 0
 WORKDIR /workdir
