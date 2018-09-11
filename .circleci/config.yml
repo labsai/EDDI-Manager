@@ -94,43 +94,6 @@ jobs:
             # docker push labsai/eddi-config-ui:1
             fi
 
-#
-#      - run:
-#          name: Decode Google Cloud Credentials
-#          command: echo $GCR_AUTH > ${HOME}/gcp-key.json
-#      - run: |
-#          gcloud auth activate-service-account --key-file ${HOME}/gcp-key.json
-#          gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-#          gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
-#          gcloud --quiet container clusters get-credentials ${GOOGLE_CLUSTER_NAME}
-#
-#      - run:
-#          name: Authenticate Google Cloud Registry with Docker
-#          command: docker login -u _json_key -p "$(cat ${HOME}/gcp-key.json)" eu.gcr.io
-#
-#      - run: |
-#          export VERSION="$(cat ./package.json | jq -r '.version')-${CIRCLE_BUILD_NUM}"
-#          export DOCKER_IMAGE=$(cat ./package.json | jq -r '.docker.imageUrl')
-#
-#          export DOCKER_IMAGE_URL="${DOCKER_IMAGE}:${VERSION}"
-#          export DOCKER_IMAGE_LATEST_URL="${DOCKER_IMAGE}:latest"
-#
-#          echo "Resolved version: ${VERSION}"
-#
-#          ./build-service.sh
-#
-#          docker push $DOCKER_IMAGE_URL
-#          docker push $DOCKER_IMAGE_LATEST_URL
-#
-#          echo "Successfully pushed image: $DOCKER_IMAGE"
-#
-#      - run: cp /workspace/PUBLISHED_VERSION_NUMBER .
-
-#      - persist_to_workspace:
-#          root: .
-#          paths:
-#            - ./PUBLISHED_VERSION_NUMBER
-
 workflows:
   version: 2
   build_and_test:
