@@ -78,20 +78,20 @@ jobs:
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
             docker login -u $DOCKER_USER -p $DOCKER_PASS
 
-            docker build -t labsai/eddi-config-ui:1.0.0-b$CIRCLE_BUILD_NUM .
-            docker push labsai/eddi-config-ui:1.0.0-b$CIRCLE_BUILD_NUM
+            docker build -t ginc/eddi-config-ui:1.0.0-b$CIRCLE_BUILD_NUM .
+            docker push ginc/eddi-config-ui:1.0.0-b$CIRCLE_BUILD_NUM
 
-            docker build -t labsai/eddi-config-ui:latest .
-            docker push labsai/eddi-config-ui:latest
+            docker build -t ginc/eddi-config-ui:latest .
+            docker push ginc/eddi-config-ui:latest
 
-            # docker build -t labsai/eddi-config-ui:1.0.0 .
-            # docker push labsai/eddi-config-ui:1.0.0
+            # docker build -t ginc/eddi-config-ui:1.0.0 .
+            # docker push ginc/eddi-config-ui:1.0.0
 
-            # docker build -t labsai/eddi-config-ui:1.0 .
-            # docker push labsai/eddi-config-ui:1.0
+            # docker build -t ginc/eddi-config-ui:1.0 .
+            # docker push ginc/eddi-config-ui:1.0
 
-            # docker build -t labsai/eddi-config-ui:1 .
-            # docker push labsai/eddi-config-ui:1
+            # docker build -t ginc/eddi-config-ui:1 .
+            # docker push ginc/eddi-config-ui:1
             fi
 
 #
