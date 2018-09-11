@@ -65,16 +65,33 @@ jobs:
 
       - run: npm run test
 
-#  build-and-push-image:
-#    docker:
-#      - image: eu.gcr.io/differ-140008/circle-image:v1.1.1
-#        auth:
-#          username: _json_key
-#          password: $GCR_AUTH
-#
-#    steps:
-#      - checkout
-#      - setup_remote_docker
+  build-and-push-image:
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - deploy:
+          name: Build and push Docker image
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+            docker build labsai/eddi-config-ui:1.0.0-b$CIRCLE_BUILD_NUM .
+            docker push labsai/eddi-config-ui:1.0.0-b$CIRCLE_BUILD_NUM
+
+            docker build labsai/eddi-config-ui:latest .
+            docker push labsai/eddi-config-ui:latest
+
+            # docker build labsai/eddi-config-ui:1.0.0 .
+            # docker push labsai/eddi-config-ui:1.0.0
+
+            # docker build labsai/eddi-config-ui:1.0 .
+            # docker push labsai/eddi-config-ui:1.0
+
+            # docker build labsai/eddi-config-ui:1 .
+            # docker push labsai/eddi-config-ui:1
+            fi
+
 #
 #      - run:
 #          name: Decode Google Cloud Credentials
@@ -112,20 +129,20 @@ jobs:
 #          paths:
 #            - ./PUBLISHED_VERSION_NUMBER
 
-#workflows:
-#  version: 2
-#  build_and_test:
-#    jobs:
-#      - lint:
-#          context: org-global
-#      - danger:
-#          context: org-global
-#      - test:
-#          context: org-global
-#      - build-and-push-image:
-#          context: org-global
-#          filters: *filter-only-master
-#          requires:
-#            - lint
-#            - danger
-#            - test
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - lint:
+          context: org-global
+      - danger:
+          context: org-global
+      - test:
+          context: org-global
+      - build-and-push-image:
+          context: org-global
+          filters: *filter-only-master
+          requires:
+            - lint
+            - danger
+            - test
