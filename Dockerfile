@@ -5,6 +5,16 @@ ARG EDDI_API_URL="http://localhost:7070"
 ENV EDDI_API_URL=$EDDI_API_URL
 ARG PORT=7071
 ENV PORT=$PORT
+
+ARG AUTH_METHOD="none"
+ENV AUTH_METHOD=$AUTH_METHOD
+ARG AUTH_URL="https://auth.labs.ai/auth"
+ENV AUTH_URL=$AUTH_URL
+ARG AUTH_REALM="EDDI"
+ENV AUTH_REALM=$AUTH_REALM
+ARG AUTH_CLIENT_ID="eddi-config-ui"
+ENV AUTH_CLIENT_ID="$AUTH_CLIENT_ID"
+
 RUN JOBS=MAX npm set progress=false && npm config set depth 0
 WORKDIR /workdir
 COPY /package*.json ./
