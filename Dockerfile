@@ -23,8 +23,4 @@ RUN npm install
 COPY . .
 RUN npm run build
 EXPOSE $PORT
-ENTRYPOINT node server.js --path ./dist --port $PORT --env "{\"EDDI_API_URL\":\"$EDDI_API_URL\"}"
---port $PORT --env "{\"AUTH_METHOD\":\"$AUTH_METHOD\"}"
---port $PORT --env "{\"AUTH_URL\":\"$AUTH_URL\"}"
---port $PORT --env "{\"AUTH_REALM\":\"$AUTH_REALM\"}"
---port $PORT --env "{\"AUTH_CLIENT_ID\":\"$AUTH_CLIENT_ID\"}"
+ENTRYPOINT node server.js --path ./dist --port $PORT --env "{\"EDDI_API_URL\":\"$EDDI_API_URL\", \"AUTH_METHOD\":\"$AUTH_METHOD\", \"AUTH_URL\":\"$AUTH_URL\", \"AUTH_REALM\":\"$AUTH_REALM\", \"AUTH_CLIENT_ID\":\"$AUTH_CLIENT_ID\"}"
