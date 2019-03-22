@@ -1,4 +1,8 @@
 {
   "eddiApiUrl": "http://localhost:7070",
-  "environment": "local"
+  "environment": "local",
+  "authMethod": "none",
+  "authUrl": "https://auth.labs.ai/auth",
+  "authRealm": "EDDI",
+  "authClientId": "eddi-config-ui"
 }
