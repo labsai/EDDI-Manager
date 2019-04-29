@@ -1,5 +1,5 @@
 {
-  "eddiApiUrl": "http://localhost:7070",
+  "eddiApiUrl": "http://localhost:7072",
   "environment": "local",
   "authMethod": "none",
   "authUrl": "https://auth.labs.ai/auth",
