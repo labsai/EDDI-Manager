@@ -4,5 +4,6 @@
   "authMethod": "none",
   "authUrl": "https://auth.labs.ai/auth",
   "authRealm": "EDDI",
-  "authClientId": "eddi-config-ui"
+  "authClientId": "eddi-config-ui",
+  "readOnly": "false"
 }
