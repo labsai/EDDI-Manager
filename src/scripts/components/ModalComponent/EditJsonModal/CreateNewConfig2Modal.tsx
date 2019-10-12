@@ -55,8 +55,8 @@ class CreateNewConfig2Modal extends React.Component<IPrivateProps, IState> {
     this.discardChanges();
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.discardChanges(nextProps);
+  componentDidUpdate(prevProps) {
+    this.discardChanges();
   }
 
   onChange = value => {

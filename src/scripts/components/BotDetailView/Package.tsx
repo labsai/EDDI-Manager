@@ -34,8 +34,8 @@ class Package extends React.Component<IPrivateProps> {
   componentDidMount() {
     this.fetchPlugins();
   }
-  componentWillReceiveProps(nextProps) {
-    this.fetchPlugins(nextProps);
+  componentDidUpdate(prevProps) {
+    this.fetchPlugins();
   }
 
   fetchPlugins(props = this.props) {

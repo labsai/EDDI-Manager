@@ -63,9 +63,9 @@ class BotConversationView extends React.Component<IPrivateProps, IState> {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (!this.props.conversation && nextProps.conversation) {
-      this.fetchConversation(nextProps);
+  componentDidUpdate(prevProps) {
+    if (!prevProps.conversation && this.props.conversation) {
+      this.fetchConversation(this.props);
     }
   }
 

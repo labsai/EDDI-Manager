@@ -53,10 +53,10 @@ class BotsUsingPackage extends React.Component<IProps, IState> {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (_.isUndefined(nextProps.packagePayload.usedByBots)) {
+  componentDidUpdate(prevProps) {
+    if (_.isUndefined(this.props.packagePayload.usedByBots)) {
       eddiApiActionDispatchers.fetchBotsUsingPackageAction(
-        nextProps.packagePayload.resource,
+        this.props.packagePayload.resource,
         false,
       );
     }

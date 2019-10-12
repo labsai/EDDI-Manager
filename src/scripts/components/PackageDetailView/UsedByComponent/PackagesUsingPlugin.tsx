@@ -52,10 +52,10 @@ class PackagesUsingPlugin extends React.Component<IProps, IState> {
       );
     }
   }
-  componentWillReceiveProps(nextProps) {
-    if (!nextProps.plugin.usedByPackages) {
+  componentDidUpdate(prevProps) {
+    if (!this.props.plugin.usedByPackages) {
       eddiApiActionDispatchers.fetchPackagesUsingPluginAction(
-        nextProps.plugin.resource,
+        this.props.plugin.resource,
         false,
       );
     }

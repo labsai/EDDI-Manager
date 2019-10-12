@@ -27,9 +27,9 @@ class PackageContainer extends React.Component<IProps, IState> {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     this.setState({
-      selectedPackageResource: nextProps.packageResource,
+      selectedPackageResource: this.props.packageResource,
     });
   }
 

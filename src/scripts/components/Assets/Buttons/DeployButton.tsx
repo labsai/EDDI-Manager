@@ -84,7 +84,7 @@ class DeployButton extends React.Component<IProps> {
     this.waitForUpdatedStatus();
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     this.waitForUpdatedStatus();
   }
 

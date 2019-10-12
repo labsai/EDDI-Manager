@@ -51,8 +51,8 @@ class VersionDropDownComponent extends React.Component<IProps, IState> {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
-    const options = nextProps.packageExtensions.map(option => ({
+  componentDidUpdate(prevProps) {
+    const options = this.props.packageExtensions.map(option => ({
       value: option.type,
       label: Parser.getPluginName(option.type, true),
     }));
