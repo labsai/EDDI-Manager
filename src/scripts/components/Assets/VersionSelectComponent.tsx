@@ -72,8 +72,11 @@ class VersionSelectComponent extends React.Component<IProps, IState> {
   }
 
   componentDidUpdate(prevProps) {
-    this.setOptions();
+    if (prevProps !== this.props) {
+      this.setOptions();
+    }
   }
+
   setOptions(props = this.props): void {
     const options = _.times(props.currentVersion, i => ({
       value: ++i,

@@ -70,7 +70,9 @@ class PluginSelectComponent extends React.Component<IProps, IState> {
   }
 
   componentDidUpdate(prevProps) {
-    this.setOption();
+    if (prevProps !== this.props) {
+      this.setOption();
+    }
   }
 
   isPluginPage(props = this.props): boolean {
