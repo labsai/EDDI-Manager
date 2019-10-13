@@ -198,6 +198,7 @@ class BotConversationView extends React.Component<IPrivateProps, IState> {
                         }
                       />
                       <ConversationSteps
+                        isLoading={this.props.isLoading}
                         conversationId={this.props.conversationId}
                         conversationSteps={conversation.data.conversationSteps}
                         conversationOutputs={
