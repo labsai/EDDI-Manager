@@ -47,7 +47,9 @@ class ViewJsonContent extends React.Component<IPrivateProps, IState> {
   }
 
   componentDidUpdate(prevProps) {
-    this.setJsonText(this.props.data);
+    if (prevProps !== this.props) {
+      this.setJsonText(this.props.data);
+    }
   }
 
   setJsonText(data = this.props.data) {

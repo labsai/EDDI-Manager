@@ -40,9 +40,11 @@ class ViewJsonModal extends React.Component<IPrivateProps, IState> {
   }
 
   componentDidUpdate(prevProps) {
-    this.setState({
-      selectedResource: this.props.resource,
-    });
+    if (prevProps !== this.props) {
+      this.setState({
+        selectedResource: this.props.resource,
+      });
+    }
   }
 
   selectVersion = (newVersion: number) => {

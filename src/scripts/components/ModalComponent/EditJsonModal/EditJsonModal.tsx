@@ -51,7 +51,9 @@ class EditJsonModal extends React.Component<IPrivateProps, IState> {
   }
 
   componentDidUpdate(prevProps) {
-    this.discardChanges();
+    if (prevProps !== this.props) {
+      this.discardChanges();
+    }
   }
 
   onChange = value => {
