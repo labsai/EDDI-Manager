@@ -16,7 +16,6 @@ import {
   WHITE_COLOR,
 } from '../../../../styles/DefaultStylingProperties';
 import eddiApiActionDispatchers from '../../../actions/EddiApiActionDispatchers';
-import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 
 interface IProps {
   isLoading: boolean;
