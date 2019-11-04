@@ -8,7 +8,6 @@ import modalActionDispatchers from '../../../actions/ModalActionDispatchers';
 import * as renderIf from 'render-if';
 import { compileJsonSchema, IJsonError } from '../../utils/helpers/JsonHelpers';
 import Editor from './Editor';
-import 'brace';
 import * as _ from 'lodash';
 import JsonErrors from './JsonErrors';
 import JsonExample from './JsonExample';
