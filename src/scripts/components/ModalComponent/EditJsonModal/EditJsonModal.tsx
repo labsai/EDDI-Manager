@@ -173,7 +173,6 @@ class EditJsonModal extends React.Component<IPrivateProps, IState> {
                 ? this.setState({ selectedTab: TabEnum.form })
                 : this.validateJson()
             }>
-            }>
             {'Form'}
           </div>
         </div>
@@ -197,7 +196,7 @@ class EditJsonModal extends React.Component<IPrivateProps, IState> {
         {renderIf(this.state.selectedTab === TabEnum.form)(() => (
           <JsonSchemaForm
             schema={this.props.schema}
-            data={this.state.isValidJson ? this.state.editorText : {}}
+            data={this.state.editorText}
             onChange={this.onChange}
             validate={this.validateSchemaForm}
           />

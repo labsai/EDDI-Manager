@@ -51,7 +51,7 @@ class CreateNewConfig2Modal extends React.Component<IPrivateProps, IState> {
   constructor(props) {
     super(props);
     this.state = {
-      editorText: '',
+      editorText: '{}',
       expanded: false,
       enableBasicAutocompletion: true,
       enableLiveAutocompletion: false,
@@ -60,12 +60,7 @@ class CreateNewConfig2Modal extends React.Component<IPrivateProps, IState> {
 
   componentDidMount() {
     this.discardChanges();
-    this.initEditor();
   }
-
-  componentWillUnmount() {}
-
-  initEditor() {}
 
   componentDidUpdate(prevProps) {
     if (prevProps !== this.props) {
