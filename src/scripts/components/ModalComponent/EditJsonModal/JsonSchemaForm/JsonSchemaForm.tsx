@@ -2,36 +2,48 @@ import * as React from 'react';
 import * as Radium from 'radium';
 import { Component, compose, pure, setDisplayName } from 'recompose';
 import * as renderIf from 'render-if';
-
-interface IProps {
-  schema?: JSONSchema4;
-}
-
 import Form from 'react-jsonschema-form';
 import { connect } from 'react-redux';
 import { schemaSelector } from '../../../../selectors/SystemSelectors';
 import { JSONSchema4 } from 'json-schema';
-
-const schema = {
-  title: 'Todo',
-  type: 'object',
-  required: ['title'],
-  properties: {
-    title: { type: 'string', title: 'Title', default: 'A new task' },
-    done: { type: 'boolean', title: 'Done?', default: false },
+import { CSSProperties } from 'react';
+import * as metaSchema4 from 'ajv/lib/refs/json-schema-draft-04.json';
+const styles: CSSProperties = {
+  form: {
+    marginTop: '20px',
+    marginLeft: '5px',
+    marginRight: '5px',
   },
 };
 
+interface IProps {
+  schema?: JSONSchema4;
+  data: string;
+  onChange(data): void;
+  validate(): void;
+}
+
+let yourForm;
+
 const JsonSchemaForm: React.StatelessComponent<IProps> = (props: IProps) => {
   return (
-    <div>
-      {renderIf(props.schema)(() => (
+    <div style={styles.form}>
+      <button onClick={() => yourForm.submit()}>{'Validate form'}</button>
+      {renderIf(props.schema && props.data)(() => (
         <Form
-          schema={schema}
-          onChange={console.log('changed')}
-          onSubmit={console.log('submitted')}
-          onError={console.log('errors')}
-        />
+          ref={form => {
+            yourForm = form;
+          }}
+          additionalMetaSchemas={[metaSchema4]}
+          schema={props.schema}
+          formData={JSON.parse(props.data)}
+          onChange={data =>
+            props.onChange(JSON.stringify(data.formData, null, '\t'))
+          }
+          onSubmit={() => props.validate()}
+          onError={() => console.log('errors')}>
+          <br />
+        </Form>
       ))}
     </div>
   );

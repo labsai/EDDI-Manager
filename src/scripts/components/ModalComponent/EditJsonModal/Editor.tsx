@@ -25,6 +25,7 @@ import ExpandButton from './EditorButtons/ExpandButton';
 import UndoButton from './EditorButtons/UndoButton';
 import RedoButton from './EditorButtons/RedoButton';
 import ValidateButton from './EditorButtons/ValidateButton';
+import * as ace from 'ace-builds';
 
 interface IState {
   editorText: string;

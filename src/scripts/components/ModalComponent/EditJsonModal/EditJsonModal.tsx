@@ -15,12 +15,21 @@ import JsonIsValid from './JsonIsValid';
 import { connect } from 'react-redux';
 import { schemaSelector } from '../../../selectors/SystemSelectors';
 import { JSONSchema4 } from 'json-schema';
+import editStyles from './EditJsonModal.styles';
+import JsonSchemaForm from './JsonSchemaForm/JsonSchemaForm';
+import { getTypeFromResource } from '../../utils/ApiFunctions';
+
+enum TabEnum {
+  'editor',
+  'form',
+}
 
 interface IState {
   editorText: string;
   showExample: boolean;
   errors: IJsonError[];
   isValidJson: boolean;
+  selectedTab: TabEnum;
 }
 
 interface IPrivateProps extends IPublicProps {
@@ -42,10 +51,14 @@ class EditJsonModal extends React.Component<IPrivateProps, IState> {
       showExample: false,
       errors: [],
       isValidJson: false,
+      selectedTab: TabEnum.editor,
     };
   }
 
   componentDidMount() {
+    eddiApiActionDispatchers.fetchJsonSchemaAction(
+      getTypeFromResource(this.props.resource),
+    );
     this.discardChanges();
   }
 
@@ -114,6 +127,10 @@ class EditJsonModal extends React.Component<IPrivateProps, IState> {
     return isValidJson;
   };
 
+  validateSchemaForm = () => {
+    this.validateJson();
+  };
+
   render() {
     return (
       <div>
@@ -135,19 +152,56 @@ class EditJsonModal extends React.Component<IPrivateProps, IState> {
             />
           </div>
         </div>
-        {renderIf(!_.isEmpty(this.state.errors))(() => (
-          <JsonErrors errors={this.state.errors} />
-        ))}
+        <div style={editStyles.tabs}>
+          <div
+            style={
+              this.state.selectedTab === TabEnum.editor
+                ? editStyles.tab
+                : { ...editStyles.tab, ...editStyles.tabDisabled }
+            }
+            onClick={() => this.setState({ selectedTab: TabEnum.editor })}>
+            {'Editor'}
+          </div>
+          <div
+            style={
+              this.state.selectedTab === TabEnum.form
+                ? editStyles.tab
+                : { ...editStyles.tab, ...editStyles.tabDisabled }
+            }
+            onClick={() =>
+              this.validateJson()
+                ? this.setState({ selectedTab: TabEnum.form })
+                : this.validateJson()
+            }>
+            }>
+            {'Form'}
+          </div>
+        </div>
         {renderIf(this.state.isValidJson)(() => <JsonIsValid />)}
-        <JsonExample type={this.props.type} />
-        <Editor
-          type={this.props.type}
-          data={this.state.editorText}
-          errors={this.state.errors}
-          onConfirm={this.updateJson}
-          onChange={this.onChange}
-          validate={this.validateJson}
-        />
+        {renderIf(this.state.selectedTab === TabEnum.editor)(() => (
+          <div>
+            {renderIf(!_.isEmpty(this.state.errors))(() => (
+              <JsonErrors errors={this.state.errors} />
+            ))}
+            <JsonExample type={this.props.type} />
+            <Editor
+              type={this.props.type}
+              data={this.state.editorText}
+              errors={this.state.errors}
+              onConfirm={this.updateJson}
+              onChange={this.onChange}
+              validate={this.validateJson}
+            />
+          </div>
+        ))}
+        {renderIf(this.state.selectedTab === TabEnum.form)(() => (
+          <JsonSchemaForm
+            schema={this.props.schema}
+            data={this.state.isValidJson ? this.state.editorText : {}}
+            onChange={this.onChange}
+            validate={this.validateSchemaForm}
+          />
+        ))}
       </div>
     );
   }
