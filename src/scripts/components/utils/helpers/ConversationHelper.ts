@@ -42,8 +42,10 @@ export default class ConversationHelper {
 
   static getOutput(conversationOutput: IConversationOutput): IOutputValue[] {
     const output: IOutputValue[] = [];
-    for (let o of conversationOutput.output) {
-      output.push(this.parseConversationOutput(o));
+    if (conversationOutput.output) {
+      for (let o of conversationOutput.output) {
+        output.push(this.parseConversationOutput(o));
+      }
     }
     return output;
   }
