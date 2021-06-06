@@ -61,7 +61,7 @@
     "@types/chai": "3.5.2",
     "@types/enzyme": "2.8.12",
     "@types/immutability-helper": "2.6.3",
-    "@types/mocha": "2.2.41",
+    "@types/mocha": "2.2.48",
     "@types/radium": "0.18.23",
     "@types/react": "16.0.34",
     "@types/react-dom": "16.0.3",
