@@ -1,7 +1,7 @@
 {
   "eddiApiUrl": "https://34.120.33.83",
   "environment": "local",
-  "authMethod": "none",
+  "authMethod": "keyclock",
   "authUrl": "https://auth.labs.ai/auth",
   "authRealm": "EDDI",
   "authClientId": "eddi-config-ui",
