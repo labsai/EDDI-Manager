@@ -3,9 +3,8 @@ defaults: &defaults
     - image: circleci/node:8.9.4
 
 aliases:
-  - &install-node-dependencies
-    |
-      npm install --no-package-lock --no-spin --no-progress
+  - &install-node-dependencies |
+    npm install --no-package-lock --no-spin --no-progress
 
   - &filter-only-master
     branches:
@@ -24,7 +23,6 @@ aliases:
 
 version: 2
 jobs:
-
   lint:
     <<: *defaults
     steps:
