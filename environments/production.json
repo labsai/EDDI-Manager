@@ -1,7 +1,7 @@
 {
   "eddiApiUrl": "https://app.labs.ai",
   "environment": "production",
-  "authMethod": "none",
+  "authMethod": "keycloak",
   "authUrl": "https://auth.labs.ai/auth",
   "authRealm": "EDDI",
   "authClientId": "eddi-config-ui",
