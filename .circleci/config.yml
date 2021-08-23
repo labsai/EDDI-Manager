@@ -63,6 +63,12 @@ jobs:
 
       - run: npm run test
 
+  build-and-push-image:
+    docker:
+      - image: circleci/node:8.9.4
+    steps:
+      - checkout
+
 workflows:
   version: 2
   build_and_test:
