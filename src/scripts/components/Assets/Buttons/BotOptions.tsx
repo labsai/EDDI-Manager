@@ -8,7 +8,7 @@ import ArrowRightOutlinedIcon from '@material-ui/icons/ArrowRightOutlined';
 import LogsIcon from '@material-ui/icons/Dns';
 import ImportExportIcon from '@material-ui/icons/ImportExport';
 import ChatBubbleIcon from '@material-ui/icons/ChatBubble';
-import TelegramIcon from '@mui/icons-material/Telegram';
+import CallMissedOutgoingIcon from '@material-ui/icons/CallMissedOutgoing';
 import CloudDownloadOutlinedIcon from '@material-ui/icons/CloudDownloadOutlined';
 import CreateIcon from '@material-ui/icons/Create';
 import CreateOutlinedIcon from '@material-ui/icons/CreateOutlined';
@@ -144,7 +144,7 @@ const BotOptions = ({
               .focus();
           }}>
           <ListItemIcon>
-            <TelegramIcon fontSize="small" />
+            <CallMissedOutgoingIcon fontSize="small" />
           </ListItemIcon>
           <Typography variant="inherit">{'Open External Chat'}</Typography>
         </MenuItem>
