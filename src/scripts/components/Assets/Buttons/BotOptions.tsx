@@ -8,6 +8,7 @@ import ArrowRightOutlinedIcon from '@material-ui/icons/ArrowRightOutlined';
 import LogsIcon from '@material-ui/icons/Dns';
 import ImportExportIcon from '@material-ui/icons/ImportExport';
 import ChatBubbleIcon from '@material-ui/icons/ChatBubble';
+import TelegramIcon from '@mui/icons-material/Telegram';
 import CloudDownloadOutlinedIcon from '@material-ui/icons/CloudDownloadOutlined';
 import CreateIcon from '@material-ui/icons/Create';
 import CreateOutlinedIcon from '@material-ui/icons/CreateOutlined';
@@ -132,6 +133,20 @@ const BotOptions = ({
             <ChatBubbleIcon fontSize="small" />
           </ListItemIcon>
           <Typography variant="inherit">{'Open Chat'}</Typography>
+        </MenuItem>
+        <MenuItem
+          key={'Open External Chat'}
+          disabled={!botDeployed}
+          onClick={() => {
+            historyPush(location.pathname, [`botId=${bot.id}`]);
+            window
+              .open(`${apiUrl}/chat/unrestricted/${bot.id}`, '_blank')
+              .focus();
+          }}>
+          <ListItemIcon>
+            <TelegramIcon fontSize="small" />
+          </ListItemIcon>
+          <Typography variant="inherit">{'Open External Chat'}</Typography>
         </MenuItem>
         <MenuItem
           key={'View Conversations'}
