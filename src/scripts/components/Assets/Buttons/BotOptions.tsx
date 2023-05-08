@@ -114,8 +114,8 @@ const BotOptions = ({
         onClose={handleClose}
         PaperProps={{
           style: {
-            maxHeight: ITEM_HEIGHT * 4.5,
-            width: '20ch',
+            maxHeight: ITEM_HEIGHT * 5.2,
+            width: '23ch',
           },
         }}>
         <MenuItem
@@ -271,8 +271,8 @@ const BotOptions = ({
             }}
             PaperProps={{
               style: {
-                maxHeight: ITEM_HEIGHT * 4.5,
-                width: '20ch',
+                maxHeight: ITEM_HEIGHT * 5.2,
+                width: '23ch',
               },
             }}>
             <MenuItem
