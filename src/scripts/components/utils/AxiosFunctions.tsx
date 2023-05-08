@@ -1127,7 +1127,7 @@ export interface IConversationProperties {
 
 export interface IConversationProperty {
   name: string;
-  value: string;
+  value: any;
   scope: string;
 }
 

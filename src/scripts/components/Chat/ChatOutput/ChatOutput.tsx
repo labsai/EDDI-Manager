@@ -2,6 +2,10 @@ import * as React from 'react';
 import useStyles from './ChatOutput.styles';
 import clsx from 'clsx';
 import useScrollIntoView from '../../utils/useScrollIntoView';
+import parse from 'html-react-parser';
+
+
+
 
 interface IChatOutput {
   output: { text: string };
@@ -25,7 +29,7 @@ const ChatOutput = ({ output, input }: IChatOutput) => {
       className={clsx(classes.chatOutput, input ? classes.chatInput : null)}
       ref={chatOutputRef}>
       <p className={clsx(classes.outputText, input ? classes.inputText : null)}>
-        {outputText}
+        {parse(outputText)}
       </p>
     </div>
   );

@@ -30,6 +30,7 @@ import ChatOutput from './ChatOutput/ChatOutput';
 import ChatOutputs from './ChatOutputs/ChatOutputs';
 import ChatQuickReplies from './ChatQuickReplies/ChatQuickReplies';
 import Delayed from './Delay/Delay';
+import getIdsFromPath from '../utils/helpers/getIdsFromPath';
 
 const Chat = () => {
   const context = useSelector(getChatContext);
@@ -41,11 +42,13 @@ const Chat = () => {
   const [chatVisible, setChatVisible] = React.useState(false);
 
   // need to get bot id
-  const isBotPage = location.pathname.includes('botview');
-  const urlSearchParams = new URLSearchParams(location.search);
-  const botId = isBotPage
-    ? location.pathname.split('/')?.[2]
-    : urlSearchParams.get('botId');
+  const { botId, packageId } = getIdsFromPath();
+
+  // const isBotPage = location.pathname.includes('botview');
+  // const urlSearchParams = new URLSearchParams(location.search);
+  // const botId = isBotPage
+  //   ? location.pathname.split('/')?.[3]
+  //   : urlSearchParams.get('botId');
 
   const { data, isLoading, error } = useSelector(chatDataSelector);
 
