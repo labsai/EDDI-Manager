@@ -7,36 +7,36 @@ import { Router, Route } from 'react-router-dom';
 import { persistor, store } from './store/store';
 import { history } from './history';
 import { PersistGate } from 'redux-persist/integration/react';
-import { ConsentProvider } from 'react-hook-consent';
+import { ConsentBanner, ConsentProvider, ConsentOptions } from 'react-hook-consent';
 
-
+const consentOptions: ConsentOptions = {
+  services: [
+    {
+      id: 'eddi',
+      name: 'Google Analytics',
+      scripts: [
+        { id: 'external-script', src: 'https://www.google-analytics.com/analytics.js' },
+      ],
+      cookies: [{ pattern: 'cookie-name' }],
+      mandatory: true,
+      description: "We may allow third party service providers to use cookies or similar technologies to collect information about your browsing activities over time and across different websites following your use of the Services.For example, we use Google Analytics, an online analytics service operated by Google LLC(Google Analytics).Google Analytics uses cookies to help us analyze traffic on the Site and enhance your experience when you use the Services.For more information on how Google LLC uses this data, go to https://policies.google.com/privacy",
+    },
+  ],
+  theme: 'dark',
+}
 
 render(
   <ConsentProvider
-    options={{
-      services: [
-        {
-          id: 'eddi',
-          name: 'MyName',
-          scripts: [
-            { id: 'external-script', src: 'https://myscript.com/script.js' },
-            { id: 'inline-code', code: `alert("I am a JavaScript code");` },
-          ],
-          cookies: [{ pattern: 'cookie-name' }],
-          mandatory: true,
-        },
-      ],
-      theme: 'dark',
-    }}
+    options={consentOptions}
   >
-  <Provider store={store}>
-    <PersistGate loading={null} persistor={persistor}>
-      <Router history={history}>
-        <Route component={App} />
-      </Router>
-    </PersistGate>
-  </Provider>
-  </ConsentProvider>
-  ,
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <Router history={history}>
+          <Route component={App} />
+          <ConsentBanner />
+        </Router>
+      </PersistGate>
+    </Provider>
+  </ConsentProvider>,
   document.getElementById('root'),
 );
