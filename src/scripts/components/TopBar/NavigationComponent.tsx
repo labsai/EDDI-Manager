@@ -14,7 +14,7 @@ import {
 import { historyPush } from '../../history';
 import { pageEnum } from '../pages/pageEnum';
 import PluginSelectComponent from './PluginSelectComponent';
-import eddiApiActionDispatchers from 'src/scripts/actions/EddiApiActionDispatchers';
+import eddiApiActionDispatchers from '../../actions/EddiApiActionDispatchers';
 
 const useStyles = makeStyles({
   navBar: {
