@@ -14,6 +14,7 @@ import {
 import { historyPush } from '../../history';
 import { pageEnum } from '../pages/pageEnum';
 import PluginSelectComponent from './PluginSelectComponent';
+import eddiApiActionDispatchers from 'src/scripts/actions/EddiApiActionDispatchers';
 
 const useStyles = makeStyles({
   navBar: {
@@ -46,13 +47,19 @@ interface IProps {
   page: pageEnum;
 }
 
+const handleBots = () => {
+  historyPush(MANAGE)
+  eddiApiActionDispatchers.fetchBotsAction(5, 0);
+}
+
+
 const NavigationComponent = (props: IProps) => {
   const classes = useStyles();
   return (
     <div className={classes.navBar}>
       <div
         key={'bots'}
-        onClick={() => historyPush(MANAGE)}
+        onClick={() => handleBots()}
         className={clsx(classes.navBarItem, {
           [classes.navBarItemDisabled]: props.page !== pageEnum.bot,
         })}>
