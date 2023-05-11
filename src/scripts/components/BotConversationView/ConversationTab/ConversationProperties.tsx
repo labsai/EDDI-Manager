@@ -71,17 +71,43 @@ const ConversationProperties = ({ conversationProperties }: IProps) => {
             <TruncateTextComponent
               classes={{ text: classes.propertyValue }}
               text={
-                typeof conversationProperties[property].value === 'string'
+                typeof conversationProperties["valueString"].value !== null
                   ? JSON.stringify(
-                      conversationProperties[property].value,
+                    conversationProperties["valueString"].value,
+                    null,
+                    '\t',
+                  ) :
+                  typeof conversationProperties["valueObject"].value !== null
+                    ? JSON.stringify(
+                      conversationProperties["valueObject"].value,
                       null,
                       '\t',
-                    )
-                  : JSON.stringify(
-                      conversationProperties[property].value,
-                      null,
-                      4,
-                    )
+                    ) :
+                    typeof conversationProperties["valueList"].value !== null
+                      ? JSON.stringify(
+                        conversationProperties["valueList"].value,
+                        null,
+                        '\t',
+                      ) :
+                      typeof conversationProperties["valueInt"].value !== null
+                        ? JSON.stringify(
+                          conversationProperties["valueInt"].value,
+                          null,
+                          '\t',
+                        ) :
+                        typeof conversationProperties["valueFloat"].value !== null
+                          ? JSON.stringify(
+                            conversationProperties["valueFloat"].value,
+                            null,
+                            '\t',
+                          ) :
+                          typeof conversationProperties["valueBoolean"].value !== null
+                            ? JSON.stringify(
+                              conversationProperties["valueBoolean"].value,
+                              null,
+                              '\t',
+                            ) :
+                            "No value provided!"
               }
               length={40}
             />

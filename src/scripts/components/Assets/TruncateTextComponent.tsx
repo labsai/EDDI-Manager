@@ -50,7 +50,7 @@ const TruncateTextComponent = ({
 
   return (
     <div>
-      {!!text ? (
+      {!!text && (
         <div>
           <div className={clsx(classes.textContainer, externalClasses?.text)}>
             <div className={clsx({ [classes.truncate]: !isExpanded })}>
@@ -70,13 +70,7 @@ const TruncateTextComponent = ({
             </div>
           )}
         </div>
-      )
-        : (
-          <div className={clsx(classes.textContainer, externalClasses?.text)}>
-            No value provided!
-          </div>
-        )
-      }
+      )}
     </div>
   );
 };
