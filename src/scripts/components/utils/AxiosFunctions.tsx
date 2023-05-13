@@ -1126,6 +1126,12 @@ export interface IConversationProperties {
 }
 
 export interface IConversationProperty {
+  valueString: string;
+  valueObject: {};
+  valueList: any;
+  valueInt: number;
+  valueFloat: any;
+  valueBoolean: boolean;
   name: string;
   value: any;
   scope: string;
