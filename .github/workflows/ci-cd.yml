@@ -27,6 +27,6 @@ jobs:
         run: yarn
 
       - name: Build Project
-        run: yarn webpack --env NODE_ENV=production --progress --config webpack.config.babel.js
+        run: yarn webpack --env NODE_ENV=production --progress --config webpack.config.mjs
       - name: Deploy Site
         run: gsutil cp -r dist/* gs://manager-labs-ai

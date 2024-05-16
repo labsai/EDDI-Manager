@@ -2,4 +2,4 @@
 *.js.map
 package.json
 !wallaby.js
-!webpack.config.babel.js
+!webpack.config.mjs

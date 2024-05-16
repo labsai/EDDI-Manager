@@ -13,6 +13,8 @@ import {
   GITCALLS_PATH,
   HTTPCALLS,
   HTTPCALLS_PATH,
+  LANGCHAIN,
+  LANGCHAIN_PATH,
   OUTPUT,
   OUTPUT_PATH,
   PROPERTYSETTER,
@@ -828,6 +830,12 @@ export async function getPluginDescriptors(
       case HTTPCALLS:
         res = await axios.get(
           `${await getAPIUrl()}${HTTPCALLS_PATH}/descriptors?index=${index}&limit=${limit}`,
+        );
+        break;
+
+      case LANGCHAIN:
+        res = await axios.get(
+          `${await getAPIUrl()}${LANGCHAIN_PATH}/descriptors?index=${index}&limit=${limit}`,
         );
         break;
 

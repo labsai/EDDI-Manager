@@ -9,6 +9,6 @@ compiled
 coverage
 .awcache
 !wallaby.js
-!webpack.config.babel.js
+!webpack.config.mjs
 !webpack/*.js
 !server.js
