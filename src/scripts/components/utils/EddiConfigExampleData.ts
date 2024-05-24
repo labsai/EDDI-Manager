@@ -2,6 +2,7 @@ import {
   BEHAVIOR,
   BOT,
   HTTPCALLS,
+  LANGCHAIN,
   OUTPUT,
   PACKAGE,
   PROPERTYSETTER,
@@ -92,6 +93,26 @@ export const HTTPCALLS_POST_EXAMPLE: string = `{
     }
   ]
 }`;
+
+export const LANGCHAIN_POST_EXAMPLE: string = `{
+  "tasks": [
+    {
+      "id": "runLLM",
+      "type": "openai",
+      "description": "This is an example task description",
+      "actions": ["*"],
+      "parameters": {
+        "apiKey": "your-openai-api-key",
+        "modelName": "gpt-4o",
+        "temperature": "0.7",
+        "timeout": "15000",
+        "logRequests": "true",
+        "logResponses": "true"
+      }
+    }
+  ]
+}
+`;
 
 export const PROPERTYSETTER_POST_EXAMPLE: string = `{
         "setOnActions": [
@@ -193,6 +214,8 @@ export function getPostExample(eddiType: string) {
       return OUTPUT_POST_EXAMPLE;
     case HTTPCALLS:
       return HTTPCALLS_POST_EXAMPLE;
+    case LANGCHAIN:
+      return LANGCHAIN_POST_EXAMPLE;
     case PROPERTYSETTER:
       return PROPERTYSETTER_POST_EXAMPLE;
     case BOT:

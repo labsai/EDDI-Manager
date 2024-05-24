@@ -388,13 +388,49 @@ export const langChainSnippets: ISnippet[] = [
     name: 'task',
     tabTrigger: 'task',
     content: `{
-  "actions": [\${1:"any_action"}],
-  "id": "\${2:id}",
-  "type": "\${3:openai}",
-  "description": "\${4:Connector for OpenAI}",
+  "id": "\${1:task_1}",
+  "type": "\${2:example_type}",
+  "description": "\${3:This is an example task description}",
+  "actions": [
+    \${4:"action_1"},
+    \${5:"action_2"}
+  ],
+  "preRequest": {
+    "propertyInstructions": [
+      {
+        "name": "\${6:exampleProperty}",
+        "valueString": "\${7:exampleValue}",
+        "scope": "\${8:step}"
+      }
+    ]
+  },
+  "postResponse": {
+    "propertyInstructions": [
+      {
+        "name": "\${9:exampleResponseProperty}",
+        "valueString": "\${10:responseValue}",
+        "scope": "\${11:conversation}"
+      }
+    ],
+    "outputBuildInstructions": [
+      {
+        "pathToTargetArray": "\${12:response.data}",
+        "iterationObjectName": "\${13:item}",
+        "outputType": "\${14:exampleType}",
+        "outputValue": "\${15:exampleOutputValue}"
+      }
+    ],
+    "qrBuildInstructions": [
+      {
+        "pathToTargetArray": "\${16:response.quickReplies}",
+        "iterationObjectName": "\${17:item}",
+        "quickReplyValue": "\${18:exampleQuickReplyValue}",
+        "quickReplyExpressions": "\${19:exampleExpression}"
+      }
+    ]
+  },
   "parameters": {
-    "apiKey": "\${5:apiKey}",
-    "modelName": "\${6:modelName}"
+    "exampleParameter": "\${20:exampleValue}"
   }
 }`,
   },
@@ -402,15 +438,60 @@ export const langChainSnippets: ISnippet[] = [
     scope: 'json',
     name: 'actions',
     tabTrigger: 'actions',
-    content: `"actions": [\${1:"any_action"}]`,
+    content: `"actions": [
+  \${1:"any_action"}
+]`,
+  },
+  {
+    scope: 'json',
+    name: 'preRequest',
+    tabTrigger: 'preRequest',
+    content: `"preRequest": {
+  "propertyInstructions": [
+    {
+      "name": "\${1:exampleProperty}",
+      "valueString": "\${2:exampleValue}",
+      "scope": "\${3:step}"
+    }
+  ]
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'postResponse',
+    tabTrigger: 'postResponse',
+    content: `"postResponse": {
+  "propertyInstructions": [
+    {
+      "name": "\${1:exampleResponseProperty}",
+      "valueString": "\${2:responseValue}",
+      "scope": "\${3:conversation}"
+    }
+  ],
+  "outputBuildInstructions": [
+    {
+      "pathToTargetArray": "\${4:response.data}",
+      "iterationObjectName": "\${5:item}",
+      "outputType": "\${6:exampleType}",
+      "outputValue": "\${7:exampleOutputValue}"
+    }
+  ],
+  "qrBuildInstructions": [
+    {
+      "pathToTargetArray": "\${8:response.quickReplies}",
+      "iterationObjectName": "\${9:item}",
+      "quickReplyValue": "\${10:exampleQuickReplyValue}",
+      "quickReplyExpressions": "\${11:exampleExpression}"
+    }
+  ]
+}`,
   },
   {
     scope: 'json',
     name: 'parameters',
     tabTrigger: 'parameters',
     content: `"parameters": {
-  "apiKey": "\${1:apiKey}",
-  "modelName": "\${2:modelName}"
+  "exampleParameter": "\${1:exampleValue}"
 }`,
   },
   {
@@ -418,9 +499,8 @@ export const langChainSnippets: ISnippet[] = [
     name: 'parameter',
     tabTrigger: 'parameter',
     content: `"param1": "\${1:value1}"`,
-  },
+  }
 ];
-
 
 export const propertySetterSnippets: ISnippet[] = [
   {
