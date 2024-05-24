@@ -6,8 +6,8 @@ import {
   IAddNewPackageToBotsSuccessAction,
   ICreateNewBotSuccessAction,
   IDeployBotSuccessAction,
-  IDeployExampleBotsFailedAction,
-  IDeployExampleBotsSuccessAction,
+  IDeployInitialBotsFailedAction,
+  IDeployInitialBotsSuccessAction,
   IDuplicateSuccessAction,
   IFetchBotDataSuccessAction,
   IFetchBotDeploymentStatusSuccessAction,
@@ -28,9 +28,9 @@ import {
   ADD_NEW_PACKAGE_TO_BOTS_SUCCESS,
   CREATE_NEW_BOT_SUCCESS,
   DEPLOY_BOT_SUCCESS,
-  DEPLOY_EXAMPLE_BOTS,
-  DEPLOY_EXAMPLE_BOTS_FAILED,
-  DEPLOY_EXAMPLE_BOTS_SUCCESS,
+  DEPLOY_INITIAL_BOTS,
+  DEPLOY_INITIAL_BOTS_FAILED,
+  DEPLOY_INITIAL_BOTS_SUCCESS,
   DUPLICATE_SUCCESS,
   FETCH_BOT,
   FETCH_BOTDATA_SUCCESS,
@@ -448,7 +448,7 @@ const BotReducer: IBotReducer = (
       });
     }
 
-    case DEPLOY_EXAMPLE_BOTS: {
+    case DEPLOY_INITIAL_BOTS: {
       return update(state, {
         isLoadingAllBots: {
           $set: true,
@@ -456,27 +456,27 @@ const BotReducer: IBotReducer = (
       });
     }
 
-    case DEPLOY_EXAMPLE_BOTS_FAILED: {
+    case DEPLOY_INITIAL_BOTS_FAILED: {
       return update(state, {
         isLoadingAllBots: {
           $set: false,
         },
         error: {
-          $set: (action as IDeployExampleBotsFailedAction).error,
+          $set: (action as IDeployInitialBotsFailedAction).error,
         },
       });
     }
 
-    case DEPLOY_EXAMPLE_BOTS_SUCCESS: {
+    case DEPLOY_INITIAL_BOTS_SUCCESS: {
       return update(state, {
         isLoadingAllBots: {
           $set: false,
         },
         bots: {
-          $set: (action as IDeployExampleBotsSuccessAction).bots,
+          $set: (action as IDeployInitialBotsSuccessAction).bots,
         },
         botsLoaded: {
-          $set: (action as IDeployExampleBotsSuccessAction).bots.length,
+          $set: (action as IDeployInitialBotsSuccessAction).bots.length,
         },
       });
     }

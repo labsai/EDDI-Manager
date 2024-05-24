@@ -100,8 +100,8 @@ const BotList = ({
             <div>{`There are no bots yet..`}</div>
             <BlueButton
               classes={{ button: classes.deployExampleBotsButton }}
-              onClick={() => eddiApiActionDispatchers.deployExampleBotsAction()}
-              text={'Deploy Example Bots'}
+              onClick={() => eddiApiActionDispatchers.deployInitialBotsAction()}
+              text={'Deploy Initial Bots'}
             />
           </div>
         )}

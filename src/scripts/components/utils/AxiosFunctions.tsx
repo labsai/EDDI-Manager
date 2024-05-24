@@ -1187,7 +1187,7 @@ export async function endConversation(conversationId: string) {
   }
 }
 
-interface IExampleBotsResponseData {
+interface IInitialBotsResponseData {
   environment: string;
   botId: string;
   botVersion: number;
@@ -1195,12 +1195,12 @@ interface IExampleBotsResponseData {
   descriptor: IDescriptor;
 }
 
-export async function deployExampleBots(): Promise<IBot[]> {
+export async function deployInitialBots(): Promise<IBot[]> {
   try {
     const response = await axios.post(
-      `${await getAPIUrl()}/backup/import/examples`,
+      `${await getAPIUrl()}/backup/import/initialBots`,
     );
-    const exampleBots: IExampleBotsResponseData[] = response.data;
+    const exampleBots: IInitialBotsResponseData[] = response.data;
     return exampleBots.map((bot) => {
       return {
         ...bot.descriptor,
@@ -1212,7 +1212,7 @@ export async function deployExampleBots(): Promise<IBot[]> {
       };
     });
   } catch (err) {
-    console.error(`Failed to deploy example bots. Error: ${err.message}`);
+    console.error(`Failed to deploy initial bots. Error: ${err.message}`);
   }
 }
 

@@ -16,7 +16,7 @@ import {
   watchCreateNewConfig,
   watchCreateNewPackage,
   watchDeployBot,
-  watchDeployExampleBots,
+  watchDeployInitialBots,
   watchDuplicateResource,
   watchEndConversation,
   watchFetchBot,
@@ -86,7 +86,7 @@ function* root() {
   yield fork(watchKeycloakRefreshToken);
   yield fork(watchCheckAuthentication);
   yield fork(watchSignOut);
-  yield fork(watchDeployExampleBots);
+  yield fork(watchDeployInitialBots);
   yield fork(watchChat);
   yield fork(watchBotLogs);
   yield fork(watchMassUpdateJsonData);

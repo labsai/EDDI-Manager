@@ -29,9 +29,9 @@ import {
   DEPLOY_BOT,
   DEPLOY_BOT_FAILED,
   DEPLOY_BOT_SUCCESS,
-  DEPLOY_EXAMPLE_BOTS,
-  DEPLOY_EXAMPLE_BOTS_FAILED,
-  DEPLOY_EXAMPLE_BOTS_SUCCESS,
+  DEPLOY_INITIAL_BOTS,
+  DEPLOY_INITIAL_BOTS_FAILED,
+  DEPLOY_INITIAL_BOTS_SUCCESS,
   DUPLICATE,
   DUPLICATE_FAILED,
   DUPLICATE_SUCCESS,
@@ -1531,37 +1531,37 @@ export function endConversationFailedAction(
   };
 }
 
-export interface IDeployExampleBotsAction extends Action {}
+export interface IDeployInitialBotsAction extends Action {}
 
-export function deployExampleBotsAction(): IDeployExampleBotsAction {
+export function deployInitialBotsAction(): IDeployInitialBotsAction {
   return {
-    type: DEPLOY_EXAMPLE_BOTS,
+    type: DEPLOY_INITIAL_BOTS,
   };
 }
 
-export interface IDeployExampleBotsSuccessAction extends Action {
+export interface IDeployInitialBotsSuccessAction extends Action {
   bots: IBot[];
 }
 
-export function deployExampleBotsSuccessAction(
+export function deployInitialBotsSuccessAction(
   bots: IBot[],
-): IDeployExampleBotsSuccessAction {
+): IDeployInitialBotsSuccessAction {
   return {
     bots,
-    type: DEPLOY_EXAMPLE_BOTS_SUCCESS,
+    type: DEPLOY_INITIAL_BOTS_SUCCESS,
   };
 }
 
-export interface IDeployExampleBotsFailedAction extends Action {
+export interface IDeployInitialBotsFailedAction extends Action {
   error: Error;
 }
 
-export function deployExampleBotsFailedAction(
+export function deployInitialBotsFailedAction(
   error,
-): IDeployExampleBotsFailedAction {
+): IDeployInitialBotsFailedAction {
   return {
     error,
-    type: DEPLOY_EXAMPLE_BOTS_FAILED,
+    type: DEPLOY_INITIAL_BOTS_FAILED,
   };
 }
 

@@ -16,9 +16,9 @@ import {
   deployBotAction,
   deployBotFailedAction,
   deployBotSuccessAction,
-  deployExampleBotsAction,
-  deployExampleBotsFailedAction,
-  deployExampleBotsSuccessAction,
+  deployInitialBotsAction,
+  deployInitialBotsFailedAction,
+  deployInitialBotsSuccessAction,
   duplicateAction,
   duplicateFailedAction,
   duplicateSuccessAction,
@@ -62,9 +62,9 @@ import {
   IDeployBotAction,
   IDeployBotFailedAction,
   IDeployBotSuccessAction,
-  IDeployExampleBotsAction,
-  IDeployExampleBotsFailedAction,
-  IDeployExampleBotsSuccessAction,
+  IDeployInitialBotsAction,
+  IDeployInitialBotsFailedAction,
+  IDeployInitialBotsSuccessAction,
   IDuplicateAction,
   IDuplicateFailedAction,
   IDuplicateSuccessAction,
@@ -248,9 +248,9 @@ export interface IEddiApiActionDispatchers extends ActionCreatorsMapObject {
     conversationId,
   ) => IEndConversationSuccessAction;
   endConversationFailedAction: (conversationId) => IEndConversationFailedAction;
-  deployExampleBotsAction: () => IDeployExampleBotsAction;
-  deployExampleBotsSuccessAction: (bots) => IDeployExampleBotsSuccessAction;
-  deployExampleBotsFailedAction: (error) => IDeployExampleBotsFailedAction;
+  deployInitialBotsAction: () => IDeployInitialBotsAction;
+  deployInitialBotsSuccessAction: (bots) => IDeployInitialBotsSuccessAction;
+  deployInitialBotsFailedAction: (error) => IDeployInitialBotsFailedAction;
   clearEditedPluginDataAction: () => void;
   updateExtensionsOrderAction: (
     pkg,
@@ -320,9 +320,9 @@ const actions: IEddiApiActionDispatchers = {
   endConversationAction,
   endConversationSuccessAction,
   endConversationFailedAction,
-  deployExampleBotsAction,
-  deployExampleBotsFailedAction,
-  deployExampleBotsSuccessAction,
+  deployInitialBotsAction: deployInitialBotsAction,
+  deployInitialBotsFailedAction: deployInitialBotsFailedAction,
+  deployInitialBotsSuccessAction: deployInitialBotsSuccessAction,
   massUpdateJsonDataAction,
   clearEditedPluginDataAction,
   updateExtensionsOrderAction,

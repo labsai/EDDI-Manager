@@ -13,8 +13,8 @@ import {
   createNewPluginSuccessAction,
   deployBotFailedAction,
   deployBotSuccessAction,
-  deployExampleBotsFailedAction,
-  deployExampleBotsSuccessAction,
+  deployInitialBotsFailedAction,
+  deployInitialBotsSuccessAction,
   duplicateFailedAction,
   duplicateSuccessAction,
   endConversationFailedAction,
@@ -56,7 +56,7 @@ import {
   ICreateNewConfigAction,
   ICreateNewPackageAction,
   IDeployBotAction,
-  IDeployExampleBotsAction,
+  IDeployInitialBotsAction,
   IDuplicateAction,
   IEndConversationAction,
   IFetchBotAction,
@@ -108,7 +108,7 @@ import {
   CREATE_NEW_CONFIG,
   CREATE_NEW_PACKAGE,
   DEPLOY_BOT,
-  DEPLOY_EXAMPLE_BOTS,
+  DEPLOY_INITIAL_BOTS,
   DUPLICATE,
   END_CONVERSATION,
   FETCH_BOT,
@@ -148,7 +148,7 @@ import {
 import {
   addPackageToBot,
   deployBot as axiosDeployBot,
-  deployExampleBots as axiosDeployExampleBots,
+  deployInitialBots as axiosDeployInitialBots,
   duplicate,
   endConversation as axiosEndConversation,
   getAllDefaultPluginTypes,
@@ -1001,17 +1001,17 @@ export function* watchEndConversation(): Iterator<{}> {
   yield takeEvery(END_CONVERSATION, endConversation);
 }
 
-export function* deployExampleBots(
-  action: IDeployExampleBotsAction,
+export function* deployInitialBots(
+  action: IDeployInitialBotsAction,
 ): Iterator<{}> {
   try {
-    const bots: IBot[] = yield call(axiosDeployExampleBots);
-    yield put(deployExampleBotsSuccessAction(bots));
+    const bots: IBot[] = yield call(axiosDeployInitialBots);
+    yield put(deployInitialBotsSuccessAction(bots));
   } catch (err) {
-    yield put(deployExampleBotsFailedAction(err));
+    yield put(deployInitialBotsFailedAction(err));
   }
 }
 
-export function* watchDeployExampleBots(): Iterator<{}> {
-  yield takeEvery(DEPLOY_EXAMPLE_BOTS, deployExampleBots);
+export function* watchDeployInitialBots(): Iterator<{}> {
+  yield takeEvery(DEPLOY_INITIAL_BOTS, deployInitialBots);
 }
