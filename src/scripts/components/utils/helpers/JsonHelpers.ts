@@ -8,6 +8,7 @@ import {
   BEHAVIOR,
   BOT,
   HTTPCALLS,
+  LANGCHAIN,
   OUTPUT,
   PACKAGE,
   PROPERTYSETTER,
@@ -81,6 +82,8 @@ export function getSnippets(type: string): ISnippet[] {
       return Snippets.outputSnippets;
     case HTTPCALLS:
       return Snippets.httpCallsSnippets;
+    case LANGCHAIN:
+      return Snippets.langChainSnippets;
     case PROPERTYSETTER:
       return Snippets.propertySetterSnippets;
     case PACKAGE:

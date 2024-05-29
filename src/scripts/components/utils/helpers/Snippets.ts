@@ -234,7 +234,7 @@ export const outputSnippets: ISnippet[] = [
 }`,
   },
 ];
-// todo: Finish httpCallsSnippets
+
 export const httpCallsSnippets: ISnippet[] = [
   {
     scope: 'json',
@@ -254,25 +254,222 @@ export const httpCallsSnippets: ISnippet[] = [
     tabTrigger: 'httpCall',
     content: `{
   "httpCall": "\${1:name}",
-  "saveResponse": "\${2:saveResponse}",
-  "fireAndForget": "\${3:fireAndForget}",
+  "saveResponse": \${2:false},
+  "fireAndForget": \${3:false},
   "responseObjectName": "\${4:responseObjectName}",
-  "actions": [\${5:}],
-  "preRequest": {\${6:}}
+  "responseHeaderObjectName": "\${5:responseHeaderObjectName}",
+  "isBatchCalls": \${6:false},
+  "iterationObjectName": "\${7:iterationObjectName}",
+  "actions": [\${8:}],
+  "preRequest": \${9:{}},
+  "request": \${10:{}},
+  "postResponse": \${11:{}}
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'preRequest',
+    tabTrigger: 'preRequest',
+    content: `{
+  "propertyInstructions": [\${1:}],
+  "batchRequests": \${2:{}},
+  "delayBeforeExecutingInMillis": \${3:0}
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'propertyInstruction',
+    tabTrigger: 'propertyInstruction',
+    content: `{
+  "fromObjectPath": "\${1:fromObjectPath}",
+  "toObjectPath": "\${2:toObjectPath}",
+  "convertToObject": \${3:false},
+  "override": \${4:true},
+  "runOnValidationError": \${5:false},
+  "httpCodeValidator": \${6:{}}
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'httpCodeValidator',
+    tabTrigger: 'httpCodeValidator',
+    content: `{
+  "runOnHttpCode": [\${1:200, 201}],
+  "skipOnHttpCode": [\${2:0, 400, 401, 402, 403, 404, 409, 410, 500, 501, 502}]
 }`,
   },
   {
     scope: 'json',
     name: 'batchRequests',
     tabTrigger: 'batchRequests',
-    content: `"batchRequests": {
-  "pathToTargetArray": "\${1:pathToTargetArray}",
-  "iterationObjectName": "\${2:iterationObjectName}"
+    content: `{
+  "executeCallsSequentially": \${1:false}
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'request',
+    tabTrigger: 'request',
+    content: `{
+  "path": "\${1:path}",
+  "headers": \${2:{}},
+  "queryParams": \${3:{}},
+  "method": "\${4:GET}",
+  "contentType": "\${5:}",
+  "body": "\${6:}"
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'postResponse',
+    tabTrigger: 'postResponse',
+    content: `{
+  "retryHttpCallInstruction": \${1:{}},
+  "propertyInstructions": [\${2:}],
+  "outputBuildInstructions": [\${3:}],
+  "qrBuildInstructions": [\${4:}]
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'retryHttpCallInstruction',
+    tabTrigger: 'retryHttpCallInstruction',
+    content: `{
+  "maxRetries": \${1:3},
+  "exponentialBackoffDelayInMillis": \${2:1000},
+  "retryOnHttpCodes": [\${3:502, 503}],
+  "responseValuePathMatchers": [\${4:}]
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'responseValuePathMatcher',
+    tabTrigger: 'responseValuePathMatcher',
+    content: `{
+  "valuePath": "\${1:valuePath}",
+  "contains": "\${2:contains}",
+  "equals": "\${3:equals}",
+  "trueIfNoMatch": \${4:false}
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'outputBuildingInstruction',
+    tabTrigger: 'outputBuildingInstruction',
+    content: `{
+  "outputType": "\${1:outputType}",
+  "outputValue": "\${2:outputValue}",
+  "httpCodeValidator": \${3:{}}
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'quickRepliesBuildingInstruction',
+    tabTrigger: 'quickRepliesBuildingInstruction',
+    content: `{
+  "quickReplyValue": "\${1:quickReplyValue}",
+  "quickReplyExpressions": "\${2:quickReplyExpressions}",
+  "httpCodeValidator": \${3:{}}
 }`,
   },
 ];
 
-export const propertySetterSnippets: ISnippet[] = [];
+export const langChainSnippets: ISnippet[] = [
+  {
+    scope: 'json',
+    name: 'tasks',
+    tabTrigger: 'tasks',
+    content: `"tasks": [
+  \${1}
+]`,
+  },
+  {
+    scope: 'json',
+    name: 'task',
+    tabTrigger: 'task',
+    content: `{
+  "actions": [\${1:"any_action"}],
+  "id": "\${2:id}",
+  "type": "\${3:openai}",
+  "description": "\${4:Connector for OpenAI}",
+  "parameters": {
+    "apiKey": "\${5:apiKey}",
+    "modelName": "\${6:modelName}"
+  }
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'actions',
+    tabTrigger: 'actions',
+    content: `"actions": [\${1:"any_action"}]`,
+  },
+  {
+    scope: 'json',
+    name: 'parameters',
+    tabTrigger: 'parameters',
+    content: `"parameters": {
+  "apiKey": "\${1:apiKey}",
+  "modelName": "\${2:modelName}"
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'parameter',
+    tabTrigger: 'parameter',
+    content: `"param1": "\${1:value1}"`,
+  },
+];
+
+
+export const propertySetterSnippets: ISnippet[] = [
+  {
+    scope: 'json',
+    name: 'propertySetterConfiguration',
+    tabTrigger: 'propertySetterConfiguration',
+    content: `"propertySetterConfiguration": {
+  "setOnActions": [\${1:}]
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'setOnActions',
+    tabTrigger: 'setOnActions',
+    content: `{
+  "actions": [\${1:}],
+  "setProperties": [\${2:}]
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'action',
+    tabTrigger: 'action',
+    content: `"\${1:action}"`,
+  },
+  {
+    scope: 'json',
+    name: 'propertyInstruction',
+    tabTrigger: 'propertyInstruction',
+    content: `{
+  "fromObjectPath": "\${1:fromObjectPath}",
+  "toObjectPath": "\${2:toObjectPath}",
+  "convertToObject": \${3:false},
+  "override": \${4:true},
+  "runOnValidationError": \${5:false},
+  "httpCodeValidator": \${6:{}}
+}`,
+  },
+  {
+    scope: 'json',
+    name: 'httpCodeValidator',
+    tabTrigger: 'httpCodeValidator',
+    content: `{
+  "runOnHttpCode": [\${1:200, 201}],
+  "skipOnHttpCode": [\${2:400, 401, 402, 403, 404, 500, 501, 502}]
+}`,
+  },
+];
+
 
 export const packageSnippets: ISnippet[] = [
   {
