@@ -1,7 +1,7 @@
 {
-  "name": "eddi-config-ui",
+  "name": "eddi-manager",
   "version": "1.0.0-RC",
-  "description": "eddi-config-ui",
+  "description": "eddi-manager",
   "main": "index.js",
   "scripts": {
     "server": "node server.js --path ./dist --port 3000 --env \"{\\\"EDDI_API_URL\\\":\\\"$EDDI_API_URL\\\", \\\"AUTH_METHOD\\\":\\\"$AUTH_METHOD\\\", \\\"AUTH_REALM\\\":\\\"$AUTH_REALM\\\", \\\"AUTH_URL\\\":\\\"$AUTH_URL\\\", \\\"AUTH_CLIENT_ID\\\":\\\"$AUTH_CLIENT_ID\\\", \\\"READ_ONLY_DOMAIN\\\":\\\"$READ_ONLY_DOMAIN\\\"}\"",
@@ -26,7 +26,7 @@
     "serve-production": "NODE_ENV=production npm run build && node server.js --path ./dist"
   },
   "docker": {
-    "imageUrl": "labsai/eddi-config-ui"
+    "imageUrl": "labsai/eddi-manager"
   },
   "nyc": {
     "check-coverage": true,

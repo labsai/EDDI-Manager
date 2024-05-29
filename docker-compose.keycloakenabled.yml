@@ -15,8 +15,8 @@ services:
       EDDI_MEMORY_MIN: 128m
       EDDI_MEMORY_MAX: 128m
       EDDI_JAVA_ENV_KEYCLOAK_ENABLED: webServer.securityHandlerType=keycloak
-  eddi-config-ui:
-    image: labsai/eddi-config-ui:latest
+  eddi-manager:
+    image: labsai/eddi-manager:latest
     ports:
       - '7071:7071'
     links:
@@ -30,7 +30,7 @@ services:
       AUTH_METHOD: 'keycloak'
       AUTH_URL: 'https://sso.labs.ai/auth'
       AUTH_REALM: 'labsai'
-      AUTH_CLIENT_ID: 'eddi-config-ui'
+      AUTH_CLIENT_ID: 'eddi-manager'
   mongodb:
     image: mongo:3.6
     restart: always
