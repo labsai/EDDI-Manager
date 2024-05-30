@@ -13,6 +13,8 @@ import {
   GITCALLS_PATH,
   HTTPCALLS,
   HTTPCALLS_PATH,
+  LANGCHAIN,
+  LANGCHAIN_PATH,
   OUTPUT,
   OUTPUT_PATH,
   PROPERTYSETTER,
@@ -831,6 +833,12 @@ export async function getPluginDescriptors(
         );
         break;
 
+      case LANGCHAIN:
+        res = await axios.get(
+          `${await getAPIUrl()}${LANGCHAIN_PATH}/descriptors?index=${index}&limit=${limit}`,
+        );
+        break;
+
       case GITCALLS:
         res = await axios.get(
           `${await getAPIUrl()}${GITCALLS_PATH}/descriptors?index=${index}&limit=${limit}`,
@@ -1126,8 +1134,14 @@ export interface IConversationProperties {
 }
 
 export interface IConversationProperty {
+  valueString: string;
+  valueObject: {};
+  valueList: any;
+  valueInt: number;
+  valueFloat: any;
+  valueBoolean: boolean;
   name: string;
-  value: string;
+  value: any;
   scope: string;
 }
 

@@ -45,6 +45,7 @@ import {
   BEHAVIOR,
   GITCALLS,
   HTTPCALLS,
+  LANGCHAIN,
   OUTPUT,
   PROPERTYSETTER,
   REGULAR_DICTIONARY,
@@ -74,13 +75,15 @@ export interface IPluginState {
   allBehaviorsLoaded: boolean;
   allOutputsLoaded: boolean;
   allHttpCallsLoaded: boolean;
+  allLangChainLoaded: boolean;
   allGitCallsLoaded: boolean;
   allPropertysetterLoaded: boolean;
-
   loadedDictionaries: number;
+
   loadedBehaviors: number;
   loadedOutputs: number;
   loadedHttpCalls: number;
+  loadedLangChain: number;
   loadedGitCalls: number;
   loadedPropertysetters: number;
 }
@@ -98,6 +101,7 @@ export const initialState: IPluginState = {
   allBehaviorsLoaded: false,
   allOutputsLoaded: false,
   allHttpCallsLoaded: false,
+  allLangChainLoaded: false,
   allGitCallsLoaded: false,
   allPropertysetterLoaded: false,
 
@@ -105,6 +109,7 @@ export const initialState: IPluginState = {
   loadedBehaviors: 0,
   loadedOutputs: 0,
   loadedHttpCalls: 0,
+  loadedLangChain: 0,
   loadedGitCalls: 0,
   loadedPropertysetters: 0,
 };
@@ -213,6 +218,15 @@ const PluginReducer: IPluginReducer = (
         },
         allHttpCallsLoaded: {
           $set: pluginType === HTTPCALLS ? lastPage : state.allHttpCallsLoaded,
+        },
+        loadedLangChain: {
+          $set:
+            pluginType === LANGCHAIN
+              ? state.loadedLangChain + newPluginsLoaded
+              : state.loadedLangChain,
+        },
+        allLangChainLoaded: {
+          $set: pluginType === LANGCHAIN ? lastPage : state.allLangChainLoaded,
         },
         loadedGitCalls: {
           $set:

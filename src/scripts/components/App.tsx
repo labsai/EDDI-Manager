@@ -52,6 +52,8 @@ import * as kcHelper from './utils/keycloakFunctions';
 import Parser from './utils/Parser';
 import useChangeBodyMaxWidth from './utils/useChangeBodyMaxWidth';
 
+
+
 library.add(faUndo);
 library.add(faRedo);
 library.add(faCheck);
@@ -152,7 +154,6 @@ const App = ({
       </div>
     );
   }
-
   return (
     <>
       <div className={`ui container ${isChatOpened ? 'with-chat' : null}`}>

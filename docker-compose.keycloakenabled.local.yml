@@ -1,6 +1,6 @@
 version: '3'
 services:
-  eddi-config-ui:
+  eddi-manager:
     build:
       context: .
       args:
@@ -10,8 +10,8 @@ services:
         AUTH_METHOD: 'keycloak'
         AUTH_URL: 'https://sso.labs.ai/auth'
         AUTH_REALM: 'labsai'
-        AUTH_CLIENT_ID: 'eddi-config-ui'
-    image: labsai/eddi-config-ui:local
+        AUTH_CLIENT_ID: 'eddi-manager'
+    image: labsai/eddi-manager:local
     environment:
       EDDI_API_URL: 'http://localhost:7070'
       READ_ONLY_DOMAIN: 'https://app.labs.ai'
@@ -19,4 +19,4 @@ services:
       AUTH_METHOD: 'keycloak'
       AUTH_URL: 'https://sso.labs.ai/auth'
       AUTH_REALM: 'labsai'
-      AUTH_CLIENT_ID: 'eddi-config-ui'
+      AUTH_CLIENT_ID: 'eddi-manager'

@@ -7,6 +7,7 @@ import {
   BEHAVIOR,
   GITCALLS,
   HTTPCALLS,
+  LANGCHAIN,
   OUTPUT,
   PROPERTYSETTER,
   REGULAR_DICTIONARY,
@@ -44,6 +45,8 @@ const ExtensionsPage = ({ location }: IRouteProps) => {
         return OUTPUT;
       case 'httpCalls':
         return HTTPCALLS;
+      case 'langchain':
+        return LANGCHAIN;
       case 'gitCalls':
         return GITCALLS;
       case 'property':

@@ -8,6 +8,7 @@ import ArrowRightOutlinedIcon from '@material-ui/icons/ArrowRightOutlined';
 import LogsIcon from '@material-ui/icons/Dns';
 import ImportExportIcon from '@material-ui/icons/ImportExport';
 import ChatBubbleIcon from '@material-ui/icons/ChatBubble';
+import CallMissedOutgoingIcon from '@material-ui/icons/CallMissedOutgoing';
 import CloudDownloadOutlinedIcon from '@material-ui/icons/CloudDownloadOutlined';
 import CreateIcon from '@material-ui/icons/Create';
 import CreateOutlinedIcon from '@material-ui/icons/CreateOutlined';
@@ -113,8 +114,8 @@ const BotOptions = ({
         onClose={handleClose}
         PaperProps={{
           style: {
-            maxHeight: ITEM_HEIGHT * 4.5,
-            width: '20ch',
+            maxHeight: ITEM_HEIGHT * 5.2,
+            width: '23ch',
           },
         }}>
         <MenuItem
@@ -132,6 +133,20 @@ const BotOptions = ({
             <ChatBubbleIcon fontSize="small" />
           </ListItemIcon>
           <Typography variant="inherit">{'Open Chat'}</Typography>
+        </MenuItem>
+        <MenuItem
+          key={'Open External Chat'}
+          disabled={!botDeployed}
+          onClick={() => {
+            historyPush(location.pathname, [`botId=${bot.id}`]);
+            window
+              .open(`${apiUrl}/chat/unrestricted/${bot.id}`, '_blank')
+              .focus();
+          }}>
+          <ListItemIcon>
+            <CallMissedOutgoingIcon fontSize="small" />
+          </ListItemIcon>
+          <Typography variant="inherit">{'Open External Chat'}</Typography>
         </MenuItem>
         <MenuItem
           key={'View Conversations'}
@@ -256,8 +271,8 @@ const BotOptions = ({
             }}
             PaperProps={{
               style: {
-                maxHeight: ITEM_HEIGHT * 4.5,
-                width: '20ch',
+                maxHeight: ITEM_HEIGHT * 5.2,
+                width: '23ch',
               },
             }}>
             <MenuItem

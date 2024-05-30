@@ -71,17 +71,49 @@ const ConversationProperties = ({ conversationProperties }: IProps) => {
             <TruncateTextComponent
               classes={{ text: classes.propertyValue }}
               text={
-                typeof conversationProperties[property].value === 'string'
+                typeof conversationProperties[property].valueString !== null
                   ? JSON.stringify(
-                      conversationProperties[property].value,
+                    conversationProperties[property].valueString,
+                    null,
+                    '\t',
+                  ) :
+                  typeof conversationProperties[property].valueObject !== null
+                    ? JSON.stringify(
+                      conversationProperties[property].valueObject,
                       null,
                       '\t',
-                    )
-                  : JSON.stringify(
-                      conversationProperties[property].value,
-                      null,
-                      4,
-                    )
+                    ) :
+                    typeof conversationProperties[property].valueList !== null
+                      ? JSON.stringify(
+                        conversationProperties[property].valueList,
+                        null,
+                        '\t',
+                      ) :
+                      typeof conversationProperties[property].valueInt !== null
+                        ? JSON.stringify(
+                          conversationProperties[property].valueInt,
+                          null,
+                          '\t',
+                        ) :
+                        typeof conversationProperties[property].valueFloat !== null
+                          ? JSON.stringify(
+                            conversationProperties[property].valueFloat,
+                            null,
+                            '\t',
+                          ) :
+                          typeof conversationProperties[property].valueBoolean !== null
+                            ? JSON.stringify(
+                              conversationProperties[property].valueBoolean,
+                              null,
+                              '\t',
+                            ) :
+                            typeof conversationProperties[property].value !== null
+                              ? JSON.stringify(
+                                conversationProperties[property].value,
+                                null,
+                                4,
+                              ) :
+                              "No value provided!"
               }
               length={40}
             />

@@ -1,9 +1,9 @@
-# EDDI-CONFIG-UI
+# eddi-manager
 
 ## Setup
 
 ```
-npm install
+npm install --legacy-peer-deps
 ```
 
 ## Development
@@ -18,7 +18,7 @@ Run `npm start` to run the packager and have the app run in your default browser
 
 ### Run Docker Compose
 
-Build eddi-config-ui local docker image:
+Build eddi-manager local docker image:
 
 ```
 docker-compose -f docker-compose.yml -f docker-compose.local.yml -p config-local build
@@ -30,13 +30,13 @@ Run docker-compose with locally build image:
 docker-compose -f docker-compose.yml -f docker-compose.local.yml -p config-local up -d
 ```
 
-Shutting down locally build eddi-config-ui:
+Shutting down locally build eddi-manager:
 
 ```
 docker-compose -f docker-compose.yml -f docker-compose.local.yml -p config-local down
 ```
 
-Run latest eddi-config-ui from docker-hub:
+Run latest eddi-manager from docker-hub:
 
 ```
 docker-compose up

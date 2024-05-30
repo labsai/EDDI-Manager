@@ -16,6 +16,8 @@ import {
   REGULAR_DICTIONARY_PATH,
   GITCALLS_PATH,
   GITCALLS,
+  LANGCHAIN,
+  LANGCHAIN_PATH,
 } from './EddiTypes';
 import * as _ from 'lodash';
 
@@ -144,6 +146,8 @@ export function getTypePath(type: string): string {
       return OUTPUT_PATH;
     case HTTPCALLS:
       return HTTPCALLS_PATH;
+    case LANGCHAIN:
+      return LANGCHAIN_PATH;
     case GITCALLS:
       return GITCALLS_PATH;
     case PROPERTYSETTER:
