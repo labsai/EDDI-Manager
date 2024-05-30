@@ -1624,6 +1624,9 @@ function postNewConfig(type, name, description, data) {
             case EddiTypes_1.HTTPCALLS:
               configPath = EddiTypes_1.HTTPCALLS_PATH;
               break;
+            case EddiTypes_1.LANGCHAIN:
+              configPath = EddiTypes_1.LANGCHAIN_PATH;
+              break;
             default:
               console.error('Could not create new config of type: ' + type);
           }

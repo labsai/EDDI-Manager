@@ -113,6 +113,7 @@ const PluginSelectComponent = ({ page }: IProps) => {
       pageEnum.behavior,
       pageEnum.output,
       pageEnum.httpCalls,
+      pageEnum.langchain,
       pageEnum.gitCalls,
       pageEnum.property,
     ].includes(page);
