@@ -2,6 +2,7 @@ import {
   BEHAVIOR,
   BOT,
   HTTPCALLS,
+  LANGCHAIN,
   OUTPUT,
   PACKAGE,
   PROPERTYSETTER,
@@ -88,6 +89,31 @@ export const HTTPCALLS_POST_EXAMPLE: string = `{
         "method": "get",
         "contentType": "",
         "body": ""
+      }
+    }
+  ]
+}`;
+
+export const LANGCHAIN_POST_EXAMPLE: string = `{
+  "tasks": [
+    {
+      "actions": ["send_message"],
+      "id": "enhancedOpenAIQuery",
+      "type": "openai",
+      "description": "Generates text responses using OpenAI's GPT-4o model, tailored with specific response characteristics.",
+      "parameters": {
+        "apiKey": "your-openai-api-key",
+        "modelName": "gpt-4o",
+        "temperature": "0.7",
+        "timeout": "15000",
+        "logRequests": "true",
+        "logResponses": "true",
+        "systemMessage": "",
+        "sendConversation": "true",
+        "includeFirstBotMessage": "true",
+        "logSizeLimit": "-1",
+        "convertToObject": "false",
+        "addToOutput": "true"
       }
     }
   ]
@@ -193,6 +219,8 @@ export function getPostExample(eddiType: string) {
       return OUTPUT_POST_EXAMPLE;
     case HTTPCALLS:
       return HTTPCALLS_POST_EXAMPLE;
+    case LANGCHAIN:
+      return LANGCHAIN_POST_EXAMPLE;
     case PROPERTYSETTER:
       return PROPERTYSETTER_POST_EXAMPLE;
     case BOT:

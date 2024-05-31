@@ -1057,6 +1057,7 @@ export interface IConversation {
   environment: string;
   lastModifiedOn: number;
   viewState: string;
+  userId: string;
   deleted: boolean;
   data?: IConversationData;
 }
@@ -1204,7 +1205,7 @@ interface IExampleBotsResponseData {
 export async function deployExampleBots(): Promise<IBot[]> {
   try {
     const response = await axios.post(
-      `${await getAPIUrl()}/backup/import/examples`,
+      `${await getAPIUrl()}/backup/import/initialBots`,
     );
     const exampleBots: IExampleBotsResponseData[] = response.data;
     return exampleBots.map((bot) => {

@@ -125,6 +125,8 @@ export function getTypeFromResource(resource: string): string {
     return OUTPUT;
   } else if (resource?.includes(HTTPCALLS_PATH)) {
     return HTTPCALLS;
+  } else if (resource?.includes(LANGCHAIN_PATH)) {
+    return LANGCHAIN;
   } else if (resource?.includes(GITCALLS_PATH)) {
     return GITCALLS;
   } else if (resource?.includes(PROPERTYSETTER_PATH)) {

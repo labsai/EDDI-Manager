@@ -68,32 +68,27 @@ const ConversationReducer: IConversationReducer = (
       });
 
     case FETCH_CONVERSATIONS_SUCCESS:
+      const successAction = action as IFetchConversationsSuccessAction;
+      const hasFilterText = !!successAction.filter?.length;
       const lastIndex =
-        (action as IFetchConversationsSuccessAction).limit >
-        (action as IFetchConversationsSuccessAction).conversations.length;
+        successAction.limit > successAction.conversations.length;
       let conversationsLoaded;
-      if ((action as IFetchConversationsSuccessAction).index === 0) {
-        conversationsLoaded = (action as IFetchConversationsSuccessAction)
-          .conversations.length;
+      if (successAction.index === 0) {
+        conversationsLoaded = successAction.conversations.length;
       } else {
         conversationsLoaded =
-          state.conversationsLoaded +
-          (action as IFetchConversationsSuccessAction).conversations.length;
+          state.conversationsLoaded + successAction.conversations.length;
       }
       return update(state, {
         conversations: {
           $apply: (conversations: IConversation[]) => {
-            if (
-              !_.isEmpty(
-                (action as IFetchConversationsSuccessAction).conversations,
-              )
-            ) {
-              return _.uniqBy(
-                (
-                  action as IFetchConversationsSuccessAction
-                ).conversations.concat(conversations),
-                (conversation) => conversation.resource,
-              );
+            if (!_.isEmpty(successAction.conversations)) {
+              return hasFilterText
+                ? successAction.conversations
+                : _.uniqBy(
+                    successAction.conversations.concat(conversations),
+                    (conversation) => conversation.resource,
+                  );
             } else {
               return conversations;
             }

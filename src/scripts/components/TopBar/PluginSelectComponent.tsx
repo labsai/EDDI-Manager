@@ -87,6 +87,7 @@ const pluginResourceOptions = [
   'Behavior rules',
   'Output sets',
   'HTTP calls',
+  'Langchain',
   'Git calls',
   'Properties',
 ];

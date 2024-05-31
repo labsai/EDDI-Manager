@@ -2,11 +2,10 @@ import CloseIcon from '@material-ui/icons/Close';
 import FindInPageIcon from '@material-ui/icons/FindInPage';
 import clsx from 'clsx';
 import * as _ from 'lodash';
+import { Button } from '@material-ui/core';
 import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import ClipLoader from 'react-spinners/ClipLoader';
 import { isModalOpenSelector } from '../../../scripts/selectors/ModalSelectors';
-import { BLUE_COLOR } from '../../../styles/DefaultStylingProperties';
 import {
   closeChatAction,
   replyInChatAction,
@@ -31,6 +30,8 @@ import ChatOutputs from './ChatOutputs/ChatOutputs';
 import ChatQuickReplies from './ChatQuickReplies/ChatQuickReplies';
 import Delayed from './Delay/Delay';
 import getIdsFromPath from '../utils/helpers/getIdsFromPath';
+
+const loadingIndicator = require('../../../public/images/loading-indicator.svg');
 
 const Chat = () => {
   const context = useSelector(getChatContext);
@@ -131,7 +132,7 @@ const Chat = () => {
       </div>
       {isLoading && (
         <div className={classes.loader}>
-          <ClipLoader color={BLUE_COLOR} />
+          <img src={loadingIndicator} className={classes.loadingIndicator} />
         </div>
       )}
       {error && <div className={classes.error}>{error}</div>}
@@ -155,6 +156,21 @@ const Chat = () => {
             const noQuickReplies =
               _.isEmpty(quickReplies) || _.isUndefined(quickReplies);
 
+            if (i === data.length - 1 && d.conversationState === 'ENDED') {
+              return (
+                <div>
+                  <p className={classes.outputText}>Conversation Ended</p>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="primary"
+                    className={classes.quickRepliesButton}
+                    onClick={startNewConversation}>
+                    Restart
+                  </Button>
+                </div>
+              );
+            }
             return outputs || input || userReply ? (
               <div className={classes.step} key={d.conversationId + i}>
                 <ChatOutputs outputs={outputs} />
