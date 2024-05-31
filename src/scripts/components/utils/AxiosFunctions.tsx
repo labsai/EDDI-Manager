@@ -1057,6 +1057,7 @@ export interface IConversation {
   environment: string;
   lastModifiedOn: number;
   viewState: string;
+  userId: string;
   deleted: boolean;
   data?: IConversationData;
 }
