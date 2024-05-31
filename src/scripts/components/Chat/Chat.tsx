@@ -2,6 +2,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import FindInPageIcon from '@material-ui/icons/FindInPage';
 import clsx from 'clsx';
 import * as _ from 'lodash';
+import { Button } from '@material-ui/core';
 import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { isModalOpenSelector } from '../../../scripts/selectors/ModalSelectors';
@@ -155,6 +156,21 @@ const Chat = () => {
             const noQuickReplies =
               _.isEmpty(quickReplies) || _.isUndefined(quickReplies);
 
+            if (i === data.length - 1 && d.conversationState === 'ENDED') {
+              return (
+                <div>
+                  <p className={classes.outputText}>Conversation Ended</p>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="primary"
+                    className={classes.quickRepliesButton}
+                    onClick={startNewConversation}>
+                    Restart
+                  </Button>
+                </div>
+              );
+            }
             return outputs || input || userReply ? (
               <div className={classes.step} key={d.conversationId + i}>
                 <ChatOutputs outputs={outputs} />

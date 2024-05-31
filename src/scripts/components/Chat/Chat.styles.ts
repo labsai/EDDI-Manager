@@ -3,6 +3,7 @@ import {
   BLACK_COLOR,
   BLUE_COLOR,
   GREY_COLOR,
+  LIGHT_BLUE_COLOR3,
   WHITE_COLOR,
 } from '../../../styles/DefaultStylingProperties';
 
@@ -77,6 +78,35 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
+  },
+  quickRepliesButton: {
+    marginRight: '10px',
+    borderRadius: '15px!important',
+    backgroundColor: `${BLUE_COLOR}!important`,
+    color: WHITE_COLOR,
+    transition: 'none',
+    fontSize: '1rem',
+    padding: '4px 10px',
+    marginTop: '2px',
+    marginLeft: '10px',
+
+    '&:hover': {
+      backgroundColor: 'transparent!important',
+      border: `2px solid ${BLUE_COLOR}!important`,
+      color: `${BLUE_COLOR}!important`,
+      padding: '2px 8px!important',
+      transition: 'none',
+    },
+  },
+  outputText: {
+    color: WHITE_COLOR,
+    padding: '5px 10px',
+    margin: 0,
+    backgroundColor: LIGHT_BLUE_COLOR3,
+    borderRadius: '15px',
+    overflow: 'hidden',
+    marginBottom: '5px',
+    float: 'left',
   },
 });
 
