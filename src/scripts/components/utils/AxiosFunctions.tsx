@@ -1204,7 +1204,7 @@ interface IExampleBotsResponseData {
 export async function deployExampleBots(): Promise<IBot[]> {
   try {
     const response = await axios.post(
-      `${await getAPIUrl()}/backup/import/examples`,
+      `${await getAPIUrl()}/backup/import/initialBots`,
     );
     const exampleBots: IExampleBotsResponseData[] = response.data;
     return exampleBots.map((bot) => {
