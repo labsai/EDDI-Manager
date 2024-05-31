@@ -45,25 +45,6 @@ const ConversationList = ({
     }
   }, [isLoading]);
 
-  const filterConversations = () => {
-    if (!_.isEmpty(filterText)) {
-      return conversations.filter(
-        (conversation) =>
-          conversation.botName
-            .toLowerCase()
-            .includes(filterText.toLowerCase()) ||
-          conversation.resource
-            .toLowerCase()
-            .includes(filterText.toLowerCase()) ||
-          conversation.botResource
-            .toLowerCase()
-            .includes(filterText.toLowerCase()),
-      );
-    } else {
-      return conversations;
-    }
-  };
-
   React.useEffect(() => {
     const interval = setInterval(() => {
       eddiApiActionDispatchers.fetchConversationsAction(
@@ -113,7 +94,6 @@ const ConversationList = ({
     }
   };
 
-  const conversationList = filterConversations();
   return (
     <div>
       <div className={classes.title}>
@@ -135,7 +115,7 @@ const ConversationList = ({
       )}
       {!error && !_.isEmpty(conversations) && (
         <div className={classes.packageList}>
-          {_.isEmpty(conversationList) && (
+          {_.isEmpty(conversations) && (
             <p>{`Found no conversations matching: "${filterText}"`}</p>
           )}
           <InfiniteScroll
@@ -147,7 +127,7 @@ const ConversationList = ({
                 Loading ...
               </div>
             }>
-            {conversationList.map((conversation) => (
+            {conversations.map((conversation) => (
               <Conversation
                 key={conversation.resource}
                 conversation={conversation}
