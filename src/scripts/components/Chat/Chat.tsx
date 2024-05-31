@@ -4,9 +4,7 @@ import clsx from 'clsx';
 import * as _ from 'lodash';
 import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import ClipLoader from 'react-spinners/ClipLoader';
 import { isModalOpenSelector } from '../../../scripts/selectors/ModalSelectors';
-import { BLUE_COLOR } from '../../../styles/DefaultStylingProperties';
 import {
   closeChatAction,
   replyInChatAction,
@@ -31,6 +29,8 @@ import ChatOutputs from './ChatOutputs/ChatOutputs';
 import ChatQuickReplies from './ChatQuickReplies/ChatQuickReplies';
 import Delayed from './Delay/Delay';
 import getIdsFromPath from '../utils/helpers/getIdsFromPath';
+
+const loadingIndicator = require('../../../public/images/loading-indicator.svg');
 
 const Chat = () => {
   const context = useSelector(getChatContext);
@@ -131,7 +131,7 @@ const Chat = () => {
       </div>
       {isLoading && (
         <div className={classes.loader}>
-          <ClipLoader color={BLUE_COLOR} />
+          <img src={loadingIndicator} className={classes.loadingIndicator} />
         </div>
       )}
       {error && <div className={classes.error}>{error}</div>}

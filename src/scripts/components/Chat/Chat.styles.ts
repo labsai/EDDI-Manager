@@ -42,10 +42,13 @@ const useStyles = makeStyles({
   loader: {
     position: 'absolute',
     margin: 'auto',
-    top: '50vh',
-    left: '50%',
+    top: 'calc(50vh - 20px)',
+    left: 'calc(50% - 20px)',
     right: '50%',
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  loadingIndicator: {
+    width: 40,
+    height: 40,
   },
   error: {
     display: 'flex',
