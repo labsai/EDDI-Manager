@@ -9,8 +9,6 @@ const getIdsFromPath = () => {
     ? location.pathname.split('/')?.[3]
     : urlSearchParams.get('packageId');
 
-  console.log('botId: ', botId);
-  console.log('packageId: ', packageId);
   return { botId, packageId };
 };
 

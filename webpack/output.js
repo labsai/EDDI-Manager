@@ -1,6 +1,7 @@
-import * as path from 'path';
+const path = require('path');
 
-export const output = {
+module.exports = {
   path: path.join(process.cwd(), 'dist'),
   filename: 'scripts/[name].[fullhash].js',
 };
+

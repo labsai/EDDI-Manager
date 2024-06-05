@@ -1,14 +1,10 @@
-import * as path from 'path';
+const path = require('path');
 
-export const devServer = {
-  contentBase: path.join(process.cwd(), 'dist'),
-  clientLogLevel: 'info',
+module.exports = {
+  static: {
+    directory: path.join(process.cwd(), 'dist')
+  },
   port: process.env.PORT,
-  inline: true,
   hot: true,
   historyApiFallback: true,
-  watchOptions: {
-    aggregateTimeout: 300,
-    poll: 500,
-  },
 };

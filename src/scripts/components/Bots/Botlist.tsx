@@ -42,6 +42,7 @@ const BotList = ({
   const asyncSetApiUrl = async () => {
     const apiUrl = await getAPIUrl();
     setApiUrl(apiUrl);
+    console.log('apiUrl: ', apiUrl);
   };
 
   const loadMore = () => {

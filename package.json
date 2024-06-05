@@ -6,7 +6,7 @@
   "scripts": {
     "server": "node server.js --path ./dist --port 3000 --env \"{\\\"EDDI_API_URL\\\":\\\"$EDDI_API_URL\\\", \\\"AUTH_METHOD\\\":\\\"$AUTH_METHOD\\\", \\\"AUTH_REALM\\\":\\\"$AUTH_REALM\\\", \\\"AUTH_URL\\\":\\\"$AUTH_URL\\\", \\\"AUTH_CLIENT_ID\\\":\\\"$AUTH_CLIENT_ID\\\", \\\"READ_ONLY_DOMAIN\\\":\\\"$READ_ONLY_DOMAIN\\\"}\"",
     "autoformat": "prettier --write '**/*.{ts,tsx,js,jsx,json,css,scss}'",
-    "start": "cross-env-shell PORT=1338 NODE_ENV=local \"(echo $PORT && webpack serve --mode development --open)\"",
+    "start": "cross-env-shell PORT=1338 NODE_ENV=local \"(echo $PORT && webpack serve --mode development)\"",
     "open-browser": "wait-on --timeout 8000 tcp:$PORT && open-url localhost:$PORT",
     "clean": "rimraf \"src/**/*.+(js|js.map)\" \"tests/unit/tests/**/*.+(js|js.map)\" \"compiled\" \"dist\"",
     "clean-coverage": "rimraf \".nyc_output\" \"coverage\"",
@@ -124,8 +124,8 @@
     "url-loader": "^4.1.1",
     "wait-on": "7.2.0",
     "webpack": "^5.39.1",
-    "webpack-cli": "^4.7.0",
-    "webpack-dev-server": "^3.11.2"
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4"
   },
   "dependencies": {
     "@babel/core": "^7.24.7",

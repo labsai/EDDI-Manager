@@ -158,7 +158,7 @@ const App = ({
             )}
             {authenticated && (
               <Routes>
-                <Route path={`${MANAGE}/*`} element={<Dashboard />} />
+                <Route path={MANAGE} element={<Dashboard />} />
                 <Route path={PACKAGES} element={<PackagePage />} />
                 <Route path={CONVERSATIONS} element={<ConversationsPage />} />
                 <Route path={RESOURCES} element={<ExtensionsPage />} />

@@ -16,7 +16,9 @@ const HomeButton = (props: IProps) => {
   return (
     <div className={classes.navigationBar}>
       <div
-        onClick={() => navigate(`${MANAGE}/${props.extraPath || ''}`)}
+        onClick={() =>
+          navigate(`${MANAGE}${props.extraPath ? `/${props.extraPath}` : ''}`)
+        }
         className={classes.homeButton}>
         <div className={classes.homeArrow}> </div>
         <div className={classes.homeSquare}> </div>

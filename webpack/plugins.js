@@ -6,7 +6,7 @@ const _ = require('lodash');
 
 const isBuild = process.env.npm_lifecycle_event === 'build';
 
-export const isVendorModule = (module) => {
+const isVendorModule = (module) => {
   // returns true for everything in node_modules
   return module.context && module.context.indexOf('node_modules') !== -1;
 };
@@ -17,7 +17,7 @@ const defaultEnvironment = require(`../environments/${ENV}.json`);
 
 const appVersion = require('../package.json').version;
 
-export function getPlugins() {
+function getPlugins() {
   let plugins = [
 
     new webpack.ProgressPlugin(),
@@ -53,3 +53,5 @@ export function getPlugins() {
 
   return plugins;
 }
+
+module.exports = { isVendorModule, getPlugins }

@@ -1,9 +1,9 @@
-import { output } from './webpack/output';
-import { module } from './webpack/module';
+const path = require('path');
+import output from './webpack/output';
+import module from './webpack/module';
 import { getPlugins } from './webpack/plugins';
-import { resolve } from './webpack/resolve';
-import { devServer } from './webpack/dev-server';
-import * as path from 'path';
+import resolve from './webpack/resolve';
+import devServer from './webpack/dev-server';
 
 const config = {
   context: path.join(process.cwd(), 'src'),

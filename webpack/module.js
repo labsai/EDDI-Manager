@@ -1,4 +1,4 @@
-export const module = {
+module.exports = {
   rules: [
     {
       test: /\.(ts|js)x?$/,

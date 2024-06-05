@@ -1,6 +1,6 @@
-import * as path from 'path';
+const path = require('path');
 
-export const resolve = {
+module.exports = {
   alias: {
     'images': 'public/images',
   },
