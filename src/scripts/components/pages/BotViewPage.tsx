@@ -10,9 +10,7 @@ function getVersion(search: string) {
 
 const BotViewPage = () => {
   const params = useParams();
-  console.log('params: ', params);
   const { search } = useLocation();
-  console.log('search: ', search);
   return (
     <div>
       <BotInfo botId={params.id} botVersion={getVersion(search)} />

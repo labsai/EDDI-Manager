@@ -9,7 +9,7 @@ export const module = {
       enforce: 'pre',
       test: /\.js$/,
       loader: 'source-map-loader',
-      exclude: [],
+      exclude: /node_modules/,
     },
     {
       test: /\.(sc|c)ss$/,
