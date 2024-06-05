@@ -122,8 +122,9 @@ import {
   UPDATE_EXTENSIONS_ORDER_SUCCESS,
   UPDATE_EXTENSIONS_ORDER_FAILED,
 } from './EddiApiActionTypes';
+import { AnyAction } from 'redux-saga';
 
-export interface IFetchBotsAction extends Action {
+export interface IFetchBotsAction extends AnyAction {
   limit: number;
   index: number;
 }
@@ -139,7 +140,7 @@ export function fetchBotsAction(
   };
 }
 
-export interface IFetchBotsSuccessAction extends Action {
+export interface IFetchBotsSuccessAction extends AnyAction {
   bots: IBot[];
   limit: number;
   index: number;
@@ -158,7 +159,7 @@ export function fetchBotsSuccessAction(
   };
 }
 
-export interface IFetchBotsFailedAction extends Action {
+export interface IFetchBotsFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -169,7 +170,7 @@ export function fetchBotsFailedAction(error: Error): IFetchBotsFailedAction {
   };
 }
 
-export interface IFetchBotAction extends Action {
+export interface IFetchBotAction extends AnyAction {
   botId: string;
 }
 
@@ -180,7 +181,7 @@ export function fetchBotAction(botId: string): IFetchBotAction {
   };
 }
 
-export interface IFetchCurrentBotAction extends Action {
+export interface IFetchCurrentBotAction extends AnyAction {
   botId: string;
 }
 
@@ -191,7 +192,7 @@ export function fetchCurrentBotAction(botId: string): IFetchCurrentBotAction {
   };
 }
 
-export interface IFetchBotSuccessAction extends Action {
+export interface IFetchBotSuccessAction extends AnyAction {
   bot: IBot;
 }
 
@@ -202,7 +203,7 @@ export function fetchBotSuccessAction(bot: IBot): IFetchBotSuccessAction {
   };
 }
 
-export interface IFetchBotFailedAction extends Action {
+export interface IFetchBotFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -213,7 +214,7 @@ export function fetchBotFailedAction(error: Error): IFetchBotFailedAction {
   };
 }
 
-export interface IFetchBotDataAction extends Action {
+export interface IFetchBotDataAction extends AnyAction {
   botResource: string;
 }
 
@@ -224,7 +225,7 @@ export function fetchBotDataAction(botResource: string): IFetchBotDataAction {
   };
 }
 
-export interface IFetchBotDataSuccessAction extends Action {
+export interface IFetchBotDataSuccessAction extends AnyAction {
   botData: IBotData;
   botResource: string;
 }
@@ -240,7 +241,7 @@ export function fetchBotDataSuccessAction(
   };
 }
 
-export interface IFetchBotDataFailedAction extends Action {
+export interface IFetchBotDataFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -253,7 +254,7 @@ export function fetchBotDataFailedAction(
   };
 }
 
-export interface IFetchPackagesAction extends Action {
+export interface IFetchPackagesAction extends AnyAction {
   limit: number;
   index: number;
 }
@@ -269,7 +270,7 @@ export function fetchPackagesAction(
   };
 }
 
-export interface IFetchPackagesSuccessAction extends Action {
+export interface IFetchPackagesSuccessAction extends AnyAction {
   packages: IPackage[];
   limit: number;
   index: number;
@@ -288,7 +289,7 @@ export function fetchPackagesSuccessAction(
   };
 }
 
-export interface IFetchPackagesFailedAction extends Action {
+export interface IFetchPackagesFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -301,7 +302,7 @@ export function fetchPackagesFailedAction(
   };
 }
 
-export interface IFetchPackageAction extends Action {
+export interface IFetchPackageAction extends AnyAction {
   packageResource: string;
 }
 
@@ -314,7 +315,7 @@ export function fetchPackageAction(
   };
 }
 
-export interface IFetchPackageSuccessAction extends Action {
+export interface IFetchPackageSuccessAction extends AnyAction {
   package: IPackage;
 }
 
@@ -327,7 +328,7 @@ export function fetchPackageSuccessAction(
   };
 }
 
-export interface IFetchPackageFailedAction extends Action {
+export interface IFetchPackageFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -340,7 +341,7 @@ export function fetchPackageFailedAction(
   };
 }
 
-export interface IFetchCurrentPackageAction extends Action {
+export interface IFetchCurrentPackageAction extends AnyAction {
   packageId: string;
 }
 
@@ -353,7 +354,7 @@ export function fetchCurrentPackageAction(
   };
 }
 
-export interface IFetchDefaultPluginTypesAction extends Action {}
+export interface IFetchDefaultPluginTypesAction extends AnyAction {}
 
 export function fetchDefaultPluginTypesAction(): IFetchDefaultPluginTypesAction {
   return {
@@ -361,7 +362,7 @@ export function fetchDefaultPluginTypesAction(): IFetchDefaultPluginTypesAction 
   };
 }
 
-export interface IFetchDefaultPluginTypesSuccessAction extends Action {
+export interface IFetchDefaultPluginTypesSuccessAction extends AnyAction {
   defaultPluginTypes: IDefaultPluginTypes[];
 }
 
@@ -374,7 +375,7 @@ export function fetchDefaultPluginTypesSuccessAction(
   };
 }
 
-export interface IFetchDefaultPluginTypesFailedAction extends Action {
+export interface IFetchDefaultPluginTypesFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -387,7 +388,7 @@ export function fetchDefaultPluginTypesFailedAction(
   };
 }
 
-export interface IFetchPluginsAction extends Action {
+export interface IFetchPluginsAction extends AnyAction {
   pluginType: string;
   limit: number;
   index: number;
@@ -406,7 +407,7 @@ export function fetchPluginsAction(
   };
 }
 
-export interface IFetchPluginsSuccessAction extends Action {
+export interface IFetchPluginsSuccessAction extends AnyAction {
   plugins: IPlugin[];
   pluginType: string;
   limit: number;
@@ -428,7 +429,7 @@ export function fetchPluginsSuccessAction(
   };
 }
 
-export interface IFetchPluginsFailedAction extends Action {
+export interface IFetchPluginsFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -441,7 +442,7 @@ export function fetchPluginsFailedAction(
   };
 }
 
-export interface IFetchPluginAction extends Action {
+export interface IFetchPluginAction extends AnyAction {
   pluginResource: string;
 }
 
@@ -452,7 +453,7 @@ export function fetchPluginAction(pluginResource: string): IFetchPluginAction {
   };
 }
 
-export interface IFetchPluginSuccessAction extends Action {
+export interface IFetchPluginSuccessAction extends AnyAction {
   plugin: IPlugin;
 }
 
@@ -465,7 +466,7 @@ export function fetchPluginSuccessAction(
   };
 }
 
-export interface IFetchPluginFailedAction extends Action {
+export interface IFetchPluginFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -478,7 +479,7 @@ export function fetchPluginFailedAction(
   };
 }
 
-export interface IUpdateDescriptorAction extends Action {
+export interface IUpdateDescriptorAction extends AnyAction {
   resource: string;
   name: string;
   description: string;
@@ -497,7 +498,7 @@ export function updateDescriptorAction(
   };
 }
 
-export interface IUpdateDescriptorSuccessAction extends Action {
+export interface IUpdateDescriptorSuccessAction extends AnyAction {
   resource: string;
   name: string;
   description: string;
@@ -515,7 +516,7 @@ export function updateDescriptorSuccessAction(
   };
 }
 
-export interface IUpdateDescriptorFailedAction extends Action {
+export interface IUpdateDescriptorFailedAction extends AnyAction {
   error: Error;
 }
 export function updateDescriptorFailedAction(
@@ -527,7 +528,7 @@ export function updateDescriptorFailedAction(
   };
 }
 
-export interface IUpdateBotAction extends Action {
+export interface IUpdateBotAction extends AnyAction {
   bot: IBot;
   package: IPackage;
 }
@@ -539,7 +540,7 @@ export function updateBotAction(bot: IBot, pkg: IPackage): IUpdateBotAction {
     type: UPDATE_BOT,
   };
 }
-export interface IUpdateBotSuccessAction extends Action {
+export interface IUpdateBotSuccessAction extends AnyAction {
   bot: IBot;
 }
 export function updateBotSuccessAction(bot: IBot): IUpdateBotSuccessAction {
@@ -548,7 +549,7 @@ export function updateBotSuccessAction(bot: IBot): IUpdateBotSuccessAction {
     type: UPDATE_BOT_SUCCESS,
   };
 }
-export interface IUpdateBotFailedAction extends Action {
+export interface IUpdateBotFailedAction extends AnyAction {
   error: Error;
 }
 export function updateBotFailedAction(error: Error): IUpdateBotFailedAction {
@@ -558,7 +559,7 @@ export function updateBotFailedAction(error: Error): IUpdateBotFailedAction {
   };
 }
 
-export interface IUpdateBotPackagesAction extends Action {
+export interface IUpdateBotPackagesAction extends AnyAction {
   bot: IBot;
   packages: string[];
 }
@@ -574,7 +575,7 @@ export function updateBotPackagesAction(
   };
 }
 
-export interface IUpdateBotPackagesSuccessAction extends Action {
+export interface IUpdateBotPackagesSuccessAction extends AnyAction {
   bot: IBot;
 }
 export function updateBotPackagesSuccessAction(
@@ -586,12 +587,12 @@ export function updateBotPackagesSuccessAction(
   };
 }
 
-export interface IAddAvailableUpdateForPackageAction extends Action {
+export interface IAddAvailableUpdateForPackageAction extends AnyAction {
   packageResource: string;
   pluginResource: string;
 }
 
-export interface IUpdateBotPackagesFailedAction extends Action {
+export interface IUpdateBotPackagesFailedAction extends AnyAction {
   error: Error;
 }
 export function updateBotPackagesFailedAction(
@@ -603,7 +604,7 @@ export function updateBotPackagesFailedAction(
   };
 }
 
-export interface IUpdatePackageAction extends Action {
+export interface IUpdatePackageAction extends AnyAction {
   package: IPackage;
   plugin: IPlugin;
 }
@@ -619,7 +620,7 @@ export function updatePackageAction(
   };
 }
 
-export interface IUpdateExtensionsOrderAction extends Action {
+export interface IUpdateExtensionsOrderAction extends AnyAction {
   package: IPackage;
   packageExtensions: IPlugins;
 }
@@ -634,7 +635,7 @@ export function updateExtensionsOrderAction(
     type: UPDATE_EXTENSIONS_ORDER,
   };
 }
-export interface IUpdatePackageSuccessAction extends Action {
+export interface IUpdatePackageSuccessAction extends AnyAction {
   package: IPackage;
   noModal: boolean;
 }
@@ -648,7 +649,7 @@ export function updatePackageSuccessAction(
     type: UPDATE_PACKAGE_SUCCESS,
   };
 }
-export interface IUpdatePackageFailedAction extends Action {
+export interface IUpdatePackageFailedAction extends AnyAction {
   error: Error;
 }
 export function updatePackageFailedAction(
@@ -659,7 +660,7 @@ export function updatePackageFailedAction(
     type: UPDATE_PACKAGE_FAILED,
   };
 }
-export interface IUpdateExtensionsOrderSuccessAction extends Action {
+export interface IUpdateExtensionsOrderSuccessAction extends AnyAction {
   package: IPackage;
 }
 export function updateExtensionsOrderSuccessAction(
@@ -670,7 +671,7 @@ export function updateExtensionsOrderSuccessAction(
     type: UPDATE_EXTENSIONS_ORDER_SUCCESS,
   };
 }
-export interface IUpdateExtensionsOrderFailedAction extends Action {
+export interface IUpdateExtensionsOrderFailedAction extends AnyAction {
   error: Error;
 }
 export function updateExtensionsOrderFailedAction(
@@ -692,7 +693,7 @@ export function addAvailableUpdateForPackageAction(
   };
 }
 
-export interface IFetchPackageDataAction extends Action {
+export interface IFetchPackageDataAction extends AnyAction {
   packageResource: string;
 }
 
@@ -705,7 +706,7 @@ export function fetchPackageDataAction(
   };
 }
 
-export interface IFetchPackageDataSuccessAction extends Action {
+export interface IFetchPackageDataSuccessAction extends AnyAction {
   packageData: IPlugins;
   packageResource: string;
 }
@@ -721,7 +722,7 @@ export function fetchPackageDataSuccessAction(
   };
 }
 
-export interface IFetchPackageDataFailedAction extends Action {
+export interface IFetchPackageDataFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -734,7 +735,7 @@ export function fetchPackageDataFailedAction(
   };
 }
 
-export interface IFetchBotsUsingPackageAction extends Action {
+export interface IFetchBotsUsingPackageAction extends AnyAction {
   packageResource: string;
   anyVersion: boolean;
 }
@@ -750,7 +751,7 @@ export function fetchBotsUsingPackageAction(
   };
 }
 
-export interface IFetchBotsUsingPackageSuccessAction extends Action {
+export interface IFetchBotsUsingPackageSuccessAction extends AnyAction {
   packageResource: string;
   anyVersion: boolean;
   bots: IBot[];
@@ -769,7 +770,7 @@ export function fetchBotsUsingPackageSuccessAction(
   };
 }
 
-export interface IFetchBotsUsingPackageFailedAction extends Action {
+export interface IFetchBotsUsingPackageFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -782,7 +783,7 @@ export function fetchBotsUsingPackageFailedAction(
   };
 }
 
-export interface IFetchPackagesUsingPluginAction extends Action {
+export interface IFetchPackagesUsingPluginAction extends AnyAction {
   pluginResource: string;
   anyVersion: boolean;
 }
@@ -798,7 +799,7 @@ export function fetchPackagesUsingPluginAction(
   };
 }
 
-export interface IFetchPackagesUsingPluginSuccessAction extends Action {
+export interface IFetchPackagesUsingPluginSuccessAction extends AnyAction {
   pluginResource: string;
   anyVersion: boolean;
   packages: IPackage[];
@@ -817,7 +818,7 @@ export function fetchPackagesUsingPluginSuccessAction(
   };
 }
 
-export interface IFetchPackagesUsingPluginFailedAction extends Action {
+export interface IFetchPackagesUsingPluginFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -830,7 +831,7 @@ export function fetchPackagesUsingPluginFailedAction(
   };
 }
 
-export interface IUpdateJsonDataAction extends Action {
+export interface IUpdateJsonDataAction extends AnyAction {
   resource: string;
   data: any;
 }
@@ -846,7 +847,7 @@ export function updateJsonDataAction(
   };
 }
 
-export interface IMassUpdateJsonDataAction extends Action {
+export interface IMassUpdateJsonDataAction extends AnyAction {
   plugins: { resource: string; data: any }[];
   deploy: boolean;
   openedResource?: string;
@@ -864,7 +865,7 @@ export function massUpdateJsonDataAction(
   };
 }
 
-export interface IUpdateJsonDataFailedAction extends Action {
+export interface IUpdateJsonDataFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -877,12 +878,12 @@ export function updateJsonDataFailedAction(
   };
 }
 
-export interface IUpdateJsonDataSuccessAction extends Action {
+export interface IUpdateJsonDataSuccessAction extends AnyAction {
   resource: string;
   data: string;
 }
 
-export interface IUpdatePluginSuccessAction extends Action {
+export interface IUpdatePluginSuccessAction extends AnyAction {
   plugin: IPlugin;
   noModal: boolean;
 }
@@ -898,7 +899,7 @@ export function updatePluginSuccessAction(
   };
 }
 
-export interface ICreateNewConfigAction extends Action {
+export interface ICreateNewConfigAction extends AnyAction {
   eddiType: string;
   name: string;
   description: string;
@@ -920,7 +921,7 @@ export function createNewConfigAction(
   };
 }
 
-export interface ICreateNewConfigFailedAction extends Action {
+export interface ICreateNewConfigFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -933,7 +934,7 @@ export function createNewConfigFailedAction(
   };
 }
 
-export interface ICreateNewBotAction extends Action {
+export interface ICreateNewBotAction extends AnyAction {
   // todo : Remake this action so no api calls have to be called before this is action runs.
   botId: string;
 }
@@ -945,7 +946,7 @@ export function createNewBotAction(botId: string): ICreateNewBotAction {
   };
 }
 
-export interface ICreateNewBotSuccessAction extends Action {
+export interface ICreateNewBotSuccessAction extends AnyAction {
   bot: IBot;
 }
 
@@ -958,7 +959,7 @@ export function createNewBotSuccessAction(
   };
 }
 
-export interface ICreateNewBotFailedAction extends Action {
+export interface ICreateNewBotFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -971,7 +972,7 @@ export function createNewBotFailedAction(
   };
 }
 
-export interface ICreateNewPackageAction extends Action {
+export interface ICreateNewPackageAction extends AnyAction {
   // todo : Remake this action so no api calls have to be called before this is action runs.
   packageId: string;
 }
@@ -985,7 +986,7 @@ export function createNewPackageAction(
   };
 }
 
-export interface ICreateNewPackageSuccessAction extends Action {
+export interface ICreateNewPackageSuccessAction extends AnyAction {
   pkg: IPackage;
 }
 
@@ -998,7 +999,7 @@ export function createNewPackageSuccessAction(
   };
 }
 
-export interface ICreateNewPackageFailedAction extends Action {
+export interface ICreateNewPackageFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1011,7 +1012,7 @@ export function createNewPackageFailedAction(
   };
 }
 
-export interface ICreateNewPluginSuccessAction extends Action {
+export interface ICreateNewPluginSuccessAction extends AnyAction {
   plugin: IPlugin;
 }
 
@@ -1024,7 +1025,7 @@ export function createNewPluginSuccessAction(
   };
 }
 
-export interface IUpdatePackagesAction extends Action {
+export interface IUpdatePackagesAction extends AnyAction {
   pluginResource: string;
   packages: string[];
 }
@@ -1040,7 +1041,7 @@ export function updatePackagesAction(
   };
 }
 
-export interface IUpdatePackagesSuccessAction extends Action {
+export interface IUpdatePackagesSuccessAction extends AnyAction {
   packages: IPackage[];
   noModal: boolean;
 }
@@ -1056,7 +1057,7 @@ export function updatePackagesSuccessAction(
   };
 }
 
-export interface IUpdatePackagesFailedAction extends Action {
+export interface IUpdatePackagesFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1074,7 +1075,7 @@ interface IBotToUpdate {
   packageResources: string[];
 }
 
-export interface IUpdateBotsAction extends Action {
+export interface IUpdateBotsAction extends AnyAction {
   bots: IBotToUpdate[];
 }
 
@@ -1085,7 +1086,7 @@ export function updateBotsAction(bots: IBotToUpdate[]): IUpdateBotsAction {
   };
 }
 
-export interface IUpdateBotsSuccessAction extends Action {
+export interface IUpdateBotsSuccessAction extends AnyAction {
   bots: IBot[];
 }
 
@@ -1098,7 +1099,7 @@ export function updateBotsSuccessAction(
   };
 }
 
-export interface IUpdateBotsFailedAction extends Action {
+export interface IUpdateBotsFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1109,7 +1110,7 @@ export function updateBotsFailedAction(error: Error): IUpdateBotsFailedAction {
   };
 }
 
-export interface IDeployBotAction extends Action {
+export interface IDeployBotAction extends AnyAction {
   botResource: string;
 }
 
@@ -1120,7 +1121,7 @@ export function deployBotAction(botResource: string): IDeployBotAction {
   };
 }
 
-export interface IDeployBotSuccessAction extends Action {
+export interface IDeployBotSuccessAction extends AnyAction {
   botResource: string;
   conversationUrl: string;
 }
@@ -1136,7 +1137,7 @@ export function deployBotSuccessAction(
   };
 }
 
-export interface IDeployBotFailedAction extends Action {
+export interface IDeployBotFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1147,7 +1148,7 @@ export function deployBotFailedAction(error: Error): IDeployBotFailedAction {
   };
 }
 
-export interface IUndeployBotAction extends Action {
+export interface IUndeployBotAction extends AnyAction {
   botResource: string;
 }
 
@@ -1158,7 +1159,7 @@ export function undeployBotAction(botResource: string): IUndeployBotAction {
   };
 }
 
-export interface IUndeployBotSuccessAction extends Action {
+export interface IUndeployBotSuccessAction extends AnyAction {
   botResource: string;
 }
 
@@ -1171,7 +1172,7 @@ export function undeployBotSuccessAction(
   };
 }
 
-export interface IUndeployBotFailedAction extends Action {
+export interface IUndeployBotFailedAction extends AnyAction {
   error: Error;
   response: string;
 }
@@ -1187,7 +1188,7 @@ export function undeployBotFailedAction(
   };
 }
 
-export interface IFetchBotDeploymentStatusAction extends Action {
+export interface IFetchBotDeploymentStatusAction extends AnyAction {
   botResource: string;
 }
 
@@ -1200,7 +1201,7 @@ export function fetchBotDeploymentStatusAction(
   };
 }
 
-export interface IFetchBotDeploymentStatusSuccessAction extends Action {
+export interface IFetchBotDeploymentStatusSuccessAction extends AnyAction {
   botResource: string;
   status: string;
 }
@@ -1216,7 +1217,7 @@ export function fetchBotDeploymentStatusSuccessAction(
   };
 }
 
-export interface IFetchBotDeploymentStatusFailedAction extends Action {
+export interface IFetchBotDeploymentStatusFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1229,7 +1230,7 @@ export function fetchBotDeploymentStatusFailedAction(
   };
 }
 
-export interface IAddNewPackageToBotsAction extends Action {
+export interface IAddNewPackageToBotsAction extends AnyAction {
   packageResource: string;
   bots: IBot[];
 }
@@ -1245,7 +1246,7 @@ export function addNewPackageToBotsAction(
   };
 }
 
-export interface IAddNewPackageToBotsSuccessAction extends Action {
+export interface IAddNewPackageToBotsSuccessAction extends AnyAction {
   packageResource: string;
   bots: IBot[];
 }
@@ -1261,7 +1262,7 @@ export function addNewPackageToBotsSuccessAction(
   };
 }
 
-export interface IAddNewPackageToBotsFailedAction extends Action {
+export interface IAddNewPackageToBotsFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1274,7 +1275,7 @@ export function addNewPackageToBotsFailedAction(
   };
 }
 
-export interface IFetchJsonSchemaAction extends Action {
+export interface IFetchJsonSchemaAction extends AnyAction {
   eddiType: string;
 }
 
@@ -1287,7 +1288,7 @@ export function fetchJsonSchemaAction(
   };
 }
 
-export interface IFetchJsonSchemaFailedAction extends Action {
+export interface IFetchJsonSchemaFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1300,7 +1301,7 @@ export function fetchJsonSchemaFailedAction(
   };
 }
 
-export interface IFetchJsonSchemaSuccessAction extends Action {
+export interface IFetchJsonSchemaSuccessAction extends AnyAction {
   eddiType: string;
   schema: IEddiSchema;
 }
@@ -1338,7 +1339,7 @@ export function fetchPluginJsonSchemaSuccessAction(
   };
 }
 
-export interface IDuplicateAction extends Action {
+export interface IDuplicateAction extends AnyAction {
   resource: string;
   deepCopy: boolean;
 }
@@ -1354,7 +1355,7 @@ export function duplicateAction(
   };
 }
 
-export interface IDuplicateSuccessAction extends Action {
+export interface IDuplicateSuccessAction extends AnyAction {
   bot: IBot;
   packages: IPackage[];
   plugins: IPlugin[];
@@ -1373,7 +1374,7 @@ export function duplicateSuccessAction(
   };
 }
 
-export interface IDuplicateFailedAction extends Action {
+export interface IDuplicateFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1384,7 +1385,7 @@ export function duplicateFailedAction(error: Error): IDuplicateFailedAction {
   };
 }
 
-export interface IFetchConversationsAction extends Action {
+export interface IFetchConversationsAction extends AnyAction {
   limit: number;
   index: number;
   conversationId: string;
@@ -1409,7 +1410,7 @@ export function fetchConversationsAction(
   };
 }
 
-export interface IFetchConversationsSuccessAction extends Action {
+export interface IFetchConversationsSuccessAction extends AnyAction {
   limit: number;
   index: number;
   conversationId: string;
@@ -1437,7 +1438,7 @@ export function fetchConversationsSuccessAction(
   };
 }
 
-export interface IFetchConversationsFailedAction extends Action {
+export interface IFetchConversationsFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1450,7 +1451,7 @@ export function fetchConversationsFailedAction(
   };
 }
 
-export interface IFetchConversationAction extends Action {
+export interface IFetchConversationAction extends AnyAction {
   conversationId: string;
 }
 
@@ -1463,7 +1464,7 @@ export function fetchConversationAction(
   };
 }
 
-export interface IFetchConversationSuccessAction extends Action {
+export interface IFetchConversationSuccessAction extends AnyAction {
   conversationId: string;
   conversation: IConversationData;
 }
@@ -1479,7 +1480,7 @@ export function fetchConversationSuccessAction(
   };
 }
 
-export interface IFetchConversationFailedAction extends Action {
+export interface IFetchConversationFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1492,7 +1493,7 @@ export function fetchConversationFailedAction(
   };
 }
 
-export interface IEndConversationAction extends Action {
+export interface IEndConversationAction extends AnyAction {
   conversationId: string;
 }
 
@@ -1505,7 +1506,7 @@ export function endConversationAction(
   };
 }
 
-export interface IEndConversationSuccessAction extends Action {
+export interface IEndConversationSuccessAction extends AnyAction {
   conversationId: string;
 }
 
@@ -1518,7 +1519,7 @@ export function endConversationSuccessAction(
   };
 }
 
-export interface IEndConversationFailedAction extends Action {
+export interface IEndConversationFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1531,7 +1532,7 @@ export function endConversationFailedAction(
   };
 }
 
-export interface IDeployExampleBotsAction extends Action {}
+export interface IDeployExampleBotsAction extends AnyAction {}
 
 export function deployExampleBotsAction(): IDeployExampleBotsAction {
   return {
@@ -1539,7 +1540,7 @@ export function deployExampleBotsAction(): IDeployExampleBotsAction {
   };
 }
 
-export interface IDeployExampleBotsSuccessAction extends Action {
+export interface IDeployExampleBotsSuccessAction extends AnyAction {
   bots: IBot[];
 }
 
@@ -1552,7 +1553,7 @@ export function deployExampleBotsSuccessAction(
   };
 }
 
-export interface IDeployExampleBotsFailedAction extends Action {
+export interface IDeployExampleBotsFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1565,7 +1566,7 @@ export function deployExampleBotsFailedAction(
   };
 }
 
-export interface IFetchBotLogsAction extends Action {
+export interface IFetchBotLogsAction extends AnyAction {
   botId: string;
   botVersion: number;
   environment: string;
@@ -1584,7 +1585,7 @@ export function fetchBotLogsAction(
   };
 }
 
-export interface IFetchBotLogsSuccessAction extends Action {
+export interface IFetchBotLogsSuccessAction extends AnyAction {
   logs: IBotLogs[];
 }
 
@@ -1597,7 +1598,7 @@ export function fetchBotLogsSuccessAction(
   };
 }
 
-export interface IFetchBotLogsFailedAction extends Action {
+export interface IFetchBotLogsFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -1614,7 +1615,7 @@ export function resetBotLogs() {
   };
 }
 
-export interface IEditPluginDataAction extends Action {
+export interface IEditPluginDataAction extends AnyAction {
   pluginId: string;
   data: string;
   resource: string;

@@ -5,7 +5,7 @@ import * as React from 'react';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { useSelector } from 'react-redux';
 import modalActionDispatchers from '../../../scripts/actions/ModalActionDispatchers';
-import { historyPush } from '../../../scripts/history';
+import { useNavigate } from 'react-router';
 import {
   BLACK_COLOR,
   BLUE_COLOR,
@@ -89,8 +89,9 @@ interface IProps {
   setPlugins: (plugins: IPluginExtensions[]) => void;
 }
 
-const PluginList: React.StatelessComponent<IProps> = (props: IProps) => {
+const PluginList: React.FC<IProps> = (props: IProps) => {
   const classes = useStyles();
+  const navigate = useNavigate();
   const { isOpened: isChatOpened } = useSelector(isChatOpenedSelector);
 
   const openParallelConfigModal = (pluginResource?: string) => {
@@ -151,9 +152,10 @@ const PluginList: React.StatelessComponent<IProps> = (props: IProps) => {
                               botId={props.botId}
                               openParallelConfigModal={() => {
                                 openParallelConfigModal(plug.config.uri);
-                                historyPush(`${location.pathname}`, [
-                                  `packageId=${props.packageId}`,
-                                ]);
+                                navigate(
+                                  `${location.pathname}` +
+                                    `?packageId=${props.packageId}`,
+                                );
                               }}
                             />
                           </div>
@@ -189,9 +191,9 @@ const PluginList: React.StatelessComponent<IProps> = (props: IProps) => {
                 botId={props.botId}
                 openParallelConfigModal={() => {
                   openParallelConfigModal(plug.config.uri);
-                  historyPush(`${location.pathname}`, [
-                    `packageId=${props.packageId}`,
-                  ]);
+                  navigate(
+                    `${location.pathname}` + `?packageId=${props.packageId}`,
+                  );
                 }}
               />
             ))}

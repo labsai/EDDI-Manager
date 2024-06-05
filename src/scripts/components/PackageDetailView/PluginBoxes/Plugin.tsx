@@ -6,7 +6,7 @@ import { connect, useSelector } from 'react-redux';
 import { compose, pure, setDisplayName } from 'recompose';
 import eddiApiActionDispatchers from '../../../actions/EddiApiActionDispatchers';
 import ModalActionDispatchers from '../../../actions/ModalActionDispatchers';
-import { historyPush } from '../../../history';
+import { useNavigate } from 'react-router';
 import { IAppState } from '../../../reducers';
 import {
   getAllConversationSteps,
@@ -23,6 +23,7 @@ import PluginHelper from '../../utils/helpers/PluginHelper';
 import Parser from '../../utils/Parser';
 import { IOptions } from '../PackageView';
 import useStyles, { rjvStyles } from './Plugin.styles';
+import { createSearchParams } from 'react-router-dom';
 
 interface IPublicProps {
   pluginType: IOptions;
@@ -50,6 +51,7 @@ const Plugin = ({
   openParallelConfigModal,
 }: IPrivateProps) => {
   const classes = useStyles();
+  const navigate = useNavigate();
   React.useEffect(() => {
     if (pluginResource) {
       eddiApiActionDispatchers.fetchPluginAction(pluginResource);
@@ -156,15 +158,14 @@ const Plugin = ({
     if (!_.isEmpty(pluginResource)) {
       ModalActionDispatchers.showViewJsonModal(pluginResource);
 
-      const query = [];
-      if (botId && !isBotPage()) {
-        query.push(`botId=${botId}`);
-      }
-      if (packageId) {
-        query.push(`packageId=${packageId}`);
-      }
-      if (!_.isEmpty(query)) {
-        historyPush(location.pathname, query);
+      if ((botId && !isBotPage()) || packageId) {
+        navigate({
+          pathname: location.pathname,
+          search: createSearchParams({
+            botId: botId && !isBotPage() ? botId : undefined,
+            packageId,
+          }).toString(),
+        });
       }
     }
   };

@@ -15,7 +15,7 @@ import {
   LIGHT_BLUE_COLOR,
   LIGHT_GREY_COLOR2,
 } from '../../../styles/DefaultStylingProperties';
-import { historyPush } from '../../history';
+import { useNavigate } from 'react-router';
 import { pageEnum } from '../pages/pageEnum';
 
 const useStyles = makeStyles({
@@ -103,6 +103,7 @@ interface IOption {
 
 const PluginSelectComponent = ({ page }: IProps) => {
   const classes = useStyles();
+  const navigate = useNavigate();
   const [selectedOption, setSelectedOption] = React.useState<IOption>({
     label: 'Resources',
     value: -1,
@@ -144,7 +145,7 @@ const PluginSelectComponent = ({ page }: IProps) => {
         return;
       }
       setSelectedOption({ label: selectedOption, value });
-      historyPush(RESOURCES, [`type=${pageEnum[value]}`]);
+      navigate(RESOURCES + `?type=${pageEnum[value]}`);
     }
   };
 

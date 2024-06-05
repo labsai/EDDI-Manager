@@ -195,7 +195,6 @@ import getIdsFromPath, {
 } from '../components/utils/helpers/getIdsFromPath';
 import { parsePlugins } from '../components/utils/helpers/PluginParser';
 import Parser from '../components/utils/Parser';
-import { historyPush } from '../history';
 
 export function* FetchBots(action: IFetchBotsAction) {
   try {
@@ -744,18 +743,24 @@ export function* massUpdateJsonData(
             updatedPlugin?.resource || currentPackage.resource,
           ),
         );
-        yield call(historyPush, `${location.pathname}`, [
-          !isPackagePage() ? `packageId=${packageId}` : `botId=${botId}`,
-        ]);
+        yield call(
+          window.open,
+          `${location.pathname}?` + !isPackagePage()
+            ? `packageId=${packageId}`
+            : `botId=${botId}`,
+        );
       }
     } else {
       const currentPackage: IPackage = yield call(getCurrentPackage, packageId);
       yield put(
         showParallelConfigModal(currentPackage, currentPackage.resource),
       );
-      yield call(historyPush, `${location.pathname}`, [
-        !isPackagePage ? `packageId=${packageId}` : `botId=${botId}`,
-      ]);
+      yield call(
+        window.open,
+        `${location.pathname}?` + !isPackagePage
+          ? `packageId=${packageId}`
+          : `botId=${botId}`,
+      );
     }
     yield put(clearEditedPluginDataAction());
     yield put(hideLoader());

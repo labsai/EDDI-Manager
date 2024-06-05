@@ -8,7 +8,7 @@ import modalActionDispatchers from '../../../scripts/actions/ModalActionDispatch
 import { BLUE_COLOR } from '../../../styles/DefaultStylingProperties';
 import { openChatAction } from '../../actions/ChatActions';
 import eddiApiActionDispatchers from '../../actions/EddiApiActionDispatchers';
-import { historyPush } from '../../history';
+import { useNavigate } from 'react-router';
 import { readOnlySelector } from '../../selectors/AuthenticationSelectors';
 import Options from '../Assets/Buttons/BotOptions';
 import DeployButton from '../Assets/Buttons/DeployButton';
@@ -31,6 +31,7 @@ interface IPrivateProps extends IPublicProps {
 const warningIcon = require('../../../public/images/WarningIcon.png');
 
 const Bot = ({ bot, apiUrl, readOnly }: IPrivateProps) => {
+  const navigate = useNavigate();
   const classes = useStyles();
   React.useEffect(() => {
     if (_.isUndefined(bot.packages)) {
@@ -58,7 +59,7 @@ const Bot = ({ bot, apiUrl, readOnly }: IPrivateProps) => {
       <div className={classes.botBox}>
         <div
           className={classes.botHeader}
-          onClick={() => historyPush(`${BOT_VIEW.replace(':id', bot.id)}/`)}>
+          onClick={() => navigate(`${BOT_VIEW.replace(':id', bot.id)}/`)}>
           <div className={classes.link}>
             <div className={classes.botHeaderName}>{bot.name || bot.id}</div>
             <div className={classes.versionName}>
@@ -104,7 +105,7 @@ const Bot = ({ bot, apiUrl, readOnly }: IPrivateProps) => {
               disabled={bot.deploymentStatus !== READY}
               onClick={() => {
                 dispatch(openChatAction());
-                historyPush(location.pathname, [`botId=${bot.id}`]);
+                navigate(location.pathname + `?botId=${bot.id}`);
                 /* window
                   .open(`${apiUrl}/chat/unrestricted/${bot.id}`, '_blank')
                   .focus() */

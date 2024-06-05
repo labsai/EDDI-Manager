@@ -9,7 +9,7 @@ import { BOT_VIEW } from '../../constants/paths';
 import { BLUE_COLOR } from '../../../styles/DefaultStylingProperties';
 import eddiApiActionDispatchers from '../../actions/EddiApiActionDispatchers';
 import modalActionDispatchers from '../../actions/ModalActionDispatchers';
-import { historyPush } from '../../history';
+import { useNavigate } from 'react-router';
 import { readOnlySelector } from '../../selectors/AuthenticationSelectors';
 import { conversationSelector } from '../../selectors/ConversationSelectors';
 import WhiteButton from '../Assets/Buttons/WhiteButton';
@@ -44,6 +44,7 @@ const BotConversationView = ({
   conversationId,
   conversation: conversationProps,
 }: IPrivateProps) => {
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = React.useState<TabEnum>(
     TabEnum.conversationSteps,
   );
@@ -96,9 +97,9 @@ const BotConversationView = ({
               <div
                 className={classes.botName}
                 onClick={() =>
-                  historyPush(
-                    `${BOT_VIEW.replace(':id', conversation.botId)}/`,
-                    [`version=${conversation.botVersion}`],
+                  navigate(
+                    `${BOT_VIEW.replace(':id', conversation.botId)}/` +
+                      `?version=${conversation.botVersion}`,
                   )
                 }>
                 {conversationProps?.botName || conversation.botId}

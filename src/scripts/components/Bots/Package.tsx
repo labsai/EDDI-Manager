@@ -8,12 +8,13 @@ import { compose, pure, setDisplayName } from 'recompose';
 import { PACKAGE_VIEW } from '../../constants/paths';
 import { BLUE_COLOR } from '../../../styles/DefaultStylingProperties';
 import eddiApiActionDispatchers from '../../actions/EddiApiActionDispatchers';
-import { historyPush } from '../../history';
+import { useNavigate } from 'react-router';
 import { readOnlySelector } from '../../selectors/AuthenticationSelectors';
 import { packageSelector } from '../../selectors/PackageSelectors';
 import WhiteButton from '../Assets/Buttons/WhiteButton';
 import { IBot, IPackage } from '../utils/AxiosFunctions';
 import useStyles from './Package.styles';
+import { createSearchParams } from 'react-router-dom';
 
 interface IPrivateProps extends IPublicProps {
   packagePayload: IPackage;
@@ -36,6 +37,7 @@ const Package = ({
   isLoading,
   error,
 }: IPrivateProps) => {
+  const navigate = useNavigate();
   const classes = useStyles();
 
   React.useEffect(() => {
@@ -59,18 +61,18 @@ const Package = ({
             <div>
               <button
                 onClick={() => {
-                  const query = [];
-                  if (packageHasNewVersion) {
-                    query.push(`version=${packagePayload.version}`);
-                  }
-                  if (bot.id) {
-                    query.push(`botId=${bot.id}`);
-                  }
-                  historyPush(
-                    `${PACKAGE_VIEW.replace(':id', packagePayload.id)}/`,
-
-                    query,
-                  );
+                  navigate({
+                    pathname: `${PACKAGE_VIEW.replace(
+                      ':id',
+                      packagePayload.id,
+                    )}/`,
+                    search: createSearchParams({
+                      version: packageHasNewVersion
+                        ? String(packagePayload.version)
+                        : undefined,
+                      botId: bot.id,
+                    }).toString(),
+                  });
                 }}
                 className={classes.botPackageButton}>
                 <div

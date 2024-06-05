@@ -5,20 +5,22 @@ import * as moment from 'moment';
 import useStyles from './Conversation.styles';
 import { IConversation } from '../utils/AxiosFunctions';
 import Parser from '../utils/Parser';
-import { historyPush } from '../../history';
+import { useNavigate } from 'react-router';
 import { CONVERSATION_VIEW } from '../../constants/paths';
 
 interface IProps {
   conversation: IConversation;
 }
 
-const Conversation: React.StatelessComponent<IProps> = (props: IProps) => {
+const Conversation: React.FC<IProps> = (props: IProps) => {
   const classes = useStyles();
+  const navigate = useNavigate();
+
   return (
     <div
       className={classes.conversation}
       onClick={() =>
-        historyPush(
+        navigate(
           `${CONVERSATION_VIEW.replace(
             ':id',
             Parser.getId(props.conversation.resource),

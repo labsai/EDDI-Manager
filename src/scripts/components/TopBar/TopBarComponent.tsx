@@ -13,7 +13,6 @@ import {
 } from '../../../styles/DefaultStylingProperties';
 import authenticationActionDispatchers from '../../actions/AuthenticationActionDispatchers';
 import ModalActionDispatchers from '../../actions/ModalActionDispatchers';
-import { historyPush } from '../../history';
 import {
   authenticationSelector,
   readOnlySelector,
@@ -25,6 +24,7 @@ import { ModalEnum } from '../utils/ModalEnum';
 import FilterComponent from './FilterComponent';
 import NavigationComponent from './NavigationComponent';
 import { MANAGE } from '../../constants/paths';
+import { useNavigate } from 'react-router';
 
 const LIMIT = 10;
 
@@ -103,6 +103,7 @@ const TopBarComponent = ({
   keycloak,
 }: IPrivateProps) => {
   const classes = useStyles();
+  const navigate = useNavigate();
   const openModal = () => {
     switch (page) {
       case pageEnum.bot:
@@ -132,7 +133,7 @@ const TopBarComponent = ({
   };
 
   const logout = () => {
-    historyPush(MANAGE);
+    navigate(MANAGE);
     authenticationActionDispatchers.signOutAction(keycloak);
   };
 

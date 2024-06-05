@@ -18,8 +18,9 @@ import {
   SIGN_OUT_SUCCESS,
 } from './AuthenticationActionTypes';
 import * as Keycloak from 'keycloak-js';
+import { AnyAction } from 'redux-saga';
 
-export interface IBasicAuthSignInAction extends Action {
+export interface IBasicAuthSignInAction extends AnyAction {
   username: string;
   password: string;
 }
@@ -35,7 +36,7 @@ export function basicAuthSignInAction(
   };
 }
 
-export interface IBasicAuthSignInFailedAction extends Action {
+export interface IBasicAuthSignInFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -48,7 +49,7 @@ export function basicAuthSignInFailedAction(
   };
 }
 
-export interface IBasicAuthSignInSuccessAction extends Action { }
+export interface IBasicAuthSignInSuccessAction extends AnyAction { }
 
 export function basicAuthSignInSuccessAction(): IBasicAuthSignInSuccessAction {
   return {
@@ -56,7 +57,7 @@ export function basicAuthSignInSuccessAction(): IBasicAuthSignInSuccessAction {
   };
 }
 
-export interface IKeycloakSignInAction extends Action {
+export interface IKeycloakSignInAction extends AnyAction {
   keycloak: Keycloak.KeycloakInstance;
 }
 
@@ -69,7 +70,7 @@ export function keycloakSignInAction(
   };
 }
 
-export interface IKeycloakSignInSuccessAction extends Action {
+export interface IKeycloakSignInSuccessAction extends AnyAction {
   keycloak: Keycloak.KeycloakInstance;
 }
 
@@ -82,7 +83,7 @@ export function keycloakSignInSuccessAction(
   };
 }
 
-export interface IKeycloakSignInFailedAction extends Action {
+export interface IKeycloakSignInFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -95,7 +96,7 @@ export function keycloakSignInFailedAction(
   };
 }
 
-export interface IKeycloakRefreshTokenAction extends Action {
+export interface IKeycloakRefreshTokenAction extends AnyAction {
   keycloak: Keycloak.KeycloakInstance;
 }
 
@@ -108,7 +109,7 @@ export function keycloakRefreshTokenAction(
   };
 }
 
-export interface IKeycloakRefreshTokenSuccessAction extends Action { }
+export interface IKeycloakRefreshTokenSuccessAction extends AnyAction { }
 
 export function keycloakRefreshTokenSuccessAction(): IKeycloakRefreshTokenSuccessAction {
   return {
@@ -116,7 +117,7 @@ export function keycloakRefreshTokenSuccessAction(): IKeycloakRefreshTokenSucces
   };
 }
 
-export interface IKeycloakRefreshTokenFailedAction extends Action {
+export interface IKeycloakRefreshTokenFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -129,7 +130,7 @@ export function keycloakRefreshTokenFailedAction(
   };
 }
 
-export interface ISignOutAction extends Action {
+export interface ISignOutAction extends AnyAction {
   keycloak: Keycloak.KeycloakInstance;
 }
 
@@ -142,7 +143,7 @@ export function signOutAction(
   };
 }
 
-export interface ISignOutSuccessAction extends Action { }
+export interface ISignOutSuccessAction extends AnyAction { }
 
 export function signOutSuccessAction(): ISignOutSuccessAction {
   return {
@@ -150,7 +151,7 @@ export function signOutSuccessAction(): ISignOutSuccessAction {
   };
 }
 
-export interface ISignOutFailedAction extends Action {
+export interface ISignOutFailedAction extends AnyAction {
   error: Error;
 }
 
@@ -161,7 +162,7 @@ export function signOutFailedAction(error: Error): ISignOutFailedAction {
   };
 }
 
-export interface ICheckAuthenticationAction extends Action { }
+export interface ICheckAuthenticationAction extends AnyAction { }
 
 export function checkAuthenticationAction(): ICheckAuthenticationAction {
   return {
@@ -169,7 +170,7 @@ export function checkAuthenticationAction(): ICheckAuthenticationAction {
   };
 }
 
-export interface ICheckAuthenticationSuccessAction extends Action {
+export interface ICheckAuthenticationSuccessAction extends AnyAction {
   isKeycloakEnabled: boolean;
   isBasicAuthEnabled: boolean;
   isReadOnly: boolean;
@@ -191,7 +192,7 @@ export function checkAuthenticationSuccessAction(
   };
 }
 
-export interface ICheckAuthenticationFailedAction extends Action {
+export interface ICheckAuthenticationFailedAction extends AnyAction {
   error: Error;
 }
 

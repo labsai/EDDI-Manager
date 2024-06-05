@@ -17,6 +17,7 @@ import {
   START_CHAT_FAILED,
   START_CHAT_SUCCESS,
 } from './ChatActionsTypes';
+import { AnyAction } from 'redux-saga';
 
 export const openChatAction = () => {
   return {
@@ -30,7 +31,7 @@ export const closeChatAction = () => {
   };
 };
 
-export interface IStartChatAction extends Action {
+export interface IStartChatAction extends AnyAction {
   botId: string;
   context?: any;
 }
@@ -46,7 +47,7 @@ export function startChatAction(
   };
 }
 
-export interface IStartChatSuccessAction extends Action {
+export interface IStartChatSuccessAction extends AnyAction {
   data: any;
 }
 
@@ -57,7 +58,7 @@ export function startChatSuccessAction(data: any): IStartChatSuccessAction {
   };
 }
 
-export interface IStartChatFailedAction extends Action {
+export interface IStartChatFailedAction extends AnyAction {
   error: string;
 }
 
@@ -68,7 +69,7 @@ export function startChatFailedAction(error: string): IStartChatFailedAction {
   };
 }
 
-export interface IReplyInChatAction extends Action {
+export interface IReplyInChatAction extends AnyAction {
   botId: string;
   conversationId: string;
   input: string;
@@ -90,7 +91,7 @@ export function replyInChatAction(
   };
 }
 
-export interface IReplyInChatSuccesAction extends Action {
+export interface IReplyInChatSuccesAction extends AnyAction {
   data: any;
 }
 
@@ -101,7 +102,7 @@ export function replyInChatSuccessAction(data: any): IReplyInChatSuccesAction {
   };
 }
 
-export interface IReplyInChatFailedAction extends Action {
+export interface IReplyInChatFailedAction extends AnyAction {
   error: string;
 }
 
@@ -114,7 +115,7 @@ export function replyInChatFailedAction(
   };
 }
 
-export interface ISetChatContextAction extends Action {
+export interface ISetChatContextAction extends AnyAction {
   context: string;
 }
 
@@ -135,7 +136,7 @@ export function setChatAnimation(enabled: boolean) {
       };
 }
 
-export interface IRestartChatAction extends Action {
+export interface IRestartChatAction extends AnyAction {
   botId: string;
   conversationId?: string;
 }
@@ -151,7 +152,7 @@ export function restartChatAction(
   };
 }
 
-export interface IRestartChatSuccessAction extends Action {
+export interface IRestartChatSuccessAction extends AnyAction {
   data: any;
 }
 
@@ -162,7 +163,7 @@ export function restartChatSuccessAction(data: any): IRestartChatSuccessAction {
   };
 }
 
-export interface IRestartChatFailedAction extends Action {
+export interface IRestartChatFailedAction extends AnyAction {
   error: string;
 }
 
@@ -181,7 +182,7 @@ export function clearChatAction() {
   };
 }
 
-export interface ISetUserReplyAction extends Action {
+export interface ISetUserReplyAction extends AnyAction {
   userReply: string;
 }
 

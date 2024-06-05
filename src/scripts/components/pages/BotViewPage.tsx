@@ -1,24 +1,23 @@
 import * as React from 'react';
 import BotInfo from '../BotDetailView/BotInfo';
 import Parser from '../utils/Parser';
+import { useLocation, useParams } from 'react-router';
 
-interface IRouteProps {
-  match: { params: { id: string } };
-  location: { search: string };
-}
 function getVersion(search: string) {
   const queryStrings = Parser.getQueryStrings(search);
   return queryStrings.version;
 }
-interface IProps extends IRouteProps {}
 
-const BotViewPage = (props: IProps) => (
-  <div>
-    <BotInfo
-      botId={props.match.params.id}
-      botVersion={getVersion(props.location.search)}
-    />
-  </div>
-);
+const BotViewPage = () => {
+  const params = useParams();
+  console.log('params: ', params);
+  const { search } = useLocation();
+  console.log('search: ', search);
+  return (
+    <div>
+      <BotInfo botId={params.id} botVersion={getVersion(search)} />
+    </div>
+  );
+};
 
 export default BotViewPage;

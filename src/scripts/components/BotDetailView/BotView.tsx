@@ -4,7 +4,7 @@ import { compose, pure, setDisplayName } from 'recompose';
 import { openChatAction } from '../../actions/ChatActions';
 import eddiApiActionDispatchers from '../../actions/EddiApiActionDispatchers';
 import modalActionDispatchers from '../../actions/ModalActionDispatchers';
-import { historyPush } from '../../history';
+import { useLocation, useNavigate } from 'react-router';
 import { readOnlySelector } from '../../selectors/AuthenticationSelectors';
 import Options from '../Assets/Buttons/BotOptions';
 import DeployButton from '../Assets/Buttons/DeployButton';
@@ -19,6 +19,7 @@ import Parser from '../utils/Parser';
 import BotDescriptor from './BotDescriptor';
 import useStyles from './BotView.styles';
 import PackageList from './PackageList';
+import { BOT_VIEW } from '../../constants/paths';
 
 interface IPublicProps {
   bot: IBot;
@@ -32,6 +33,8 @@ const warningIcon = require('../../../public/images/WarningIcon.png');
 const foundUnpublishedChanges = false; // todo : add function to check if there are unpublished changes.
 
 const BotView = ({ bot, readOnly }: IPrivateProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const classes = useStyles();
   const [apiUrl, setApiUrl] = React.useState('');
 
@@ -75,7 +78,7 @@ const BotView = ({ bot, readOnly }: IPrivateProps) => {
     eddiApiActionDispatchers.fetchBotAction(
       Parser.replaceResourceVersion(bot.resource, newVersion),
     );
-    historyPush(`${bot.id}`, [`version=${newVersion}`]);
+    navigate(`${BOT_VIEW.replace(':id', bot.id)}` + `?version=${newVersion}`);
   };
 
   const dispatch = useDispatch();
@@ -137,7 +140,7 @@ const BotView = ({ bot, readOnly }: IPrivateProps) => {
               disabled={bot.deploymentStatus !== READY}
               onClick={() => {
                 dispatch(openChatAction());
-                historyPush(location.pathname, [`botId=${bot.id}`]);
+                navigate(location.pathname + `?botId=${bot.id}`);
                 /* window
                   .open(`${apiUrl}/chat/unrestricted/${bot.id}`, '_blank')
                   .focus(); */

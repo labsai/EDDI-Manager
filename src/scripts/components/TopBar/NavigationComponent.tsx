@@ -11,7 +11,7 @@ import {
   SMALL_FONT2,
   BLUE_COLOR,
 } from '../../../styles/DefaultStylingProperties';
-import { historyPush } from '../../history';
+import { useNavigate } from 'react-router';
 import { pageEnum } from '../pages/pageEnum';
 import PluginSelectComponent from './PluginSelectComponent';
 import eddiApiActionDispatchers from '../../actions/EddiApiActionDispatchers';
@@ -47,13 +47,14 @@ interface IProps {
   page: pageEnum;
 }
 
-const handleBots = () => {
-  historyPush(MANAGE)
-  eddiApiActionDispatchers.fetchBotsAction(5, 0);
-}
-
-
 const NavigationComponent = (props: IProps) => {
+  const navigate = useNavigate();
+
+  const handleBots = () => {
+    navigate(MANAGE);
+    eddiApiActionDispatchers.fetchBotsAction(5, 0);
+  };
+
   const classes = useStyles();
   return (
     <div className={classes.navBar}>
@@ -67,7 +68,7 @@ const NavigationComponent = (props: IProps) => {
       </div>
       <div
         key={'packages'}
-        onClick={() => historyPush(PACKAGES)}
+        onClick={() => navigate(PACKAGES)}
         className={clsx(classes.navBarItem, {
           [classes.navBarItemDisabled]: props.page !== pageEnum.package,
         })}>
@@ -75,7 +76,7 @@ const NavigationComponent = (props: IProps) => {
       </div>
       <div
         key={'conversations'}
-        onClick={() => historyPush(CONVERSATIONS)}
+        onClick={() => navigate(CONVERSATIONS)}
         className={clsx(classes.navBarItem, {
           [classes.navBarItemDisabled]: props.page !== pageEnum.conversation,
         })}>

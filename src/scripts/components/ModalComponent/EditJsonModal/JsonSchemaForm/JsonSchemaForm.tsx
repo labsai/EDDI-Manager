@@ -178,7 +178,7 @@ interface IProps {
   validate(): void;
 }
 
-const JsonSchemaForm: React.StatelessComponent<IProps> = (props: IProps) => {
+const JsonSchemaForm: React.FC<IProps> = (props: IProps) => {
   const classes = useStyles();
   const readOnly = props.readOnly;
   const formRef = React.useRef(null);

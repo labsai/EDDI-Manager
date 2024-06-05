@@ -7,14 +7,15 @@ import { compose, pure, setDisplayName } from 'recompose';
 import { PACKAGE_VIEW } from '../../constants/paths';
 import { BLUE_COLOR } from '../../../styles/DefaultStylingProperties';
 import eddiApiActionDispatchers from '../../actions/EddiApiActionDispatchers';
-import { historyPush } from '../../history';
+import { useNavigate } from 'react-router';
 import { packageSelector } from '../../selectors/PackageSelectors';
 import BlueButton from '../Assets/Buttons/BlueButton';
 import Options from '../Assets/Buttons/Options';
 import VersionSelectComponent from '../Assets/VersionSelectComponent';
-import { IPackage, IPlugins } from '../utils/AxiosFunctions';
+import { IPackage } from '../utils/AxiosFunctions';
 import useStyles from './Package.styles';
 import PluginList from './PluginList';
+import { createSearchParams } from 'react-router-dom';
 
 interface IPublicProps {
   isPackageInBot: boolean;
@@ -40,6 +41,7 @@ const Package = ({
   isLoading,
   botId,
 }: IPrivateProps) => {
+  const navigate = useNavigate();
   const classes = useStyles();
   const fetchPlugins = () => {
     if (
@@ -111,18 +113,18 @@ const Package = ({
             <div
               className={classes.packageHeader}
               onClick={() => {
-                const query = [];
-                if (!isCurrentVersion) {
-                  query.push(`version=${packagePayload.version}`);
-                }
-                if (botId) {
-                  query.push(`botId=${botId}`);
-                }
-                historyPush(
-                  `${PACKAGE_VIEW.replace(':id', packagePayload.id)}/`,
-
-                  query,
-                );
+                navigate({
+                  pathname: `${PACKAGE_VIEW.replace(
+                    ':id',
+                    packagePayload.id,
+                  )}/`,
+                  search: createSearchParams({
+                    version: !isCurrentVersion
+                      ? `version=${packagePayload.version}`
+                      : '',
+                    botId,
+                  }).toString(),
+                });
               }}>
               <div
                 className={clsx(classes.packageName, {
@@ -180,9 +182,7 @@ const Package = ({
                     packagePayload.version !== packagePayload.currentVersion,
                 })}
                 onClick={() =>
-                  historyPush(
-                    `${PACKAGE_VIEW.replace(':id', packagePayload.id)}/`,
-                  )
+                  navigate(`${PACKAGE_VIEW.replace(':id', packagePayload.id)}/`)
                 }>
                 {'View package'}
               </button>

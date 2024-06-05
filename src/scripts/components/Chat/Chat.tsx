@@ -43,7 +43,7 @@ const Chat = () => {
   const [chatVisible, setChatVisible] = React.useState(false);
 
   // need to get bot id
-  const { botId, packageId } = getIdsFromPath();
+  const { botId } = getIdsFromPath();
 
   // const isBotPage = location.pathname.includes('botview');
   // const urlSearchParams = new URLSearchParams(location.search);

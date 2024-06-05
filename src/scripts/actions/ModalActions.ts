@@ -25,8 +25,9 @@ import {
   SHOW_BOT_LOGS_MODAL,
   SHOW_PARALLEL_CONFIG_MODAL,
 } from './ModalActionTypes';
+import { AnyAction } from 'redux-saga';
 
-export interface IShowModalAction extends Action {
+export interface IShowModalAction extends AnyAction {
   bot?: IBot;
   packagePayload?: IPackage;
   mode: ModalEnum;
@@ -66,7 +67,7 @@ export function showModal(
   };
 }
 
-export interface ICloseModalAction extends Action {}
+export interface ICloseModalAction extends AnyAction {}
 
 export function closeModal(): ICloseModalAction {
   return {
@@ -74,7 +75,7 @@ export function closeModal(): ICloseModalAction {
   };
 }
 
-export interface IShowViewJsonModalAction extends Action {
+export interface IShowViewJsonModalAction extends AnyAction {
   resource: string;
 }
 
@@ -85,7 +86,7 @@ export function showViewJsonModal(resource: string): IShowViewJsonModalAction {
   };
 }
 
-export interface IShowEditJsonModalAction extends Action {
+export interface IShowEditJsonModalAction extends AnyAction {
   resource: string;
   data: {};
 }
@@ -101,7 +102,7 @@ export function showEditJsonModal(
   };
 }
 
-export interface IShowAddPackagesModalAction extends Action {
+export interface IShowAddPackagesModalAction extends AnyAction {
   bot: IBot;
 }
 
@@ -112,7 +113,7 @@ export function showAddPackagesModal(bot: IBot): IShowAddPackagesModalAction {
   };
 }
 
-export interface IShowBotLogsModalAction extends Action {
+export interface IShowBotLogsModalAction extends AnyAction {
   bot: IBot;
 }
 
@@ -123,7 +124,7 @@ export function showBotLogsModal(bot: IBot): IShowBotLogsModalAction {
   };
 }
 
-export interface IShowAddPluginsModalAction extends Action {
+export interface IShowAddPluginsModalAction extends AnyAction {
   pluginType: string;
   oldPlugins: string[];
   addPlugin: (plugins: string[]) => void;
@@ -142,7 +143,7 @@ export function showAddPluginsModal(
   };
 }
 
-export interface IShowEditDescriptorModalAction extends Action {
+export interface IShowEditDescriptorModalAction extends AnyAction {
   descriptor: IDescriptor;
 }
 
@@ -155,7 +156,7 @@ export function showEditDescriptorModalAction(
   };
 }
 
-export interface IShowCreateNewConfigModal extends Action {
+export interface IShowCreateNewConfigModal extends AnyAction {
   pluginType: string;
   name: string;
   description: string;
@@ -180,7 +181,7 @@ export function showCreateNewConfigModal(
   };
 }
 
-export interface IShowCreateNewConfig2Modal extends Action {
+export interface IShowCreateNewConfig2Modal extends AnyAction {
   pluginType: string;
   name: string;
   description: string;
@@ -205,7 +206,7 @@ export function showCreateNewConfig2Modal(
   };
 }
 
-export interface IShowUpdatePackagesModal extends Action {
+export interface IShowUpdatePackagesModal extends AnyAction {
   resource: string;
 }
 
@@ -218,7 +219,7 @@ export function showUpdatePackagesModal(
   };
 }
 
-export interface IShowUpdateBotsModal extends Action {
+export interface IShowUpdateBotsModal extends AnyAction {
   packageResources: string[];
 }
 
@@ -231,7 +232,7 @@ export function showUpdateBotsModal(
   };
 }
 
-export interface IShowConfirmationModal extends Action {
+export interface IShowConfirmationModal extends AnyAction {
   title: string;
   message: string;
   onConfirm: () => void;
@@ -250,7 +251,7 @@ export function showConfirmationModal(
   };
 }
 
-export interface IShowErrorMessageModal extends Action {
+export interface IShowErrorMessageModal extends AnyAction {
   title: string;
   message: string;
 }
@@ -266,7 +267,7 @@ export function showErrorMessageModal(
   };
 }
 
-export interface IShowConversationsModal extends Action {
+export interface IShowConversationsModal extends AnyAction {
   bot: IBot;
 }
 
@@ -277,7 +278,7 @@ export function showConversationsModal(bot: IBot): IShowConversationsModal {
   };
 }
 
-export interface IShowBasicAuthModal extends Action {}
+export interface IShowBasicAuthModal extends AnyAction {}
 
 export function showBasicAuthModal(): IShowBasicAuthModal {
   return {
@@ -285,7 +286,7 @@ export function showBasicAuthModal(): IShowBasicAuthModal {
   };
 }
 
-export interface IShowParallelConfigModalAction extends Action {
+export interface IShowParallelConfigModalAction extends AnyAction {
   pkg: IPackage;
   pluginResource?: string;
 }

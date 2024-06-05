@@ -14,14 +14,12 @@ import {
 } from '../utils/EddiTypes';
 import Parser from '../utils/Parser';
 import { pageEnum } from './pageEnum';
+import { useLocation } from 'react-router';
 
 const eddiLogo = require('../../../public/images/eddi-logo-white.svg');
 
-interface IRouteProps {
-  location: { search: string };
-}
-
-const ExtensionsPage = ({ location }: IRouteProps) => {
+const ExtensionsPage = () => {
+  const location = useLocation();
   const [filterText, setFilterText] = React.useState('');
 
   const classes = useStyles();
@@ -73,10 +71,7 @@ const ExtensionsPage = ({ location }: IRouteProps) => {
   );
 };
 
-const ComposedExtensionsPage: React.ComponentClass<IRouteProps> = compose<
-  IRouteProps,
-  IRouteProps
->(
+const ComposedExtensionsPage: React.ComponentClass<{}> = compose<{}, {}>(
   pure,
   setDisplayName('ExtensionsPage'),
 )(ExtensionsPage);

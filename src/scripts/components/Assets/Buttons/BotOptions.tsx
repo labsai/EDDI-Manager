@@ -21,7 +21,7 @@ import * as React from 'react';
 import { connect, useDispatch } from 'react-redux';
 import { compose, pure, setDisplayName } from 'recompose';
 import { openChatAction } from '../../../actions/ChatActions';
-import { historyPush } from '../../../history';
+import { useNavigate } from 'react-router';
 import eddiApiActionDispatchers from '../../../actions/EddiApiActionDispatchers';
 import modalActionDispatchers from '../../../actions/ModalActionDispatchers';
 import { readOnlySelector } from '../../../selectors/AuthenticationSelectors';
@@ -74,6 +74,8 @@ const BotOptions = ({
   const [anchorSubEl, setAnchorSubEl] =
     React.useState<null | HTMLElement>(null);
 
+  const navigate = useNavigate();
+
   const open = Boolean(anchorEl);
   const submenuOpen = Boolean(anchorSubEl);
 
@@ -124,7 +126,7 @@ const BotOptions = ({
           onClick={() => {
             handleClose();
             dispatch(openChatAction());
-            historyPush(location.pathname, [`botId=${bot.id}`]);
+            navigate(location.pathname + `?botId=${bot.id}`);
             /* window
               .open(`${apiUrl}/chat/unrestricted/${bot.id}`, '_blank')
               .focus(); */
@@ -138,7 +140,7 @@ const BotOptions = ({
           key={'Open External Chat'}
           disabled={!botDeployed}
           onClick={() => {
-            historyPush(location.pathname, [`botId=${bot.id}`]);
+            navigate(location.pathname + `?botId=${bot.id}`);
             window
               .open(`${apiUrl}/chat/unrestricted/${bot.id}`, '_blank')
               .focus();

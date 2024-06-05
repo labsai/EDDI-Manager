@@ -1,8 +1,9 @@
 import { Action } from 'redux';
 import { APP_READY, HIDE_LOADER, SHOW_LOADER } from './SystemActionTypes';
+import { AnyAction } from 'redux-saga';
 
-export interface IAppReadyAction extends Action {}
-export interface ILoaderAction extends Action {}
+export interface IAppReadyAction extends AnyAction {}
+export interface ILoaderAction extends AnyAction {}
 
 export function appReady(): IAppReadyAction {
   return {

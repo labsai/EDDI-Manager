@@ -15,7 +15,7 @@ import {
 import * as Keycloak from 'keycloak-js';
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { Redirect, Route } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import ClimbingBoxLoader from 'react-spinners/ClimbingBoxLoader';
 import { compose, pure, setDisplayName } from 'recompose';
 import authenticationActionDispatchers from '../actions/AuthenticationActionDispatchers';
@@ -52,8 +52,6 @@ import * as kcHelper from './utils/keycloakFunctions';
 import Parser from './utils/Parser';
 import useChangeBodyMaxWidth from './utils/useChangeBodyMaxWidth';
 
-
-
 library.add(faUndo);
 library.add(faRedo);
 library.add(faCheck);
@@ -66,12 +64,7 @@ library.add(faMinus);
 library.add(faComments);
 library.add(faSync);
 
-interface IRouteProps {
-  match: { params: { id: string } };
-  location: { search: string };
-}
-
-interface IPrivateProps extends IRouteProps {
+interface IPrivateProps {
   isAppReady: boolean;
   keycloak: Keycloak.KeycloakInstance;
   isKeycloakEnabled: boolean;
@@ -87,7 +80,6 @@ const sleep = (milliseconds) => {
 };
 
 const App = ({
-  location,
   keycloakAuthenticated,
   isKeycloakEnabled,
   keycloak,
@@ -98,9 +90,11 @@ const App = ({
 }: IPrivateProps) => {
   const classes = useStyles();
   const [authChecked, setAuthChecked] = React.useState(true);
+
+  const { search } = useLocation();
   React.useEffect(() => {
     runSagaMiddleware();
-    const queryStrings = Parser.getQueryStrings(location.search);
+    const queryStrings = Parser.getQueryStrings(search);
     if (queryStrings.apiUrl) {
       setApiUrlQuery(decodeURIComponent(queryStrings.apiUrl));
     }
@@ -163,27 +157,20 @@ const App = ({
               <div>{'You need to login to see this page'}</div>
             )}
             {authenticated && (
-              <div>
-                <Route path={MANAGE} exact component={Dashboard} />
-                <Route path={PACKAGES} exact component={PackagePage} />
-                <Route
-                  path={CONVERSATIONS}
-                  exact
-                  component={ConversationsPage}
-                />
-                <Route path={RESOURCES} exact component={ExtensionsPage} />
-                <Route path={BOT_VIEW} exact component={BotViewPage} />
+              <Routes>
+                <Route path={`${MANAGE}/*`} element={<Dashboard />} />
+                <Route path={PACKAGES} element={<PackagePage />} />
+                <Route path={CONVERSATIONS} element={<ConversationsPage />} />
+                <Route path={RESOURCES} element={<ExtensionsPage />} />
+                <Route path={BOT_VIEW} element={<BotViewPage />} />
                 <Route
                   path={CONVERSATION_VIEW}
-                  exact
-                  component={BotConversationViewPage}
+                  element={<BotConversationViewPage />}
                 />
-                <Route path={PACKAGE_VIEW} exact component={PackageViewPage} />
+                <Route path={PACKAGE_VIEW} element={<PackageViewPage />} />
                 <Route path={MANAGE} />
-                <Route exact path="/">
-                  <Redirect to={MANAGE} />
-                </Route>
-              </div>
+                <Route path="/" element={<Dashboard />} />
+              </Routes>
             )}
             {keycloakAuthenticated && <ModalComponentFrame />}
           </div>
@@ -195,9 +182,9 @@ const App = ({
   );
 };
 
-const ComposedApp: React.ComponentClass<IPrivateProps> = compose<
+const ComposedApp: React.ComponentClass<{}, IPrivateProps> = compose<
   IPrivateProps,
-  IPrivateProps
+  undefined
 >(
   pure,
   connect(authenticationSelector),

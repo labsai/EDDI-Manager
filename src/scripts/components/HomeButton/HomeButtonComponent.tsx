@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { compose, pure, setDisplayName } from 'recompose';
 import useStyles from './HomeButton.styles';
-import { historyPush } from '../../history';
+import { useNavigate } from 'react-router';
 import { MANAGE } from '../../constants/paths';
 
 interface IPublic {
@@ -12,10 +12,11 @@ interface IProps extends IPublic {}
 
 const HomeButton = (props: IProps) => {
   const classes = useStyles();
+  const navigate = useNavigate();
   return (
     <div className={classes.navigationBar}>
       <div
-        onClick={() => historyPush(`${MANAGE}/${props.extraPath || ''}`)}
+        onClick={() => navigate(`${MANAGE}/${props.extraPath || ''}`)}
         className={classes.homeButton}>
         <div className={classes.homeArrow}> </div>
         <div className={classes.homeSquare}> </div>

@@ -3,7 +3,7 @@ import * as React from 'react';
 import { compose, pure, setDisplayName } from 'recompose';
 import { CONVERSATION_VIEW } from '../../../constants/paths';
 import modalActionDispatchers from '../../../actions/ModalActionDispatchers';
-import { historyPush } from '../../../history';
+import { useNavigate } from 'react-router';
 import { IConversation } from '../../utils/AxiosFunctions';
 import Parser from '../../utils/Parser';
 import useStyles from './Conversation.styles';
@@ -12,12 +12,13 @@ interface IProps {
   conversation: IConversation;
 }
 
-const Conversation: React.StatelessComponent<IProps> = (props: IProps) => {
+const Conversation: React.FC<IProps> = (props: IProps) => {
   const classes = useStyles();
+  const navigate = useNavigate();
 
   const handleClick = () => {
     modalActionDispatchers.closeModal();
-    historyPush(
+    navigate(
       `${CONVERSATION_VIEW.replace(
         ':id',
         Parser.getId(props.conversation.resource),

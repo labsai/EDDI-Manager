@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { compose, pure, setDisplayName } from 'recompose';
 import eddiApiActionDispatchers from '../../actions/EddiApiActionDispatchers';
 import modalActionDispatchers from '../../actions/ModalActionDispatchers';
-import { historyPush } from '../../history';
+import { useNavigate } from 'react-router';
 import { defaultPluginTypesSelector } from '../../selectors/PluginSelectors';
 import PluginSelect from '../PackageDetailView/DropDownComponents/PluginSelect';
 import { IOptions } from '../PackageDetailView/PackageView';
@@ -26,7 +26,7 @@ interface IPrivateProps extends IPublicProps {
 
 const UpdatePackageModal = (props: IPrivateProps) => {
   const classes = useStyles();
-
+  const navigate = useNavigate();
   const [addedPlugins, setAddedPlugins] = React.useState<IOptions[]>([]);
   const [extensionKey, setExtensionKey] = React.useState<number>(0);
 
@@ -57,7 +57,7 @@ const UpdatePackageModal = (props: IPrivateProps) => {
     );
     modalActionDispatchers.closeModal();
     eddiApiActionDispatchers.createNewPackageAction(packageId);
-    historyPush(`${PACKAGE_VIEW.replace(':id', packageId)}/`);
+    navigate(`${PACKAGE_VIEW.replace(':id', packageId)}/`);
   };
 
   const addPluginsInModal = (addedPlugin: IOptions) => {

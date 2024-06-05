@@ -4,7 +4,7 @@ import { IPackage } from '../../utils/AxiosFunctions';
 import { connect } from 'react-redux';
 import NameAndVersion from './NameAndVersion';
 import { packageSelector } from '../../../selectors/PackageSelectors';
-import { historyPush } from '../../../history';
+import { useNavigate } from 'react-router';
 import { PACKAGE_VIEW } from '../../../constants/paths';
 
 interface IPublicProps {
@@ -24,13 +24,14 @@ const Package = ({
   usedByOlderVersion,
   isSmallName,
 }: IPrivateProps) => {
+  const navigate = useNavigate();
   return (
     <NameAndVersion
       descriptor={packagePayload}
       usedByOlderVersion={usedByOlderVersion}
       isSmallName={isSmallName}
       onClick={() =>
-        historyPush(`${PACKAGE_VIEW.replace(':id', packagePayload.id)}/`)
+        navigate(`${PACKAGE_VIEW.replace(':id', packagePayload.id)}/`)
       }
     />
   );

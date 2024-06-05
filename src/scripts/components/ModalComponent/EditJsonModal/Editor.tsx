@@ -42,7 +42,6 @@ const CreateNewConfig2Modal = ({
 }: IPrivateProps) => {
   const classes = useStyles();
   const [expanded, setExpanded] = React.useState<boolean>(false);
-  const aceEditorRef = React.useRef(null);
 
   const handleOnChange = (value) => {
     onChange(value);
@@ -81,7 +80,6 @@ const CreateNewConfig2Modal = ({
             />
           </div>
           <AceEditor
-            ref={aceEditorRef}
             mode={'json'}
             height={expanded ? '100%' : '800px'}
             width={'100%'}

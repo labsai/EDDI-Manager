@@ -1,16 +1,15 @@
 import * as React from 'react';
 import BotConversationView from '../BotConversationView/BotConversationView';
 import Parser from '../utils/Parser';
+import { useParams } from 'react-router';
 
-interface IRouteProps {
-  match: { params: { id: string } };
-  location: { search: string };
-}
-interface IProps extends IRouteProps {}
-const BotConversationViewPage = (props: IProps) => (
-  <div>
-    <BotConversationView conversationId={props.match.params.id} />
-  </div>
-);
+const BotConversationViewPage = () => {
+  const { id } = useParams();
+  return (
+    <div>
+      <BotConversationView conversationId={id} />
+    </div>
+  );
+};
 
 export default BotConversationViewPage;

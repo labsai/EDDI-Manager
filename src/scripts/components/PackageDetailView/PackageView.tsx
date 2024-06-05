@@ -5,7 +5,7 @@ import { compose, pure, setDisplayName } from 'recompose';
 import { PACKAGE_VIEW } from '../../constants/paths';
 import eddiApiActionDispatchers from '../../actions/EddiApiActionDispatchers';
 import ModalActionDispatchers from '../../actions/ModalActionDispatchers';
-import { historyPush } from '../../history';
+import { useLocation, useNavigate } from 'react-router';
 import { readOnlySelector } from '../../selectors/AuthenticationSelectors';
 import { defaultPluginTypesSelector } from '../../selectors/PluginSelectors';
 import BlueButton from '../Assets/Buttons/BlueButton';
@@ -46,6 +46,8 @@ const PackageView = ({
   defaultPluginTypes: defaultPluginTypesProps,
   readOnly,
 }: IPrivateProps) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [selectedPlugins, setSelectedPlugins] = React.useState<IOptions[]>([]);
   const [initialSelectedPluginState, setInitialSelectedPluginState] =
     React.useState<IOptions[]>([]);
@@ -160,11 +162,12 @@ const PackageView = ({
       Parser.replaceResourceVersion(packagePayload.resource, newVersion),
     );
     if (newVersion === packagePayload.currentVersion) {
-      historyPush(`${PACKAGE_VIEW.replace(':id', packagePayload.id)}/`);
+      navigate(`${PACKAGE_VIEW.replace(':id', packagePayload.id)}/`);
     } else {
-      historyPush(`${PACKAGE_VIEW.replace(':id', packagePayload.id)}`, [
-        `version=${newVersion}`,
-      ]);
+      navigate(
+        `${PACKAGE_VIEW.replace(':id', packagePayload.id)}?` +
+          `version=${newVersion}`,
+      );
     }
   };
 

@@ -3,7 +3,7 @@ import { compose, pure, setDisplayName } from 'recompose';
 import { BOT_VIEW } from '../../constants/paths';
 import eddiApiActionDispatchers from '../../actions/EddiApiActionDispatchers';
 import modalActionDispatchers from '../../actions/ModalActionDispatchers';
-import { historyPush } from '../../history';
+import { useNavigate } from 'react-router';
 import WhiteButton from '../Assets/Buttons/WhiteButton';
 import { createNewBot } from '../utils/AxiosFunctions';
 import useStyles from './ModalComponent.styles';
@@ -12,13 +12,14 @@ import './ModalComponent.styles.scss';
 const CreateBotModal = () => {
   const [name, setName] = React.useState('');
   const [description, setDescription] = React.useState('');
+  const navigate = useNavigate();
 
   const classes = useStyles();
 
   const createBot = async () => {
     const botId = await createNewBot(name, description);
     eddiApiActionDispatchers.createNewBotAction(botId);
-    historyPush(`${BOT_VIEW.replace(':id', botId)}/`);
+    navigate(`${BOT_VIEW.replace(':id', botId)}/`);
     modalActionDispatchers.closeModal();
   };
 

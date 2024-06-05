@@ -8,7 +8,8 @@ import {
 } from '../../../styles/DefaultStylingProperties';
 import SearchIcon from '@material-ui/icons/Search';
 import { pageEnum } from '../pages/pageEnum';
-import { historyPush } from '../../../scripts/history';
+import { useLocation, useNavigate } from 'react-router';
+import { createSearchParams } from 'react-router-dom';
 
 const useStyles = makeStyles({
   filter: {
@@ -65,6 +66,8 @@ function getSearchName(page: pageEnum) {
 
 const FilterComponent = (props: IProps) => {
   const classes = useStyles();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const urlSearchParams = new URLSearchParams(location.search);
   const searchValue = urlSearchParams.get('search');
@@ -72,29 +75,21 @@ const FilterComponent = (props: IProps) => {
 
   const [value, setValue] = React.useState(searchValue || '');
 
-  const getQueryParams = () => {
-    const params = [];
-    const typeQuery = pluginType ? `type=${pluginType}` : undefined;
-    const searchQuery = value.length ? `search=${value}` : undefined;
-    if (typeQuery) {
-      params.push(typeQuery);
-    }
-    if (searchQuery) {
-      params.push(searchQuery);
-    }
-
-    return params;
-  };
+  const getQueryParams = () =>
+    createSearchParams({
+      type: pluginType,
+      search: value.length ? value : '',
+    }).toString();
 
   const handleEnter = (e) => {
     if (e.key === 'Enter') {
-      historyPush(location.pathname, getQueryParams());
+      navigate({ pathname: location.pathname, search: getQueryParams() });
       props.filter(value);
     }
   };
 
   const handleFilter = () => {
-    historyPush(location.pathname, getQueryParams());
+    navigate({ pathname: location.pathname, search: getQueryParams() });
     props.filter(value);
   };
 
