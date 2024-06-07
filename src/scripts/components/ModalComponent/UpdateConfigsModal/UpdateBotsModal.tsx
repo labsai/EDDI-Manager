@@ -10,7 +10,7 @@ import BlueButton from '../../Assets/Buttons/BlueButton';
 import WhiteButton from '../../Assets/Buttons/WhiteButton';
 import { getBotsUsingPackage, IBot } from '../../utils/AxiosFunctions';
 import useStyles from '../AddPackagesModal/AddPackagesModal.styles';
-import '../ModalComponent.styles.scss';
+
 import SelectableConfig from './SelectableConfig';
 
 interface IBotToUpdate {

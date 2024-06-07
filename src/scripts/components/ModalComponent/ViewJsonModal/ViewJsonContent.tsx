@@ -18,7 +18,7 @@ import { getTypeFromResource } from '../../utils/ApiFunctions';
 import { IDetailedDescriptor } from '../../utils/AxiosFunctions';
 import { PACKAGE } from '../../utils/EddiTypes';
 import JsonSchemaForm from '../EditJsonModal/JsonSchemaForm/JsonSchemaForm';
-import '../ModalComponent.styles.scss';
+
 import useStyles from './ViewJsonModal.styles';
 
 interface IPublicProps {

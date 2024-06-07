@@ -56,3 +56,8 @@ textarea,
 input {
   outline: none;
 }
+
+.modal-body-open {
+  overflow-y: hidden;
+  overflow-x: hidden;
+}

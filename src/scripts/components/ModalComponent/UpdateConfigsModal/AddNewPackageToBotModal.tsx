@@ -10,7 +10,7 @@ import BlueButton from '../../Assets/Buttons/BlueButton';
 import { DEFAULT_LIMIT } from '../../utils/ApiFunctions';
 import { IBot, IPackage } from '../../utils/AxiosFunctions';
 import useStyles from '../AddPackagesModal/AddPackagesModal.styles';
-import '../ModalComponent.styles.scss';
+
 import SelectableConfig from './SelectableConfig';
 
 interface IPublicProps {

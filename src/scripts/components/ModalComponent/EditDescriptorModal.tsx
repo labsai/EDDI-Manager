@@ -5,7 +5,6 @@ import ModalActionDispatchers from '../../actions/ModalActionDispatchers';
 import WhiteButton from '../Assets/Buttons/WhiteButton';
 import { IDescriptor } from '../utils/AxiosFunctions';
 import useStyles from './ModalComponent.styles';
-import './ModalComponent.styles.scss';
 
 interface IProps {
   descriptor: IDescriptor;

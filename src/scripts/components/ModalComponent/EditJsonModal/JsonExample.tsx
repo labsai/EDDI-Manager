@@ -3,7 +3,6 @@ import { compose, pure, setDisplayName } from 'recompose';
 import { getPostExample } from '../../utils/EddiConfigExampleData';
 import Parser from '../../utils/Parser';
 import useStyles from '../ModalComponent.styles';
-import '../ModalComponent.styles.scss';
 
 interface IPublicProps {
   type: string;

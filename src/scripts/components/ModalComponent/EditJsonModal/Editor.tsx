@@ -1,5 +1,5 @@
 import * as React from 'react';
-import '../ModalComponent.styles.scss';
+
 import { compose, pure, setDisplayName } from 'recompose';
 import AceEditor from 'react-ace';
 import * as _ from 'lodash';

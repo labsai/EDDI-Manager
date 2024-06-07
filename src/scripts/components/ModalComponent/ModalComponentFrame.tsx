@@ -21,7 +21,7 @@ import CreateNewConfig2Modal from './EditJsonModal/CreateNewConfig2Modal';
 import CreateNewConfigModal from './EditJsonModal/CreateNewConfigModal';
 import EditJsonModal from './EditJsonModal/EditJsonModal';
 import ErrorMessageModal from './ErrorMessageModal';
-import './ModalComponent.styles.scss';
+
 import ParallelConfigModal from './ParallelConfigModal/ParallelConfigModal';
 import AddNewPackageToBotModal from './UpdateConfigsModal/AddNewPackageToBotModal';
 import UpdateBotsModal from './UpdateConfigsModal/UpdateBotsModal';

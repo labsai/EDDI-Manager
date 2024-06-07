@@ -1,5 +1,5 @@
 import * as React from 'react';
-import '../styles/base.scss';
+import '../styles/base.css';
 import { createRoot } from 'react-dom/client';
 import App from './components/App';
 import { Provider } from 'react-redux';

@@ -11,7 +11,7 @@ import { IOptions } from '../PackageDetailView/PackageView';
 import Plugin from '../PackageDetailView/PluginBoxes/Plugin';
 import { createNewPackage, IDefaultPluginTypes } from '../utils/AxiosFunctions';
 import useStyles from './ModalComponent.styles';
-import './ModalComponent.styles.scss';
+
 import clsx from 'clsx';
 import { BLUE_COLOR } from '../../../styles/DefaultStylingProperties';
 import { PACKAGE_VIEW } from '../../constants/paths';

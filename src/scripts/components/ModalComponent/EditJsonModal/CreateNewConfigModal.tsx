@@ -6,7 +6,6 @@ import ModalActionDispatchers from '../../../actions/ModalActionDispatchers';
 import BlueButton from '../../Assets/Buttons/BlueButton';
 import Parser from '../../utils/Parser';
 import useStyles from '../ModalComponent.styles';
-import '../ModalComponent.styles.scss';
 
 interface IProps {
   name: string;

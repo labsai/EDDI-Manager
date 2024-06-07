@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router';
 import WhiteButton from '../Assets/Buttons/WhiteButton';
 import { createNewBot } from '../utils/AxiosFunctions';
 import useStyles from './ModalComponent.styles';
-import './ModalComponent.styles.scss';
 
 const CreateBotModal = () => {
   const [name, setName] = React.useState('');

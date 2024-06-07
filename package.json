@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "server": "node server.js --path ./dist --port 3000 --env \"{\\\"EDDI_API_URL\\\":\\\"$EDDI_API_URL\\\", \\\"AUTH_METHOD\\\":\\\"$AUTH_METHOD\\\", \\\"AUTH_REALM\\\":\\\"$AUTH_REALM\\\", \\\"AUTH_URL\\\":\\\"$AUTH_URL\\\", \\\"AUTH_CLIENT_ID\\\":\\\"$AUTH_CLIENT_ID\\\", \\\"READ_ONLY_DOMAIN\\\":\\\"$READ_ONLY_DOMAIN\\\"}\"",
-    "autoformat": "prettier --write '**/*.{ts,tsx,js,jsx,json,css,scss}'",
+    "autoformat": "prettier --write '**/*.{ts,tsx,js,jsx,json,css}'",
     "start": "cross-env-shell PORT=1338 NODE_ENV=local \"(echo $PORT && webpack serve --mode development)\"",
     "open-browser": "wait-on --timeout 8000 tcp:$PORT && open-url localhost:$PORT",
     "clean": "rimraf \"src/**/*.+(js|js.map)\" \"tests/unit/tests/**/*.+(js|js.map)\" \"compiled\" \"dist\"",
@@ -54,7 +54,7 @@
     }
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,css,scss}": [
+    "*.{ts,tsx,js,jsx,json,css}": [
       "prettier --write",
       "git add"
     ]
@@ -109,7 +109,6 @@
     "react-hot-loader": "4.13.1",
     "react-test-renderer": "18.3.1",
     "rimraf": "5.0.7",
-    "sass-loader": "14.2.1",
     "source-map-loader": "5.0.0",
     "style-loader": "4.0.0",
     "ts-node": "10.9.2",
@@ -150,7 +149,6 @@
     "lodash": "^4.17.21",
     "minimist": "1.2.8",
     "moment": "^2.29.1",
-    "node-sass": "^9.0.0",
     "prop-types": "15.8.1",
     "radium": "0.26.2",
     "react": "^18.3.1",

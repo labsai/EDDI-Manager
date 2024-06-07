@@ -11,7 +11,7 @@ import WhiteButton from '../../Assets/Buttons/WhiteButton';
 import { compileJsonSchema, IJsonError } from '../../utils/helpers/JsonHelpers';
 import Parser from '../../utils/Parser';
 import useStyles from '../ModalComponent.styles';
-import '../ModalComponent.styles.scss';
+
 import useEditStyles from './EditJsonModal.styles';
 import Editor from './Editor';
 import JsonErrors from './JsonErrors';

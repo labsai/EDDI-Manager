@@ -1,6 +1,6 @@
 import * as React from 'react';
 import useStyles from './ModalComponent.styles';
-import './ModalComponent.styles.scss';
+
 import { compose, pure, setDisplayName } from 'recompose';
 import { ModalEnum } from '../utils/ModalEnum';
 import ModalActionDispatchers from '../../actions/ModalActionDispatchers';

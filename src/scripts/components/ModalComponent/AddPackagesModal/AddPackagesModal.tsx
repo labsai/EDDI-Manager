@@ -11,7 +11,7 @@ import BlueButton from '../../Assets/Buttons/BlueButton';
 import { DEFAULT_LIMIT } from '../../utils/ApiFunctions';
 import { IBot, IPackage } from '../../utils/AxiosFunctions';
 import Parser from '../../utils/Parser';
-import '../ModalComponent.styles.scss';
+
 import useStyles from './AddPackagesModal.styles';
 import PackageContainer from './PackageContainer';
 

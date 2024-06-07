@@ -7,7 +7,7 @@ import { authenticationSelector } from '../../../selectors/AuthenticationSelecto
 import BlueButton from '../../Assets/Buttons/BlueButton';
 import WhiteButton from '../../Assets/Buttons/WhiteButton';
 import { getAPIUrl } from '../../utils/ApiFunctions';
-import '../ModalComponent.styles.scss';
+
 import useStyles from './BasicAuthModal.styles';
 
 const warningIcon = require('../../../../public/images/WarningIcon@3x.png');

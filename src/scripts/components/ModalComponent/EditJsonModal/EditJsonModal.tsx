@@ -17,7 +17,7 @@ import getIdsFromPath from '../../utils/helpers/getIdsFromPath';
 import { compileJsonSchema, IJsonError } from '../../utils/helpers/JsonHelpers';
 import { ModalEnum } from '../../utils/ModalEnum';
 import useStyles from '../ModalComponent.styles';
-import '../ModalComponent.styles.scss';
+
 import useEditStyles from './EditJsonModal.styles';
 import Editor from './Editor';
 import JsonErrors from './JsonErrors';

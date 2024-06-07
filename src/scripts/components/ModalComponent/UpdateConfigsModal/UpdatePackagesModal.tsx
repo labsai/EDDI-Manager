@@ -10,7 +10,7 @@ import BlueButton from '../../Assets/Buttons/BlueButton';
 import { getPackagesUsingPlugin, IPackage } from '../../utils/AxiosFunctions';
 import Parser from '../../utils/Parser';
 import useStyles from '../AddPackagesModal/AddPackagesModal.styles';
-import '../ModalComponent.styles.scss';
+
 import SelectableConfig from './SelectableConfig';
 
 interface IPublicProps {

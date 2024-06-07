@@ -5,7 +5,6 @@ import modalActionDispatchers from '../../actions/ModalActionDispatchers';
 import BlueButton from '../Assets/Buttons/BlueButton';
 import WhiteButton from '../Assets/Buttons/WhiteButton';
 import useStyles from './ConfirmModal.styles';
-import './ModalComponent.styles.scss';
 
 interface IProps {
   title: string;

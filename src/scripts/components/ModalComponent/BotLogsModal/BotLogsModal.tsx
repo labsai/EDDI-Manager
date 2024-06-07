@@ -10,7 +10,7 @@ import {
 } from '../../../actions/EddiApiActions';
 import { botLogsSelector } from '../../../selectors/BotSelectors';
 import { IBot, IBotLogs } from '../../utils/AxiosFunctions';
-import '../ModalComponent.styles.scss';
+
 import useStyles from './BotLogsModal.styles';
 
 const InfiniteScroll =

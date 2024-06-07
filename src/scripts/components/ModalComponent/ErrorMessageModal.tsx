@@ -3,7 +3,6 @@ import { compose, pure, setDisplayName } from 'recompose';
 import modalActionDispatchers from '../../actions/ModalActionDispatchers';
 import WhiteButton from '../Assets/Buttons/WhiteButton';
 import useStyles from './ErrorMessageModal.styles';
-import './ModalComponent.styles.scss';
 
 interface IProps {
   title: string;

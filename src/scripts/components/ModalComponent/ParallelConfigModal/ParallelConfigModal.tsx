@@ -16,7 +16,7 @@ import WhiteButton from '../../Assets/Buttons/WhiteButton';
 import { isBotPage, isPackagePage } from '../../utils/helpers/getIdsFromPath';
 import validateJson from '../../utils/helpers/ValidateJson';
 import useModalStyles from '../ModalComponent.styles';
-import '../ModalComponent.styles.scss';
+
 import useStyles from './ParallelConfigModal.styles';
 import PluginContainer from './PluginContainer';
 

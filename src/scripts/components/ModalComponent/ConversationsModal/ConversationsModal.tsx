@@ -5,7 +5,7 @@ import Options from '../../Assets/Buttons/Options';
 import VersionSelectComponent from '../../Assets/VersionSelectComponent';
 import { IBot } from '../../utils/AxiosFunctions';
 import Parser from '../../utils/Parser';
-import '../ModalComponent.styles.scss';
+
 import useStyle from '../ViewJsonModal/ViewJsonModal.styles';
 import ConversationList from './ConversationList';
 

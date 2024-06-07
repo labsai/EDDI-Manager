@@ -3,7 +3,7 @@ import { compose, pure, setDisplayName } from 'recompose';
 import eddiApiActionDispatchers from '../../../actions/EddiApiActionDispatchers';
 import { PACKAGE } from '../../utils/EddiTypes';
 import Parser from '../../utils/Parser';
-import '../ModalComponent.styles.scss';
+
 import PackageContainer from './PackageContainer';
 import PluginContainer from './PluginContainer';
 

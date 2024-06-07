@@ -13,7 +13,7 @@ import { DEFAULT_LIMIT } from '../../utils/ApiFunctions';
 import { REGULAR_DICTIONARY } from '../../utils/EddiTypes';
 import Parser from '../../utils/Parser';
 import useStyles from '../AddPackagesModal/AddPackagesModal.styles';
-import '../ModalComponent.styles.scss';
+
 import PluginsList from './PluginsList';
 
 interface IPublicProps {
