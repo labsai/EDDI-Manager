@@ -3,8 +3,8 @@ import {
   BLACK_COLOR,
   BLUE_COLOR,
   GREY_COLOR,
-  LIGHT_BLUE_COLOR3,
   WHITE_COLOR,
+  LIGHT_BLUE_COLOR3,
 } from '../../../styles/DefaultStylingProperties';
 
 const useStyles = makeStyles({
@@ -50,6 +50,10 @@ const useStyles = makeStyles({
   loadingIndicator: {
     width: 40,
     height: 40,
+  },
+  typingLoader: {
+    width: 20,
+    height: 20,
   },
   error: {
     display: 'flex',

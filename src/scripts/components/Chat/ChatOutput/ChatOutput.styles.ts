@@ -19,6 +19,10 @@ const useStyles = makeStyles({
     backgroundColor: LIGHT_BLUE_COLOR3,
     borderRadius: '15px',
     overflow: 'hidden',
+
+    '& > p': {
+      margin: 0,
+    },
   },
   chatInput: {
     display: 'flex',

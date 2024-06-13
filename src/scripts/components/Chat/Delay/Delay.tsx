@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import { getChatAnimation } from '../../../selectors/ChatSelectors';
-import Typing from '../Typing/Typing';
+import useStyles from '../Chat.styles';
+
+const loadingIndicator = require('../../../../public/images/loading-indicator.svg');
 
 const Delayed = ({
   wait,
@@ -14,12 +16,15 @@ const Delayed = ({
   showTyping?: boolean;
   ignoreAnimation?: boolean;
 }) => {
+  const classes = useStyles();
   const [hidden, setHidden] = React.useState(true);
   const animation = useSelector(getChatAnimation);
 
   const hasAnimation = ignoreAnimation ? true : animation;
 
-  const typingComponent = showTyping ? <Typing /> : null;
+  const typingComponent = showTyping ? (
+    <img src={loadingIndicator} className={classes.loadingIndicator} />
+  ) : null;
 
   React.useEffect(() => {
     const timer = setTimeout(
