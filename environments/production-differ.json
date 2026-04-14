@@ -1,9 +1,0 @@
-{
-  "eddiApiUrl": "https://app.labs.ai",
-  "environment": "production",
-  "authMethod": "keycloak",
-  "authUrl": "https://dev-sso.differ.chat/auth",
-  "authRealm": "differ-tech",
-  "authClientId": "eddi-manager",
-  "readOnlyDomain": "https://app.labs.ai"
-}
