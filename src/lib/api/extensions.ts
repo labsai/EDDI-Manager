@@ -1,4 +1,4 @@
-import { Brain, FileCode, FileText, GitBranch, Globe, MessageSquareText, Plug, Puzzle, Settings } from "lucide-react";
+import { Brain, BookOpenCheck, FileCode, FileText, GitBranch, Globe, MessageSquareText, Plug, Puzzle, Settings } from "lucide-react";
 import { api } from "../api-client";
 
 /** Matches EDDI backend ExtensionDescriptor.ConfigValue */
@@ -49,6 +49,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Settings,
   FileCode,
   Plug,
+  BookOpenCheck,
 };
 
 /** Well-known extension type IDs and their display info */
@@ -69,7 +70,7 @@ export const EXTENSION_TYPE_INFO: Record<
   "eddi://ai.labs.mcpcalls": { label: "MCP Calls", icon: "Plug", order: 11, color: "text-rose-400" },
   "eddi://ai.labs.workflow": { label: "Workflow", icon: "FileText", order: 12, color: "text-indigo-400" },
   "eddi://ai.labs.dictionary": { label: "Dictionary", icon: "FileText", order: 13, color: "text-amber-400" },
-  "eddi://ai.labs.rag": { label: "RAG", icon: "FileText", order: 14, color: "text-purple-400" },
+  "eddi://ai.labs.rag": { label: "Knowledge Bases", icon: "BookOpenCheck", order: 14, color: "text-purple-400" },
 };
 
 /** Get a human-readable label for an extension type */

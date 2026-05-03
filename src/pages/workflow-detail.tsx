@@ -164,12 +164,15 @@ export function WorkflowDetailPage() {
 
   const handleAddExtension = useCallback(
     (result: AddExtensionResult) => {
-      // Parser steps get default inline config instead of an empty config
-      const isParser = result.descriptor.type === "eddi://ai.labs.parser";
+      const type = result.descriptor.type.startsWith("eddi://")
+        ? result.descriptor.type
+        : `eddi://${result.descriptor.type}`;
+
+      const isParser = type === "eddi://ai.labs.parser";
       const defaultParser = isParser ? createDefaultParserData() : undefined;
 
       const newExt: WorkflowExtension = {
-        type: result.descriptor.type,
+        type,
         extensions: isParser && !result.configUri
           ? ({ ...defaultParser!.extensions } as Record<string, unknown>)
           : {},
