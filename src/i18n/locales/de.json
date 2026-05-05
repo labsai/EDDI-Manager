@@ -1172,7 +1172,8 @@
     "ingestText": "Text aufnehmen",
     "ingestionHistory": "Aufnahme-Status",
     "saveFirstIngestion": "Speichern Sie diese Knowledge Base zuerst, um die Dokumenten-Aufnahme zu aktivieren.",
-    "addParam": "Parameter hinzufügen"
+    "addParam": "Parameter hinzufügen",
+    "ingestionSources": "Ingestion Sources"
   },
   "onboarding": {
     "welcome": {

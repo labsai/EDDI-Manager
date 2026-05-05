@@ -32,6 +32,22 @@ vi.mock("keycloak-js", () => ({
   },
 }));
 
+// Mock localStorage (jsdom may not always have it in isolated environments)
+if (typeof localStorage === "undefined" || localStorage.getItem === undefined) {
+  const store = new Map<string, string>();
+  Object.defineProperty(globalThis, "localStorage", {
+    value: {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => store.set(key, value),
+      removeItem: (key: string) => store.delete(key),
+      clear: () => store.clear(),
+      get length() { return store.size; },
+      key: (i: number) => [...store.keys()][i] ?? null,
+    },
+    configurable: true,
+  });
+}
+
 // Mock window.matchMedia for theme-provider (JSDOM doesn't implement it)
 Object.defineProperty(window, "matchMedia", {
   writable: true,

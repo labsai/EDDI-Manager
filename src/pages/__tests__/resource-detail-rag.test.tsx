@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderPage } from "@/test/test-utils";
 import { ResourceDetailPage } from "@/pages/resource-detail";
@@ -297,7 +297,7 @@ describe("RAG Knowledge Base Editor", () => {
     });
   });
 
-  // ─── NEW: Coverage expansion tests ──────────────────────────────────
+  // ─── Coverage expansion tests ──────────────────────────────────
 
   it("switches to ollama embedding provider", async () => {
     const user = userEvent.setup();
@@ -373,7 +373,6 @@ describe("RAG Knowledge Base Editor", () => {
   it("renders embedding parameters from mock data", async () => {
     renderRagPage();
     await waitFor(() => {
-      // Mock data has model: "text-embedding-3-small" as an embedding parameter
       expect(screen.getByDisplayValue("text-embedding-3-small")).toBeInTheDocument();
     });
   });
@@ -381,8 +380,112 @@ describe("RAG Knowledge Base Editor", () => {
   it("renders store parameters from mock data", async () => {
     renderRagPage();
     await waitFor(() => {
-      // Mock data has host: "localhost" as a store parameter
       expect(screen.getByDisplayValue("localhost")).toBeInTheDocument();
+    });
+  });
+
+  // ─── Ingestion Sources ─────────────────────────────────
+
+  /** Helper: expand the "Ingestion Sources" section (collapsed by default) */
+  async function expandIngestionSources() {
+    await waitFor(() => {
+      expect(screen.getByTestId("rag-editor")).toBeInTheDocument();
+    });
+    const sectionButtons = screen.getAllByRole("button", { expanded: false });
+    const sourcesBtn = sectionButtons.find((btn) =>
+      btn.textContent?.toLowerCase().includes("ingestion sources"),
+    );
+    expect(sourcesBtn).toBeDefined();
+    fireEvent.click(sourcesBtn!);
+    await waitFor(() => {
+      expect(screen.getByTestId("ingestion-sources-panel")).toBeInTheDocument();
+    });
+  }
+
+  it("renders ingestion sources section when expanded", async () => {
+    renderRagPage();
+    await expandIngestionSources();
+  });
+
+  it("shows existing ingestion source from mock data", async () => {
+    renderRagPage();
+    await expandIngestionSources();
+    await waitFor(() => {
+      expect(screen.getByTestId("source-item-0")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Product Documentation")).toBeInTheDocument();
+  });
+
+  it("shows add ingestion source button when not read-only", async () => {
+    renderRagPage();
+    await expandIngestionSources();
+    await waitFor(() => {
+      expect(screen.getByTestId("add-ingestion-source-btn")).toBeInTheDocument();
+    });
+  });
+
+  it("opens ingestion source editor form on add click", async () => {
+    renderRagPage();
+    await expandIngestionSources();
+    fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
+    await waitFor(() => {
+      expect(screen.getByTestId("ingestion-source-editor")).toBeInTheDocument();
+    });
+  });
+
+  it("renders source type selection buttons", async () => {
+    renderRagPage();
+    await expandIngestionSources();
+    fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
+    await waitFor(() => {
+      expect(screen.getByTestId("source-type-web")).toBeInTheDocument();
+      expect(screen.getByTestId("source-type-file")).toBeInTheDocument();
+      expect(screen.getByTestId("source-type-git")).toBeInTheDocument();
+      expect(screen.getByTestId("source-type-api")).toBeInTheDocument();
+    });
+  });
+
+  it("web source type is selected by default", async () => {
+    renderRagPage();
+    await expandIngestionSources();
+    fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
+    await waitFor(() => {
+      const webBtn = screen.getByTestId("source-type-web");
+      expect(webBtn.className).toContain("ring");
+    });
+  });
+
+  it("renders start url input when adding web source", async () => {
+    renderRagPage();
+    await expandIngestionSources();
+    fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
+    await waitFor(() => {
+      expect(screen.getByTestId("source-start-url")).toBeInTheDocument();
+    });
+  });
+
+  it("renders cron preset buttons", async () => {
+    renderRagPage();
+    await expandIngestionSources();
+    fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
+    await waitFor(() => {
+      expect(screen.getByTestId("cron-preset-hourly")).toBeInTheDocument();
+      expect(screen.getByTestId("cron-preset-daily")).toBeInTheDocument();
+      expect(screen.getByTestId("cron-preset-weekly")).toBeInTheDocument();
+      expect(screen.getByTestId("cron-preset-monthly")).toBeInTheDocument();
+    });
+  });
+
+  it("shows edit and delete buttons on existing sources", async () => {
+    renderRagPage();
+    await expandIngestionSources();
+    await waitFor(() => {
+      expect(screen.getByTestId("source-item-0")).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("source-edit-0")).toBeInTheDocument();
+      expect(screen.getByTestId("source-delete-0")).toBeInTheDocument();
+      expect(screen.getByTestId("source-trigger-0")).toBeInTheDocument();
     });
   });
 });
