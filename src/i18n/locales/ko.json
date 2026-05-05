@@ -1127,7 +1127,8 @@
     "ingestText": "텍스트 수집",
     "ingestionHistory": "수집 상태",
     "saveFirstIngestion": "문서 수집을 활성화하려면 먼저 이 지식 베이스를 저장하세요.",
-    "addParam": "파라미터 추가"
+    "addParam": "파라미터 추가",
+    "ingestionSources": "Ingestion Sources"
   },
   "onboarding": {
     "welcome": {

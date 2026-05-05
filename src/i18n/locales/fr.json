@@ -1127,7 +1127,8 @@
     "ingestText": "Ingérer le texte",
     "ingestionHistory": "Statut d'ingestion",
     "saveFirstIngestion": "Enregistrez d'abord cette base pour autoriser l'ingestion.",
-    "addParam": "Ajout paramètre"
+    "addParam": "Ajout paramètre",
+    "ingestionSources": "Ingestion Sources"
   },
   "onboarding": {
     "welcome": {

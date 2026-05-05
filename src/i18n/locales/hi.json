@@ -1127,7 +1127,8 @@
     "ingestText": "टेक्स्ट सुरक्षित करें",
     "ingestionHistory": "अंतर्ग्रहण स्थिति",
     "saveFirstIngestion": "दस्तावेज़ को प्रोसेस करने से पहले इस नॉलेज बेस को सहेजें।",
-    "addParam": "पैरामीटर जोड़ें"
+    "addParam": "पैरामीटर जोड़ें",
+    "ingestionSources": "Ingestion Sources"
   },
   "onboarding": {
     "welcome": {

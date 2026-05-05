@@ -1127,7 +1127,8 @@
     "ingestText": "استيعاب النص",
     "ingestionHistory": "حالة الاستيعاب",
     "saveFirstIngestion": "احفظ قاعدة المعرفة هذه أولاً لتمكين استيعاب المستندات.",
-    "addParam": "إضافة معلمة"
+    "addParam": "إضافة معلمة",
+    "ingestionSources": "Ingestion Sources"
   },
   "onboarding": {
     "welcome": {

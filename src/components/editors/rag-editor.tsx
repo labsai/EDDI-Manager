@@ -15,10 +15,12 @@ import {
   AlertCircle,
   Lock,
   ChevronDown,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api-client";
 import { SecretKeyPicker } from "@/components/shared/secret-key-picker";
+import { IngestionSourcesPanel } from "@/components/editors/ingestion-source-editor";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1000,6 +1002,26 @@ export function RagEditor({ data, onChange, readOnly, resourceId, version = 1 }:
       >
         {resourceId ? (
           <IngestionPanel kbId={resourceId} version={version} readOnly={readOnly} />
+        ) : (
+          <p className="text-xs text-muted-foreground italic">
+            {t("ragEditor.saveFirstIngestion", "Save this knowledge base first to enable document ingestion.")}
+          </p>
+        )}
+      </Section>
+
+      {/* ══════ Ingestion Sources ══════ */}
+      <Section
+        label="Ingestion Sources"
+        icon={Globe}
+        accent="text-sky-500"
+        defaultOpen={false}
+      >
+        {resourceId ? (
+          <IngestionSourcesPanel
+            resourceId={resourceId}
+            version={version}
+            readOnly={readOnly}
+          />
         ) : (
           <p className="text-xs text-muted-foreground italic">
             {t("ragEditor.saveFirstIngestion", "Save this knowledge base first to enable document ingestion.")}

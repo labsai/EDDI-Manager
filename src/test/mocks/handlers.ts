@@ -1846,6 +1846,111 @@ export const handlers = [
     });
   }),
 
+  // Ingestion Source mock data (before group store)
+  http.get("*/ragstore/ingestion-sources/byRagConfig", ({ request }) => {
+    const url = new URL(request.url);
+    const ragConfigUri = url.searchParams.get("ragConfigUri") ?? "eddi://ai.labs.rag/ragstore/rags/rag1?version=1";
+    return HttpResponse.json([
+      {
+        resource: "eddi://ai.labs.rag/ragstore/ingestion-sources/src1?version=1",
+        name: "Product Documentation",
+        description: "Crawls product docs from sidebar",
+        type: "web",
+        sourceConfig: {
+          startUrl: "https://docs.example.com",
+          tocSelector: "nav.sidebar a[href]",
+          scope: {
+            sameDomainOnly: true,
+            pathPrefix: "/docs/",
+            maxDepth: 3,
+            maxPages: 500,
+            excludePatterns: ["**/legacy/**"],
+          },
+          crawlSettings: {
+            requestDelayMs: 1000,
+            timeoutSeconds: 30,
+            userAgent: "EDDI-Crawler/1.0",
+          },
+        },
+        ragConfigUri: ragConfigUri,
+        ingestionSettings: {
+          chunkStrategy: "recursive",
+          chunkSize: 1024,
+          chunkOverlap: 128,
+          contentHashDedup: true,
+          maxContentLength: 50000,
+        },
+        schedule: {
+          cronExpression: "0 2 * * 0",
+          enabled: true,
+        },
+      },
+    ]);
+  }),
+
+  http.get("*/ragstore/ingestion-sources/:id", () => {
+    return HttpResponse.json({
+      name: "Product Documentation",
+      description: "Crawls product docs from sidebar",
+      type: "web",
+      sourceConfig: {
+        startUrl: "https://docs.example.com",
+        tocSelector: "nav.sidebar a[href]",
+        scope: {
+          sameDomainOnly: true,
+          pathPrefix: "/docs/",
+          maxDepth: 3,
+          maxPages: 500,
+          excludePatterns: ["**/legacy/**"],
+        },
+        crawlSettings: {
+          requestDelayMs: 1000,
+          timeoutSeconds: 30,
+          userAgent: "EDDI-Crawler/1.0",
+        },
+      },
+      ragConfigUri: "eddi://ai.labs.rag/ragstore/rags/rag1?version=1",
+      ingestionSettings: {
+        chunkStrategy: "recursive",
+        chunkSize: 1024,
+        chunkOverlap: 128,
+        contentHashDedup: true,
+        maxContentLength: 50000,
+      },
+      schedule: {
+        cronExpression: "0 2 * * 0",
+        enabled: true,
+      },
+    });
+  }),
+
+  http.post("*/ragstore/ingestion-sources", () => {
+    return new HttpResponse(null, {
+      status: 201,
+      headers: { Location: "/ragstore/ingestion-sources/new-source?version=1" },
+    });
+  }),
+
+  http.put("*/ragstore/ingestion-sources/:id", () => {
+    return new HttpResponse(null, {
+      status: 200,
+      headers: { Location: "/ragstore/ingestion-sources/updated-source?version=2" },
+    });
+  }),
+
+  http.delete("*/ragstore/ingestion-sources/:id", () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post("*/ragstore/ingestion-sources/:id/trigger", ({ request }) => {
+    const url = new URL(request.url);
+    const version = url.searchParams.get("version");
+    if (!version) {
+      return HttpResponse.json({ error: "version query parameter is required" }, { status: 400 });
+    }
+    return HttpResponse.json({ status: "accepted" }, { status: 202 });
+  }),
+
   // --- Group Store Mock Handlers ---
   http.get("*/groupstore/groups/descriptors", () => {
     return HttpResponse.json([

@@ -1127,7 +1127,8 @@
     "ingestText": "นำเข้าชนิดข้อความ",
     "ingestionHistory": "สถานะการประมวล",
     "saveFirstIngestion": "หลังจากนี้ ค่อยเพิ่มความสมบูรณ์ฐานความรู้ให้กับเอกสารต่อๆไป",
-    "addParam": "แอดพารามิเตอร์"
+    "addParam": "แอดพารามิเตอร์",
+    "ingestionSources": "Ingestion Sources"
   },
   "onboarding": {
     "welcome": {

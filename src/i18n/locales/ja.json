@@ -1127,7 +1127,8 @@
     "ingestText": "テキストを取り込む",
     "ingestionHistory": "取り込みステータス",
     "saveFirstIngestion": "ドキュメントの取り込みを有効にするには、先にこのナレッジベースを保存してください。",
-    "addParam": "パラメーターの追加"
+    "addParam": "パラメーターの追加",
+    "ingestionSources": "Ingestion Sources"
   },
   "onboarding": {
     "welcome": {

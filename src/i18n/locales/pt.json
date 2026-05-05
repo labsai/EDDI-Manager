@@ -1127,7 +1127,8 @@
     "ingestText": "Ingerir Texto",
     "ingestionHistory": "Status de Ingestão",
     "saveFirstIngestion": "Salve a base de conhecimento primeiro para ativar a ingestão.",
-    "addParam": "Adicionar Parâmetro"
+    "addParam": "Adicionar Parâmetro",
+    "ingestionSources": "Ingestion Sources"
   },
   "onboarding": {
     "welcome": {
