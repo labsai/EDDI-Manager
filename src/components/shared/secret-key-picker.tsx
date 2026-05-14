@@ -18,7 +18,7 @@ import { createPortal } from "react-dom";
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface SecretKeyPickerProps {
-  /** Current value — plain text or `eddivault:<keyName>` */
+  /** Current value — plain text or `vault:<keyName>` */
   value: string;
   /** Callback when value changes */
   onChange: (value: string) => void;
@@ -34,15 +34,29 @@ interface SecretKeyPickerProps {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const VAULT_PREFIX = "eddivault:";
-const VAULT_EXPR_PREFIX = "${eddivault:";
+/** Canonical prefix (v6+) */
+const VAULT_PREFIX = "vault:";
+const VAULT_EXPR_PREFIX = "${vault:";
 
-/** Check if a value is a vault reference (either `eddivault:key` or `${eddivault:key}`) */
+/** Legacy prefix — still accepted for backward compat when reading */
+const LEGACY_VAULT_PREFIX = "eddivault:";
+const LEGACY_VAULT_EXPR_PREFIX = "${eddivault:";
+
+/** Check if a value is a vault reference (canonical or legacy prefix) */
 function isVaultRef(value: string): boolean {
-  return value.startsWith(VAULT_PREFIX) || value.startsWith(VAULT_EXPR_PREFIX);
+  return (
+    value.startsWith(VAULT_PREFIX) ||
+    value.startsWith(VAULT_EXPR_PREFIX) ||
+    value.startsWith(LEGACY_VAULT_PREFIX) ||
+    value.startsWith(LEGACY_VAULT_EXPR_PREFIX)
+  );
 }
 
-/** Extract the key name from a vault reference */
+/**
+ * Extract the inner content from a vault reference (handles both canonical and legacy).
+ * For `${vault:keyName}` → returns `"keyName"`.
+ * For `${vault:tenantId/keyName}` → returns `"tenantId/keyName"`.
+ */
 function extractVaultKey(value: string): string {
   if (value.startsWith(VAULT_EXPR_PREFIX)) {
     return value.slice(
@@ -50,15 +64,34 @@ function extractVaultKey(value: string): string {
       value.endsWith("}") ? -1 : undefined,
     );
   }
+  if (value.startsWith(LEGACY_VAULT_EXPR_PREFIX)) {
+    return value.slice(
+      LEGACY_VAULT_EXPR_PREFIX.length,
+      value.endsWith("}") ? -1 : undefined,
+    );
+  }
   if (value.startsWith(VAULT_PREFIX)) {
     return value.slice(VAULT_PREFIX.length);
+  }
+  if (value.startsWith(LEGACY_VAULT_PREFIX)) {
+    return value.slice(LEGACY_VAULT_PREFIX.length);
   }
   return value;
 }
 
-/** Create a vault reference string in the `${eddivault:...}` format */
+/**
+ * Extract just the bare key name, stripping any tenant prefix.
+ * `"openaiKey"` → `"openaiKey"`, `"myTenant/openaiKey"` → `"openaiKey"`.
+ * Used to match against the vault key list (which stores bare key names).
+ */
+function bareKeyName(vaultKey: string): string {
+  const slashIdx = vaultKey.indexOf("/");
+  return slashIdx >= 0 ? vaultKey.slice(slashIdx + 1) : vaultKey;
+}
+
+/** Create a vault reference string in the canonical `${vault:...}` format */
 function toVaultRef(keyName: string): string {
-  return `\${eddivault:${keyName}}`;
+  return `\${vault:${keyName}}`;
 }
 
 // ─── CreateSecretModal ───────────────────────────────────────────────────────
@@ -397,8 +430,8 @@ function VaultPopup({
  * - **Vault picker popup**: searchable list of existing vault keys with descriptions,
  *   keyboard navigation, and inline secret creation
  *
- * When a vault key is selected → value becomes `${eddivault:<keyName>}`.
- * When a value starts with `eddivault:` or `${eddivault:` → auto-shows vault chip.
+ * When a vault key is selected → value becomes `${vault:<keyName>}`.
+ * When a value starts with `vault:` or `${vault:` (or legacy `eddivault:`) → auto-shows vault chip.
  */
 export function SecretKeyPicker({
   value,
@@ -443,9 +476,11 @@ export function SecretKeyPicker({
   // Derived state
   const hasVaultRef = isVaultRef(value);
   const currentVaultKey = hasVaultRef ? extractVaultKey(value) : "";
-  const currentKeyExists = secretKeyNames.has(currentVaultKey);
+  // Strip tenant prefix (e.g. "myTenant/openaiKey" → "openaiKey") for vault lookups
+  const currentBareKey = bareKeyName(currentVaultKey);
+  const currentKeyExists = secretKeyNames.has(currentBareKey);
   const currentDescription = hasVaultRef
-    ? secretList.find((s) => s.keyName === currentVaultKey)?.description ?? null
+    ? secretList.find((s) => s.keyName === currentBareKey)?.description ?? null
     : null;
 
   // Filtered list for keyboard nav count
@@ -622,7 +657,7 @@ export function SecretKeyPicker({
             readOnly={readOnly}
             placeholder={
               placeholder ??
-              t("secretPicker.placeholder", "API key or ${eddivault:key-name}")
+              t("secretPicker.placeholder", "API key or ${vault:key-name}")
             }
             dir="ltr"
             className={`h-7 w-full border border-input bg-background pe-14 ps-2 font-mono text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring ${
