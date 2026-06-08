@@ -1874,7 +1874,6 @@ export const handlers = [
         type: "web",
         sourceConfig: {
           startUrl: "https://docs.example.com",
-          tocSelector: "nav.sidebar a[href]",
           scope: {
             sameDomainOnly: true,
             pathPrefix: "/docs/",
@@ -1911,7 +1910,6 @@ export const handlers = [
       type: "web",
       sourceConfig: {
         startUrl: "https://docs.example.com",
-        tocSelector: "nav.sidebar a[href]",
         scope: {
           sameDomainOnly: true,
           pathPrefix: "/docs/",

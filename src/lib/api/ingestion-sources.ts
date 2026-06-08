@@ -13,7 +13,6 @@ export interface RagIngestionSource {
 
 export interface WebSourceConfig {
   startUrl: string;
-  tocSelector?: string;
   scope?: Scope;
   crawlSettings?: CrawlSettings;
 }

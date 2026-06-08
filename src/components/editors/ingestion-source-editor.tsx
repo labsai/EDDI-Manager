@@ -208,25 +208,7 @@ export function IngestionSourceEditor({
                 data-testid="source-start-url"
               />
             </div>
-            <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                TOC Selector
-              </label>
-              <input
-                type="text"
-                value={webConfig?.tocSelector ?? ""}
-                onChange={(e) =>
-                  update({ sourceConfig: { ...webConfig, tocSelector: e.target.value || undefined } as WebSourceConfig })
-                }
-                readOnly={readOnly}
-                placeholder="nav.sidebar a[href]"
-                className="h-8 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                data-testid="source-toc-selector"
-              />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                CSS selector for navigation links. If empty, only the start URL is crawled.
-              </p>
-            </div>
+
 
             <div className="rounded-md border border-dashed border-muted-foreground/20 p-3">
               <details className="group" data-testid="scope-details">
