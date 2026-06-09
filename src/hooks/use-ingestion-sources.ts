@@ -10,7 +10,7 @@ import {
 
 const ingestionKeys = {
   all: (ragConfigUri: string) => ["ingestion-sources", ragConfigUri] as const,
-  list: (ragConfigUri: string) => ["ingestion-sources", "list", ragConfigUri] as const,
+  list: (ragConfigUri: string) => ["ingestion-sources", ragConfigUri, "list"] as const,
 };
 
 export function useIngestionSources(ragConfigUri?: string) {
