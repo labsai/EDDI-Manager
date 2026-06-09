@@ -1128,7 +1128,9 @@
     "ingestionHistory": "摄入状态",
     "saveFirstIngestion": "使用前请先保存此知识库。",
     "addParam": "添加参数",
-    "ingestionSources": "Ingestion Sources"
+    "ingestionSources": "Ingestion Sources",
+    "triggerSuccess": "Ingestion triggered",
+    "triggerError": "Failed to trigger ingestion"
   },
   "onboarding": {
     "welcome": {

@@ -1128,7 +1128,9 @@
     "ingestionHistory": "Status de Ingestão",
     "saveFirstIngestion": "Salve a base de conhecimento primeiro para ativar a ingestão.",
     "addParam": "Adicionar Parâmetro",
-    "ingestionSources": "Ingestion Sources"
+    "ingestionSources": "Ingestion Sources",
+    "triggerSuccess": "Ingestion triggered",
+    "triggerError": "Failed to trigger ingestion"
   },
   "onboarding": {
     "welcome": {

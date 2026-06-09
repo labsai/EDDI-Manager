@@ -1,4 +1,7 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/api-client";
 import {
   Globe,
   GlobeLock,
@@ -614,6 +617,7 @@ export function IngestionSourcesPanel({
   const deleteMutation = useDeleteIngestionSource();
   const triggerMutation = useTriggerIngestion();
 
+  const { t } = useTranslation();
   const [editing, setEditing] = useState<{ source: RagIngestionSource; id?: string; version?: number } | null>(null);
   const [triggering, setTriggering] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -631,6 +635,8 @@ export function IngestionSourcesPanel({
   const handleTrigger = (id: string, version: number) => {
     setTriggering(id);
     triggerMutation.mutate({ id, version }, {
+      onSuccess: () => toast.success(t("ragEditor.triggerSuccess", "Ingestion triggered")),
+      onError: (err) => toast.error(t("ragEditor.triggerError", "Failed to trigger ingestion"), { description: getErrorMessage(err) }),
       onSettled: () => setTriggering(null),
     });
   };

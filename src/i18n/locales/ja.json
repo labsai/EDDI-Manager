@@ -1128,7 +1128,9 @@
     "ingestionHistory": "取り込みステータス",
     "saveFirstIngestion": "ドキュメントの取り込みを有効にするには、先にこのナレッジベースを保存してください。",
     "addParam": "パラメーターの追加",
-    "ingestionSources": "Ingestion Sources"
+    "ingestionSources": "Ingestion Sources",
+    "triggerSuccess": "Ingestion triggered",
+    "triggerError": "Failed to trigger ingestion"
   },
   "onboarding": {
     "welcome": {

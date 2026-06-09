@@ -1201,7 +1201,9 @@
     "ingestionHistory": "Ingestion Status",
     "saveFirstIngestion": "Save this knowledge base first to enable document ingestion.",
     "addParam": "Add Parameter",
-    "ingestionSources": "Ingestion Sources"
+    "ingestionSources": "Ingestion Sources",
+    "triggerSuccess": "Ingestion triggered",
+    "triggerError": "Failed to trigger ingestion"
   },
   "onboarding": {
     "welcome": {

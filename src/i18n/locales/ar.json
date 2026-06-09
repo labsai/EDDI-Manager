@@ -1128,7 +1128,9 @@
     "ingestionHistory": "حالة الاستيعاب",
     "saveFirstIngestion": "احفظ قاعدة المعرفة هذه أولاً لتمكين استيعاب المستندات.",
     "addParam": "إضافة معلمة",
-    "ingestionSources": "Ingestion Sources"
+    "ingestionSources": "Ingestion Sources",
+    "triggerSuccess": "Ingestion triggered",
+    "triggerError": "Failed to trigger ingestion"
   },
   "onboarding": {
     "welcome": {

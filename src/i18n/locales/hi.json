@@ -1128,7 +1128,9 @@
     "ingestionHistory": "अंतर्ग्रहण स्थिति",
     "saveFirstIngestion": "दस्तावेज़ को प्रोसेस करने से पहले इस नॉलेज बेस को सहेजें।",
     "addParam": "पैरामीटर जोड़ें",
-    "ingestionSources": "Ingestion Sources"
+    "ingestionSources": "Ingestion Sources",
+    "triggerSuccess": "Ingestion triggered",
+    "triggerError": "Failed to trigger ingestion"
   },
   "onboarding": {
     "welcome": {
