@@ -1130,7 +1130,15 @@
     "addParam": "添加参数",
     "ingestionSources": "Ingestion Sources",
     "triggerSuccess": "Ingestion triggered",
-    "triggerError": "Failed to trigger ingestion"
+    "triggerError": "Failed to trigger ingestion",
+    "sourceCreated": "Ingestion source created",
+    "sourceUpdated": "Ingestion source updated",
+    "sourceDeleted": "Ingestion source deleted",
+    "sourceCreateError": "Failed to create ingestion source",
+    "sourceUpdateError": "Failed to update ingestion source",
+    "sourceDeleteError": "Failed to delete ingestion source",
+    "ingestUploadError": "Failed to upload document",
+    "ingestReadError": "Could not read file"
   },
   "onboarding": {
     "welcome": {

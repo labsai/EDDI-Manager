@@ -18,7 +18,8 @@ import {
   Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { api } from "@/lib/api-client";
+import { api, getErrorMessage } from "@/lib/api-client";
+import { toast } from "sonner";
 import { SecretKeyPicker } from "@/components/shared/secret-key-picker";
 import { IngestionSourcesPanel } from "@/components/editors/ingestion-source-editor";
 
@@ -449,15 +450,16 @@ function IngestionPanel({
         );
         // Poll status
         pollStatus(id);
-      } catch {
+      } catch (err) {
         setIngestions((prev) =>
           prev.map((ing) =>
             ing.ingestionId === tempId ? { ...ing, status: "failed: upload error" } : ing,
           ),
         );
+        toast.error(t("ragEditor.ingestUploadError", "Failed to upload document"), { description: getErrorMessage(err) });
       }
     },
-    [kbId, version, pollStatus],
+    [kbId, version, pollStatus, t],
   );
 
   const handleFiles = useCallback(
@@ -473,11 +475,12 @@ function IngestionPanel({
             ...prev,
             { ingestionId: `err-${Date.now()}`, status: `failed: could not read ${file.name}`, documentName: file.name },
           ]);
+          toast.error(t("ragEditor.ingestReadError", "Could not read file"), { description: file.name });
         };
         reader.readAsText(file);
       });
     },
-    [startIngestion],
+    [startIngestion, t],
   );
 
   const handleTextIngest = useCallback(() => {

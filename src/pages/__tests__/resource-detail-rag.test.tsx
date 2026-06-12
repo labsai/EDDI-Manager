@@ -4,6 +4,9 @@ import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import { Toaster } from "sonner";
+import { http, HttpResponse } from "msw";
+import { server } from "@/test/mocks/server";
 import { ResourceDetailPage } from "@/pages/resource-detail";
 
 function renderPage(type: string, id = "res1") {
@@ -408,6 +411,85 @@ describe("RAG Knowledge Base Editor", () => {
       expect(screen.getByTestId("source-edit-0")).toBeInTheDocument();
       expect(screen.getByTestId("source-delete-0")).toBeInTheDocument();
       expect(screen.getByTestId("source-trigger-0")).toBeInTheDocument();
+    });
+  });
+
+  // ─── Error Handling ─────────────────────────────────────
+
+  describe("error handling", () => {
+    function renderPageWithToaster(type: string, id = "res1") {
+      const queryClient = new QueryClient({
+        defaultOptions: {
+          queries: { retry: false },
+          mutations: { retry: false },
+        },
+      });
+
+      return render(
+        <MemoryRouter initialEntries={[`/manage/resources/${type}/${id}`]}>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider defaultTheme="light" storageKey="eddi-theme-test">
+              <Toaster />
+              <Routes>
+                <Route
+                  path="/manage/resources/:type/:id"
+                  element={<ResourceDetailPage />}
+                />
+              </Routes>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </MemoryRouter>
+      );
+    }
+
+    it("shows error toast and keeps editor open when source creation fails", async () => {
+      server.use(
+        http.post("*/ragstore/ingestion-sources", () => {
+          return HttpResponse.json(
+            { message: "Internal Server Error" },
+            { status: 500 },
+          );
+        }),
+      );
+
+      renderPageWithToaster("rag");
+
+      // Expand ingestion sources section
+      await waitFor(() => {
+        expect(screen.getByTestId("rag-editor")).toBeInTheDocument();
+      });
+      const sectionButtons = screen.getAllByRole("button", { expanded: false });
+      const sourcesBtn = sectionButtons.find((btn) =>
+        btn.textContent?.toLowerCase().includes("ingestion sources"),
+      );
+      expect(sourcesBtn).toBeDefined();
+      fireEvent.click(sourcesBtn!);
+      await waitFor(() => {
+        expect(screen.getByTestId("ingestion-sources-panel")).toBeInTheDocument();
+      });
+
+      // Open add form
+      fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
+      await waitFor(() => {
+        expect(screen.getByTestId("ingestion-source-editor")).toBeInTheDocument();
+      });
+
+      // Fill in the name so save button is enabled
+      const nameInput = screen.getByTestId("ingestion-source-name") as HTMLInputElement;
+      fireEvent.change(nameInput, { target: { value: "Test Source" } });
+
+      // Click save
+      fireEvent.click(screen.getByTestId("source-save-btn"));
+
+      // Assert error toast is shown
+      await waitFor(() => {
+        expect(screen.getByText(/Failed to create ingestion source/)).toBeInTheDocument();
+      });
+
+      // The editor should remain open (not close on error)
+      await waitFor(() => {
+        expect(screen.getByTestId("ingestion-source-editor")).toBeInTheDocument();
+      });
     });
   });
 });

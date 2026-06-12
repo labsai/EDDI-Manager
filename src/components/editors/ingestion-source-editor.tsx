@@ -103,6 +103,7 @@ export interface IngestionSourceEditorProps {
   onSave: (source: RagIngestionSource) => void;
   onCancel: () => void;
   readOnly?: boolean;
+  isSaving?: boolean;
 }
 
 export function IngestionSourceEditor({
@@ -111,6 +112,7 @@ export function IngestionSourceEditor({
   onSave,
   onCancel,
   readOnly = false,
+  isSaving = false,
 }: IngestionSourceEditorProps) {
   const [source, setSource] = useState<RagIngestionSource>(
     initial ?? { ...EMPTY_SOURCE, ragConfigUri },
@@ -530,11 +532,11 @@ export function IngestionSourceEditor({
           <button
             type="button"
             onClick={() => onSave(source)}
-            disabled={!source.name.trim() || !ragConfigUri}
+            disabled={!source.name.trim() || !ragConfigUri || isSaving}
             className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
             data-testid="source-save-btn"
           >
-            {initial ? "Update Source" : "Add Source"}
+            {isSaving ? (initial ? "Updating..." : "Adding...") : initial ? "Update Source" : "Add Source"}
           </button>
         </div>
       )}
@@ -624,12 +626,45 @@ export function IngestionSourcesPanel({
 
   const handleSave = (source: RagIngestionSource) => {
     if (editing?.id && editing?.version !== undefined) {
-      updateMutation.mutate({ id: editing.id, version: editing.version, source });
+      updateMutation.mutate(
+        { id: editing.id, version: editing.version, source },
+        {
+          onSuccess: () => {
+            toast.success(t("ragEditor.sourceUpdated", "Ingestion source updated"));
+            setEditing(null);
+            setIsAdding(false);
+          },
+          onError: (err) => {
+            toast.error(t("ragEditor.sourceUpdateError", "Failed to update ingestion source"), { description: getErrorMessage(err) });
+          },
+        },
+      );
     } else {
-      createMutation.mutate(source);
+      createMutation.mutate(source, {
+        onSuccess: () => {
+          toast.success(t("ragEditor.sourceCreated", "Ingestion source created"));
+          setIsAdding(false);
+          setEditing(null);
+        },
+        onError: (err) => {
+          toast.error(t("ragEditor.sourceCreateError", "Failed to create ingestion source"), { description: getErrorMessage(err) });
+        },
+      });
     }
-    setEditing(null);
-    setIsAdding(false);
+  };
+
+  const handleDelete = (srcId: string, srcVersion: number) => {
+    deleteMutation.mutate(
+      { id: srcId, version: srcVersion, ragConfigUri },
+      {
+        onSuccess: () => {
+          toast.success(t("ragEditor.sourceDeleted", "Ingestion source deleted"));
+        },
+        onError: (err) => {
+          toast.error(t("ragEditor.sourceDeleteError", "Failed to delete ingestion source"), { description: getErrorMessage(err) });
+        },
+      },
+    );
   };
 
   const handleTrigger = (id: string, version: number) => {
@@ -707,7 +742,7 @@ export function IngestionSourcesPanel({
                         </button>
                         <button
                           type="button"
-                          onClick={() => deleteMutation.mutate({ id: srcId, version: srcVersion, ragConfigUri })}
+                          onClick={() => handleDelete(srcId, srcVersion)}
                           className="rounded p-1 text-muted-foreground hover:text-destructive transition-colors"
                           title="Delete"
                           data-testid={`source-delete-${idx}`}
@@ -743,6 +778,7 @@ export function IngestionSourcesPanel({
           onSave={handleSave}
           onCancel={() => { setEditing(null); setIsAdding(false); }}
           readOnly={false}
+          isSaving={createMutation.isPending || updateMutation.isPending}
         />
       )}
     </div>
