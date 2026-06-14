@@ -32,11 +32,52 @@ import {
   useTriggerIngestion,
 } from "@/hooks/use-ingestion-sources";
 
+const DEFAULT_SCOPE: Scope = {
+  sameDomainOnly: true,
+  pathPrefix: "/",
+  maxDepth: 3,
+  maxPages: 200,
+};
+
+const DEFAULT_CRAWL_SETTINGS: CrawlSettings = {
+  requestDelayMs: 100,
+  timeoutSeconds: 15,
+  userAgent: "EDDI-Crawler/1.0",
+};
+
+const DEFAULT_INGESTION_SETTINGS: IngestionSettings = {
+  chunkStrategy: "recursive",
+  chunkSize: 512,
+  chunkOverlap: 64,
+  contentHashDedup: true,
+  maxContentLength: 100000,
+};
+
+const DEFAULT_SCHEDULE: Schedule = {
+  enabled: true,
+  cronExpression: "0 2 * * *",
+};
+
+function mergeDefaults(source: RagIngestionSource): RagIngestionSource {
+  return {
+    ...source,
+    sourceConfig: {
+      ...source.sourceConfig,
+      scope: { ...DEFAULT_SCOPE, ...source.sourceConfig?.scope },
+      crawlSettings: { ...DEFAULT_CRAWL_SETTINGS, ...source.sourceConfig?.crawlSettings },
+    } as WebSourceConfig,
+    ingestionSettings: { ...DEFAULT_INGESTION_SETTINGS, ...source.ingestionSettings },
+    schedule: { ...DEFAULT_SCHEDULE, ...source.schedule },
+  };
+}
+
 const EMPTY_SOURCE: RagIngestionSource = {
   name: "",
   type: "web",
-  sourceConfig: { startUrl: "" },
+  sourceConfig: { startUrl: "", scope: DEFAULT_SCOPE, crawlSettings: DEFAULT_CRAWL_SETTINGS },
   ragConfigUri: "",
+  ingestionSettings: DEFAULT_INGESTION_SETTINGS,
+  schedule: DEFAULT_SCHEDULE,
 };
 
 const SOURCE_TYPES = [
@@ -115,7 +156,7 @@ export function IngestionSourceEditor({
   isSaving = false,
 }: IngestionSourceEditorProps) {
   const [source, setSource] = useState<RagIngestionSource>(
-    initial ?? { ...EMPTY_SOURCE, ragConfigUri },
+    initial ? mergeDefaults(initial) : { ...EMPTY_SOURCE, ragConfigUri },
   );
 
   const update = useCallback(
@@ -174,7 +215,14 @@ export function IngestionSourceEditor({
                   disabled={st.disabled || readOnly}
                   onClick={() => {
                     if (st.value === source.type || st.disabled) return;
-                    update({ type: st.value, sourceConfig: { startUrl: "" } });
+                    if (st.value === "web") {
+                      update({
+                        type: "web",
+                        sourceConfig: { startUrl: "", scope: DEFAULT_SCOPE, crawlSettings: DEFAULT_CRAWL_SETTINGS },
+                      });
+                    } else {
+                      update({ type: st.value, sourceConfig: { startUrl: "" } });
+                    }
                   }}
                   className={cn(
                     "rounded-lg border p-2.5 text-start transition-all",
