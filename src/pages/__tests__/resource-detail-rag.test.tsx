@@ -229,12 +229,7 @@ describe("RAG Knowledge Base Editor", () => {
     expect(screen.queryByTestId("chunk-size")).not.toBeInTheDocument();
 
     // Find the chunking section header button and click it
-    const sectionButtons = screen.getAllByRole("button", { expanded: false });
-    const chunkingBtn = sectionButtons.find((btn) =>
-      btn.textContent?.toLowerCase().includes("chunking"),
-    );
-    expect(chunkingBtn).toBeDefined();
-    await user.click(chunkingBtn!);
+    fireEvent.click(screen.getByTestId("section-chunking"));
 
     await waitFor(() => {
       const slider = screen.getByTestId("chunk-size") as HTMLInputElement;
@@ -249,11 +244,7 @@ describe("RAG Knowledge Base Editor", () => {
       expect(screen.getByTestId("rag-editor")).toBeInTheDocument();
     });
 
-    const sectionButtons = screen.getAllByRole("button", { expanded: false });
-    const chunkingBtn = sectionButtons.find((btn) =>
-      btn.textContent?.toLowerCase().includes("chunking"),
-    );
-    await user.click(chunkingBtn!);
+    fireEvent.click(screen.getByTestId("section-chunking"));
 
     await waitFor(() => {
       const slider = screen.getByTestId("chunk-overlap") as HTMLInputElement;
@@ -269,11 +260,7 @@ describe("RAG Knowledge Base Editor", () => {
     });
 
     // Expand chunking section
-    const sectionButtons = screen.getAllByRole("button", { expanded: false });
-    const chunkingBtn = sectionButtons.find((btn) =>
-      btn.textContent?.toLowerCase().includes("chunking"),
-    );
-    await user.click(chunkingBtn!);
+    fireEvent.click(screen.getByTestId("section-chunking"));
 
     await waitFor(() => {
       expect(screen.getByTestId("chunk-strategy")).toBeInTheDocument();
@@ -397,12 +384,7 @@ describe("RAG Knowledge Base Editor", () => {
     await waitFor(() => {
       expect(screen.getByTestId("rag-editor")).toBeInTheDocument();
     });
-    const sectionButtons = screen.getAllByRole("button", { expanded: false });
-    const sourcesBtn = sectionButtons.find((btn) =>
-      btn.textContent?.toLowerCase().includes("ingestion sources"),
-    );
-    expect(sourcesBtn).toBeDefined();
-    fireEvent.click(sourcesBtn!);
+    fireEvent.click(screen.getByTestId("section-ingestion-sources"));
     await waitFor(() => {
       expect(screen.getByTestId("ingestion-sources-panel")).toBeInTheDocument();
     });
@@ -417,9 +399,9 @@ describe("RAG Knowledge Base Editor", () => {
     renderRagPage();
     await expandIngestionSources();
     await waitFor(() => {
-      expect(screen.getByTestId("source-item-0")).toBeInTheDocument();
+      expect(screen.getByTestId("source-name-0")).toBeInTheDocument();
     });
-    expect(screen.getByText("Product Documentation")).toBeInTheDocument();
+    expect(screen.getByTestId("source-name-0")).toHaveTextContent("Product Documentation");
   });
 
   it("shows add ingestion source button when not read-only", async () => {
@@ -457,7 +439,7 @@ describe("RAG Knowledge Base Editor", () => {
     fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
     await waitFor(() => {
       const webBtn = screen.getByTestId("source-type-web");
-      expect(webBtn.className).toContain("ring");
+      expect(webBtn).toHaveAttribute("aria-pressed", "true");
     });
   });
 
@@ -539,12 +521,7 @@ describe("RAG Knowledge Base Editor", () => {
       await waitFor(() => {
         expect(screen.getByTestId("rag-editor")).toBeInTheDocument();
       });
-      const sectionButtons = screen.getAllByRole("button", { expanded: false });
-      const sourcesBtn = sectionButtons.find((btn) =>
-        btn.textContent?.toLowerCase().includes("ingestion sources"),
-      );
-      expect(sourcesBtn).toBeDefined();
-      fireEvent.click(sourcesBtn!);
+      fireEvent.click(screen.getByTestId("section-ingestion-sources"));
       await waitFor(() => {
         expect(screen.getByTestId("ingestion-sources-panel")).toBeInTheDocument();
       });

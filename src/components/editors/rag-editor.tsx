@@ -157,6 +157,7 @@ function Section({
   accent,
   defaultOpen = true,
   badge,
+  testId,
   children,
 }: {
   label: string;
@@ -164,6 +165,7 @@ function Section({
   accent: string;
   defaultOpen?: boolean;
   badge?: string;
+  testId?: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -173,6 +175,7 @@ function Section({
         type="button"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
+        data-testid={testId}
         className="flex w-full items-center gap-2.5 px-4 py-2.5 text-start transition-colors hover:bg-muted/30"
       >
         <Icon className={cn("h-4 w-4 shrink-0", accent)} />
@@ -806,6 +809,7 @@ export function RagEditor({ data, onChange, readOnly, resourceId, version = 1 }:
         icon={Scissors}
         accent="text-amber-500"
         defaultOpen={false}
+        testId="section-chunking"
       >
         <div className="space-y-3" data-testid="chunking-section">
           <div>
@@ -1019,6 +1023,7 @@ export function RagEditor({ data, onChange, readOnly, resourceId, version = 1 }:
         icon={Globe}
         accent="text-sky-500"
         defaultOpen={false}
+        testId="section-ingestion-sources"
       >
         {resourceId ? (
           <IngestionSourcesPanel
