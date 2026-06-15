@@ -1127,7 +1127,18 @@
     "ingestText": "นำเข้าชนิดข้อความ",
     "ingestionHistory": "สถานะการประมวล",
     "saveFirstIngestion": "หลังจากนี้ ค่อยเพิ่มความสมบูรณ์ฐานความรู้ให้กับเอกสารต่อๆไป",
-    "addParam": "แอดพารามิเตอร์"
+    "addParam": "แอดพารามิเตอร์",
+    "ingestionSources": "แหล่งนำเข้าข้อมูล",
+    "triggerSuccess": "เริ่มนำเข้าข้อมูลแล้ว",
+    "triggerError": "เริ่มนำเข้าข้อมูลไม่สำเร็จ",
+    "sourceCreated": "สร้างแหล่งนำเข้าข้อมูลแล้ว",
+    "sourceUpdated": "อัปเดตแหล่งนำเข้าข้อมูลแล้ว",
+    "sourceDeleted": "ลบแหล่งนำเข้าข้อมูลแล้ว",
+    "sourceCreateError": "สร้างแหล่งนำเข้าข้อมูลไม่สำเร็จ",
+    "sourceUpdateError": "อัปเดตแหล่งนำเข้าข้อมูลไม่สำเร็จ",
+    "sourceDeleteError": "ลบแหล่งนำเข้าข้อมูลไม่สำเร็จ",
+    "ingestUploadError": "อัปโหลดเอกสารไม่สำเร็จ",
+    "ingestReadError": "อ่านไฟล์ไม่ได้"
   },
   "onboarding": {
     "welcome": {

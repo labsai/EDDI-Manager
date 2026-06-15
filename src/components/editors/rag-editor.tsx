@@ -15,10 +15,13 @@ import {
   AlertCircle,
   Lock,
   ChevronDown,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { api } from "@/lib/api-client";
+import { api, getErrorMessage } from "@/lib/api-client";
+import { toast } from "sonner";
 import { SecretKeyPicker } from "@/components/shared/secret-key-picker";
+import { IngestionSourcesPanel } from "@/components/editors/ingestion-source-editor";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -154,6 +157,7 @@ function Section({
   accent,
   defaultOpen = true,
   badge,
+  testId,
   children,
 }: {
   label: string;
@@ -161,6 +165,7 @@ function Section({
   accent: string;
   defaultOpen?: boolean;
   badge?: string;
+  testId?: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -170,6 +175,7 @@ function Section({
         type="button"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
+        data-testid={testId}
         className="flex w-full items-center gap-2.5 px-4 py-2.5 text-start transition-colors hover:bg-muted/30"
       >
         <Icon className={cn("h-4 w-4 shrink-0", accent)} />
@@ -447,15 +453,16 @@ function IngestionPanel({
         );
         // Poll status
         pollStatus(id);
-      } catch {
+      } catch (err) {
         setIngestions((prev) =>
           prev.map((ing) =>
             ing.ingestionId === tempId ? { ...ing, status: "failed: upload error" } : ing,
           ),
         );
+        toast.error(t("ragEditor.ingestUploadError", "Failed to upload document"), { description: getErrorMessage(err) });
       }
     },
-    [kbId, version, pollStatus],
+    [kbId, version, pollStatus, t],
   );
 
   const handleFiles = useCallback(
@@ -471,11 +478,12 @@ function IngestionPanel({
             ...prev,
             { ingestionId: `err-${Date.now()}`, status: `failed: could not read ${file.name}`, documentName: file.name },
           ]);
+          toast.error(t("ragEditor.ingestReadError", "Could not read file"), { description: file.name });
         };
         reader.readAsText(file);
       });
     },
-    [startIngestion],
+    [startIngestion, t],
   );
 
   const handleTextIngest = useCallback(() => {
@@ -800,6 +808,7 @@ export function RagEditor({ data, onChange, readOnly, resourceId, version = 1 }:
         icon={Scissors}
         accent="text-amber-500"
         defaultOpen={false}
+        testId="section-chunking"
       >
         <div className="space-y-3" data-testid="chunking-section">
           <div>
@@ -1000,6 +1009,27 @@ export function RagEditor({ data, onChange, readOnly, resourceId, version = 1 }:
       >
         {resourceId ? (
           <IngestionPanel kbId={resourceId} version={version} readOnly={readOnly} />
+        ) : (
+          <p className="text-xs text-muted-foreground italic">
+            {t("ragEditor.saveFirstIngestion", "Save this knowledge base first to enable document ingestion.")}
+          </p>
+        )}
+      </Section>
+
+      {/* ══════ Ingestion Sources ══════ */}
+      <Section
+        label="Ingestion Sources"
+        icon={Globe}
+        accent="text-sky-500"
+        defaultOpen={false}
+        testId="section-ingestion-sources"
+      >
+        {resourceId ? (
+          <IngestionSourcesPanel
+            resourceId={resourceId}
+            version={version}
+            readOnly={readOnly}
+          />
         ) : (
           <p className="text-xs text-muted-foreground italic">
             {t("ragEditor.saveFirstIngestion", "Save this knowledge base first to enable document ingestion.")}

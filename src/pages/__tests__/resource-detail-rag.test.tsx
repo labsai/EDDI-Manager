@@ -4,6 +4,9 @@ import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import { Toaster } from "sonner";
+import { http, HttpResponse } from "msw";
+import { server } from "@/test/mocks/server";
 import { ResourceDetailPage } from "@/pages/resource-detail";
 
 function renderPage(type: string, id = "res1") {
@@ -234,12 +237,7 @@ describe("RAG Knowledge Base Editor", () => {
     expect(screen.queryByTestId("chunk-size")).not.toBeInTheDocument();
 
     // Find the chunking section header button and click it
-    const sectionButtons = screen.getAllByRole("button", { expanded: false });
-    const chunkingBtn = sectionButtons.find((btn) =>
-      btn.textContent?.toLowerCase().includes("chunking"),
-    );
-    expect(chunkingBtn).toBeDefined();
-    fireEvent.click(chunkingBtn!);
+    fireEvent.click(screen.getByTestId("section-chunking"));
 
     await waitFor(() => {
       const slider = screen.getByTestId("chunk-size") as HTMLInputElement;
@@ -254,11 +252,7 @@ describe("RAG Knowledge Base Editor", () => {
     });
 
     // Click to expand chunking
-    const sectionButtons = screen.getAllByRole("button", { expanded: false });
-    const chunkingBtn = sectionButtons.find((btn) =>
-      btn.textContent?.toLowerCase().includes("chunking"),
-    );
-    fireEvent.click(chunkingBtn!);
+    fireEvent.click(screen.getByTestId("section-chunking"));
 
     await waitFor(() => {
       const slider = screen.getByTestId("chunk-overlap") as HTMLInputElement;
@@ -273,11 +267,7 @@ describe("RAG Knowledge Base Editor", () => {
     });
 
     // Expand chunking section
-    const sectionButtons = screen.getAllByRole("button", { expanded: false });
-    const chunkingBtn = sectionButtons.find((btn) =>
-      btn.textContent?.toLowerCase().includes("chunking"),
-    );
-    fireEvent.click(chunkingBtn!);
+    fireEvent.click(screen.getByTestId("section-chunking"));
 
     await waitFor(() => {
       expect(screen.getByTestId("chunk-strategy")).toBeInTheDocument();
@@ -303,6 +293,180 @@ describe("RAG Knowledge Base Editor", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("json-view")).toBeInTheDocument();
+    });
+  });
+
+  // ─── Ingestion Sources ─────────────────────────────────
+
+  /** Helper: expand the "Ingestion Sources" section (collapsed by default) */
+  async function expandIngestionSources() {
+    await waitFor(() => {
+      expect(screen.getByTestId("rag-editor")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByTestId("section-ingestion-sources"));
+    await waitFor(() => {
+      expect(screen.getByTestId("ingestion-sources-panel")).toBeInTheDocument();
+    });
+  }
+
+  it("renders ingestion sources section when expanded", async () => {
+    renderPage("rag");
+    await expandIngestionSources();
+  });
+
+  it("shows existing ingestion source from mock data", async () => {
+    renderPage("rag");
+    await expandIngestionSources();
+    await waitFor(() => {
+      expect(screen.getByTestId("source-name-0")).toBeInTheDocument();
+    });
+    expect(screen.getByTestId("source-name-0")).toHaveTextContent("Product Documentation");
+  });
+
+  it("shows add ingestion source button when not read-only", async () => {
+    renderPage("rag");
+    await expandIngestionSources();
+    await waitFor(() => {
+      expect(screen.getByTestId("add-ingestion-source-btn")).toBeInTheDocument();
+    });
+  });
+
+  it("opens ingestion source editor form on add click", async () => {
+    renderPage("rag");
+    await expandIngestionSources();
+    fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
+    await waitFor(() => {
+      expect(screen.getByTestId("ingestion-source-editor")).toBeInTheDocument();
+    });
+  });
+
+  it("renders source type selection buttons", async () => {
+    renderPage("rag");
+    await expandIngestionSources();
+    fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
+    await waitFor(() => {
+      expect(screen.getByTestId("source-type-web")).toBeInTheDocument();
+      expect(screen.getByTestId("source-type-file")).toBeInTheDocument();
+      expect(screen.getByTestId("source-type-git")).toBeInTheDocument();
+      expect(screen.getByTestId("source-type-api")).toBeInTheDocument();
+    });
+  });
+
+  it("web source type is selected by default", async () => {
+    renderPage("rag");
+    await expandIngestionSources();
+    fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
+    await waitFor(() => {
+      const webBtn = screen.getByTestId("source-type-web");
+      expect(webBtn).toHaveAttribute("aria-pressed", "true");
+    });
+  });
+
+  it("renders start url input when adding web source", async () => {
+    renderPage("rag");
+    await expandIngestionSources();
+    fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
+    await waitFor(() => {
+      expect(screen.getByTestId("source-start-url")).toBeInTheDocument();
+    });
+  });
+
+  it("renders cron preset buttons", async () => {
+    renderPage("rag");
+    await expandIngestionSources();
+    fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
+    await waitFor(() => {
+      expect(screen.getByTestId("cron-preset-hourly")).toBeInTheDocument();
+      expect(screen.getByTestId("cron-preset-daily")).toBeInTheDocument();
+      expect(screen.getByTestId("cron-preset-weekly")).toBeInTheDocument();
+      expect(screen.getByTestId("cron-preset-monthly")).toBeInTheDocument();
+    });
+  });
+
+  it("shows edit and delete buttons on existing sources", async () => {
+    renderPage("rag");
+    await expandIngestionSources();
+    await waitFor(() => {
+      expect(screen.getByTestId("source-item-0")).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("source-edit-0")).toBeInTheDocument();
+      expect(screen.getByTestId("source-delete-0")).toBeInTheDocument();
+      expect(screen.getByTestId("source-trigger-0")).toBeInTheDocument();
+    });
+  });
+
+  // ─── Error Handling ─────────────────────────────────────
+
+  describe("error handling", () => {
+    function renderPageWithToaster(type: string, id = "res1") {
+      const queryClient = new QueryClient({
+        defaultOptions: {
+          queries: { retry: false },
+          mutations: { retry: false },
+        },
+      });
+
+      return render(
+        <MemoryRouter initialEntries={[`/manage/resources/${type}/${id}`]}>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider defaultTheme="light" storageKey="eddi-theme-test">
+              <Toaster />
+              <Routes>
+                <Route
+                  path="/manage/resources/:type/:id"
+                  element={<ResourceDetailPage />}
+                />
+              </Routes>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </MemoryRouter>
+      );
+    }
+
+    it("shows error toast and keeps editor open when source creation fails", async () => {
+      server.use(
+        http.post("*/ragstore/ingestion-sources", () => {
+          return HttpResponse.json(
+            { message: "Internal Server Error" },
+            { status: 500 },
+          );
+        }),
+      );
+
+      renderPageWithToaster("rag");
+
+      // Expand ingestion sources section
+      await waitFor(() => {
+        expect(screen.getByTestId("rag-editor")).toBeInTheDocument();
+      });
+      fireEvent.click(screen.getByTestId("section-ingestion-sources"));
+      await waitFor(() => {
+        expect(screen.getByTestId("ingestion-sources-panel")).toBeInTheDocument();
+      });
+
+      // Open add form
+      fireEvent.click(screen.getByTestId("add-ingestion-source-btn"));
+      await waitFor(() => {
+        expect(screen.getByTestId("ingestion-source-editor")).toBeInTheDocument();
+      });
+
+      // Fill in the name so save button is enabled
+      const nameInput = screen.getByTestId("ingestion-source-name") as HTMLInputElement;
+      fireEvent.change(nameInput, { target: { value: "Test Source" } });
+
+      // Click save
+      fireEvent.click(screen.getByTestId("source-save-btn"));
+
+      // Assert error toast is shown
+      await waitFor(() => {
+        expect(screen.getByText(/Failed to create ingestion source/)).toBeInTheDocument();
+      });
+
+      // The editor should remain open (not close on error)
+      await waitFor(() => {
+        expect(screen.getByTestId("ingestion-source-editor")).toBeInTheDocument();
+      });
     });
   });
 });

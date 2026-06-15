@@ -1127,7 +1127,18 @@
     "ingestText": "टेक्स्ट सुरक्षित करें",
     "ingestionHistory": "अंतर्ग्रहण स्थिति",
     "saveFirstIngestion": "दस्तावेज़ को प्रोसेस करने से पहले इस नॉलेज बेस को सहेजें।",
-    "addParam": "पैरामीटर जोड़ें"
+    "addParam": "पैरामीटर जोड़ें",
+    "ingestionSources": "इंजेशन स्रोत",
+    "triggerSuccess": "इंजेशन शुरू किया गया",
+    "triggerError": "इंजेशन शुरू करने में विफल",
+    "sourceCreated": "इंजेशन स्रोत बनाया गया",
+    "sourceUpdated": "इंजेशन स्रोत अपडेट किया गया",
+    "sourceDeleted": "इंजेशन स्रोत हटाया गया",
+    "sourceCreateError": "इंजेशन स्रोत बनाने में विफल",
+    "sourceUpdateError": "इंजेशन स्रोत अपडेट करने में विफल",
+    "sourceDeleteError": "इंजेशन स्रोत हटाने में विफल",
+    "ingestUploadError": "दस्तावेज़ अपलोड करने में विफल",
+    "ingestReadError": "फ़ाइल पढ़ नहीं सका"
   },
   "onboarding": {
     "welcome": {

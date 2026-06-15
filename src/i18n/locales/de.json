@@ -1127,7 +1127,18 @@
     "ingestText": "Text aufnehmen",
     "ingestionHistory": "Aufnahme-Status",
     "saveFirstIngestion": "Speichern Sie diese Knowledge Base zuerst, um die Dokumenten-Aufnahme zu aktivieren.",
-    "addParam": "Parameter hinzufügen"
+    "addParam": "Parameter hinzufügen",
+    "ingestionSources": "Ingestionsquellen",
+    "triggerSuccess": "Ingestion ausgelöst",
+    "triggerError": "Fehler beim Auslösen der Ingestion",
+    "sourceCreated": "Ingestionsquelle erstellt",
+    "sourceUpdated": "Ingestionsquelle aktualisiert",
+    "sourceDeleted": "Ingestionsquelle gelöscht",
+    "sourceCreateError": "Fehler beim Erstellen der Ingestionsquelle",
+    "sourceUpdateError": "Fehler beim Aktualisieren der Ingestionsquelle",
+    "sourceDeleteError": "Fehler beim Löschen der Ingestionsquelle",
+    "ingestUploadError": "Fehler beim Hochladen des Dokuments",
+    "ingestReadError": "Datei konnte nicht gelesen werden"
   },
   "onboarding": {
     "welcome": {

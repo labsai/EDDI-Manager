@@ -1127,7 +1127,18 @@
     "ingestText": "Ingérer le texte",
     "ingestionHistory": "Statut d'ingestion",
     "saveFirstIngestion": "Enregistrez d'abord cette base pour autoriser l'ingestion.",
-    "addParam": "Ajout paramètre"
+    "addParam": "Ajouter un paramètre",
+    "ingestionSources": "Sources d'ingestion",
+    "triggerSuccess": "Ingestion déclenchée",
+    "triggerError": "Échec du déclenchement de l'ingestion",
+    "sourceCreated": "Source d'ingestion créée",
+    "sourceUpdated": "Source d'ingestion mise à jour",
+    "sourceDeleted": "Source d'ingestion supprimée",
+    "sourceCreateError": "Échec de la création de la source d'ingestion",
+    "sourceUpdateError": "Échec de la mise à jour de la source d'ingestion",
+    "sourceDeleteError": "Échec de la suppression de la source d'ingestion",
+    "ingestUploadError": "Échec du téléchargement du document",
+    "ingestReadError": "Impossible de lire le fichier"
   },
   "onboarding": {
     "welcome": {

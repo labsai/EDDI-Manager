@@ -1127,7 +1127,18 @@
     "ingestText": "テキストを取り込む",
     "ingestionHistory": "取り込みステータス",
     "saveFirstIngestion": "ドキュメントの取り込みを有効にするには、先にこのナレッジベースを保存してください。",
-    "addParam": "パラメーターの追加"
+    "addParam": "パラメーターの追加",
+    "ingestionSources": "取り込みソース",
+    "triggerSuccess": "取り込みを開始しました",
+    "triggerError": "取り込みの開始に失敗しました",
+    "sourceCreated": "取り込みソースを作成しました",
+    "sourceUpdated": "取り込みソースを更新しました",
+    "sourceDeleted": "取り込みソースを削除しました",
+    "sourceCreateError": "取り込みソースの作成に失敗しました",
+    "sourceUpdateError": "取り込みソースの更新に失敗しました",
+    "sourceDeleteError": "取り込みソースの削除に失敗しました",
+    "ingestUploadError": "ドキュメントのアップロードに失敗しました",
+    "ingestReadError": "ファイルを読み込めませんでした"
   },
   "onboarding": {
     "welcome": {

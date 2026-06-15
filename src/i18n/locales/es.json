@@ -1127,7 +1127,18 @@
     "ingestText": "Ingerir texto",
     "ingestionHistory": "Estado de ingesta",
     "saveFirstIngestion": "Guarde esta base de conocimiento primero para activar la ingesta de documentos.",
-    "addParam": "Añadir parámetro"
+    "addParam": "Añadir parámetro",
+    "ingestionSources": "Fuentes de ingesta",
+    "triggerSuccess": "Ingesta iniciada",
+    "triggerError": "No se pudo iniciar la ingesta",
+    "sourceCreated": "Fuente de ingesta creada",
+    "sourceUpdated": "Fuente de ingesta actualizada",
+    "sourceDeleted": "Fuente de ingesta eliminada",
+    "sourceCreateError": "No se pudo crear la fuente de ingesta",
+    "sourceUpdateError": "No se pudo actualizar la fuente de ingesta",
+    "sourceDeleteError": "No se pudo eliminar la fuente de ingesta",
+    "ingestUploadError": "No se pudo subir el documento",
+    "ingestReadError": "No se pudo leer el archivo"
   },
   "onboarding": {
     "welcome": {

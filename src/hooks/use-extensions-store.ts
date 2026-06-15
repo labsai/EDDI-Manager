@@ -21,7 +21,7 @@ const WELL_KNOWN_TYPES: ExtensionDescriptor[] = [
       },
     },
     extensions: {},
-  },
+  }
 ];
 
 /**

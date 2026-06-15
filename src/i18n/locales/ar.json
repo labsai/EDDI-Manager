@@ -1127,7 +1127,18 @@
     "ingestText": "استيعاب النص",
     "ingestionHistory": "حالة الاستيعاب",
     "saveFirstIngestion": "احفظ قاعدة المعرفة هذه أولاً لتمكين استيعاب المستندات.",
-    "addParam": "إضافة معلمة"
+    "addParam": "إضافة معلمة",
+    "ingestionSources": "مصادر الاستيعاب",
+    "triggerSuccess": "تم بدء الاستيعاب",
+    "triggerError": "فشل بدء الاستيعاب",
+    "sourceCreated": "تم إنشاء مصدر الاستيعاب",
+    "sourceUpdated": "تم تحديث مصدر الاستيعاب",
+    "sourceDeleted": "تم حذف مصدر الاستيعاب",
+    "sourceCreateError": "فشل إنشاء مصدر الاستيعاب",
+    "sourceUpdateError": "فشل تحديث مصدر الاستيعاب",
+    "sourceDeleteError": "فشل حذف مصدر الاستيعاب",
+    "ingestUploadError": "فشل رفع المستند",
+    "ingestReadError": "تعذر قراءة الملف"
   },
   "onboarding": {
     "welcome": {

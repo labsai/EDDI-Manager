@@ -152,8 +152,12 @@ export function WorkflowDetailPage() {
 
   const handleAddExtension = useCallback(
     (result: AddExtensionResult) => {
+      // Ensure type has eddi:// prefix (e.g., "eddi://ai.labs.rag")
+      const type = result.descriptor.type.startsWith("eddi://")
+        ? result.descriptor.type
+        : `eddi://${result.descriptor.type}`;
       const newExt: WorkflowExtension = {
-        type: result.descriptor.type,
+        type,
         extensions: {},
         config: result.configUri ? { uri: result.configUri } : {},
       };
