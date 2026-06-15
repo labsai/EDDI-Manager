@@ -59,16 +59,24 @@ const DEFAULT_SCHEDULE: Schedule = {
 };
 
 function mergeDefaults(source: RagIngestionSource): RagIngestionSource {
-  return {
+  const base: RagIngestionSource = {
     ...source,
-    sourceConfig: {
-      ...source.sourceConfig,
-      scope: { ...DEFAULT_SCOPE, ...source.sourceConfig?.scope },
-      crawlSettings: { ...DEFAULT_CRAWL_SETTINGS, ...source.sourceConfig?.crawlSettings },
-    } as WebSourceConfig,
     ingestionSettings: { ...DEFAULT_INGESTION_SETTINGS, ...source.ingestionSettings },
     schedule: { ...DEFAULT_SCHEDULE, ...source.schedule },
   };
+
+  if (source.type === "web") {
+    return {
+      ...base,
+      sourceConfig: {
+        ...source.sourceConfig,
+        scope: { ...DEFAULT_SCOPE, ...(source.sourceConfig as WebSourceConfig).scope },
+        crawlSettings: { ...DEFAULT_CRAWL_SETTINGS, ...(source.sourceConfig as WebSourceConfig).crawlSettings },
+      } as WebSourceConfig,
+    };
+  }
+
+  return base;
 }
 
 const EMPTY_SOURCE: RagIngestionSource = {
@@ -105,12 +113,14 @@ function Section({
   icon: Icon,
   accent,
   defaultOpen = true,
+  testId,
   children,
 }: {
   label: string;
   icon: React.ElementType;
   accent: string;
   defaultOpen?: boolean;
+  testId?: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -120,6 +130,7 @@ function Section({
         type="button"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
+        data-testid={testId}
         className="flex w-full items-center gap-2.5 px-4 py-2.5 text-start transition-colors hover:bg-muted/30"
       >
         <Icon className={cn("h-4 w-4 shrink-0", accent)} />
@@ -224,6 +235,7 @@ export function IngestionSourceEditor({
                       update({ type: st.value, sourceConfig: { startUrl: "" } });
                     }
                   }}
+                  aria-pressed={source.type === st.value}
                   className={cn(
                     "rounded-lg border p-2.5 text-start transition-all",
                     source.type === st.value
@@ -752,7 +764,7 @@ export function IngestionSourcesPanel({
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-foreground truncate">{src.name}</span>
+                      <span className="text-sm font-medium text-foreground truncate" data-testid={`source-name-${idx}`}>{src.name}</span>
                       <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{src.type}</span>
                     </div>
                     {src.description && (
