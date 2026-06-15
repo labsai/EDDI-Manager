@@ -1128,17 +1128,17 @@
     "ingestionHistory": "Aufnahme-Status",
     "saveFirstIngestion": "Speichern Sie diese Knowledge Base zuerst, um die Dokumenten-Aufnahme zu aktivieren.",
     "addParam": "Parameter hinzufügen",
-    "ingestionSources": "Ingestion Sources",
-    "triggerSuccess": "Ingestion triggered",
-    "triggerError": "Failed to trigger ingestion",
-    "sourceCreated": "Ingestion source created",
-    "sourceUpdated": "Ingestion source updated",
-    "sourceDeleted": "Ingestion source deleted",
-    "sourceCreateError": "Failed to create ingestion source",
-    "sourceUpdateError": "Failed to update ingestion source",
-    "sourceDeleteError": "Failed to delete ingestion source",
-    "ingestUploadError": "Failed to upload document",
-    "ingestReadError": "Could not read file"
+    "ingestionSources": "Ingestionsquellen",
+    "triggerSuccess": "Ingestion ausgelöst",
+    "triggerError": "Fehler beim Auslösen der Ingestion",
+    "sourceCreated": "Ingestionsquelle erstellt",
+    "sourceUpdated": "Ingestionsquelle aktualisiert",
+    "sourceDeleted": "Ingestionsquelle gelöscht",
+    "sourceCreateError": "Fehler beim Erstellen der Ingestionsquelle",
+    "sourceUpdateError": "Fehler beim Aktualisieren der Ingestionsquelle",
+    "sourceDeleteError": "Fehler beim Löschen der Ingestionsquelle",
+    "ingestUploadError": "Fehler beim Hochladen des Dokuments",
+    "ingestReadError": "Datei konnte nicht gelesen werden"
   },
   "onboarding": {
     "welcome": {

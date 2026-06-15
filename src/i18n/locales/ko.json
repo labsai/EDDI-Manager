@@ -1128,17 +1128,17 @@
     "ingestionHistory": "수집 상태",
     "saveFirstIngestion": "문서 수집을 활성화하려면 먼저 이 지식 베이스를 저장하세요.",
     "addParam": "파라미터 추가",
-    "ingestionSources": "Ingestion Sources",
-    "triggerSuccess": "Ingestion triggered",
-    "triggerError": "Failed to trigger ingestion",
-    "sourceCreated": "Ingestion source created",
-    "sourceUpdated": "Ingestion source updated",
-    "sourceDeleted": "Ingestion source deleted",
-    "sourceCreateError": "Failed to create ingestion source",
-    "sourceUpdateError": "Failed to update ingestion source",
-    "sourceDeleteError": "Failed to delete ingestion source",
-    "ingestUploadError": "Failed to upload document",
-    "ingestReadError": "Could not read file"
+    "ingestionSources": "데이터 수집 소스",
+    "triggerSuccess": "데이터 수집이 시작되었습니다",
+    "triggerError": "데이터 수집 시작에 실패했습니다",
+    "sourceCreated": "데이터 수집 소스가 생성되었습니다",
+    "sourceUpdated": "데이터 수집 소스가 업데이트되었습니다",
+    "sourceDeleted": "데이터 수집 소스가 삭제되었습니다",
+    "sourceCreateError": "데이터 수집 소스 생성에 실패했습니다",
+    "sourceUpdateError": "데이터 수집 소스 업데이트에 실패했습니다",
+    "sourceDeleteError": "데이터 수집 소스 삭제에 실패했습니다",
+    "ingestUploadError": "문서 업로드에 실패했습니다",
+    "ingestReadError": "파일을 읽을 수 없습니다"
   },
   "onboarding": {
     "welcome": {

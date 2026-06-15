@@ -1128,17 +1128,17 @@
     "ingestionHistory": "Estado de ingesta",
     "saveFirstIngestion": "Guarde esta base de conocimiento primero para activar la ingesta de documentos.",
     "addParam": "Añadir parámetro",
-    "ingestionSources": "Ingestion Sources",
-    "triggerSuccess": "Ingestion triggered",
-    "triggerError": "Failed to trigger ingestion",
-    "sourceCreated": "Ingestion source created",
-    "sourceUpdated": "Ingestion source updated",
-    "sourceDeleted": "Ingestion source deleted",
-    "sourceCreateError": "Failed to create ingestion source",
-    "sourceUpdateError": "Failed to update ingestion source",
-    "sourceDeleteError": "Failed to delete ingestion source",
-    "ingestUploadError": "Failed to upload document",
-    "ingestReadError": "Could not read file"
+    "ingestionSources": "Fuentes de ingesta",
+    "triggerSuccess": "Ingesta iniciada",
+    "triggerError": "No se pudo iniciar la ingesta",
+    "sourceCreated": "Fuente de ingesta creada",
+    "sourceUpdated": "Fuente de ingesta actualizada",
+    "sourceDeleted": "Fuente de ingesta eliminada",
+    "sourceCreateError": "No se pudo crear la fuente de ingesta",
+    "sourceUpdateError": "No se pudo actualizar la fuente de ingesta",
+    "sourceDeleteError": "No se pudo eliminar la fuente de ingesta",
+    "ingestUploadError": "No se pudo subir el documento",
+    "ingestReadError": "No se pudo leer el archivo"
   },
   "onboarding": {
     "welcome": {

@@ -1128,17 +1128,17 @@
     "ingestionHistory": "摄入状态",
     "saveFirstIngestion": "使用前请先保存此知识库。",
     "addParam": "添加参数",
-    "ingestionSources": "Ingestion Sources",
-    "triggerSuccess": "Ingestion triggered",
-    "triggerError": "Failed to trigger ingestion",
-    "sourceCreated": "Ingestion source created",
-    "sourceUpdated": "Ingestion source updated",
-    "sourceDeleted": "Ingestion source deleted",
-    "sourceCreateError": "Failed to create ingestion source",
-    "sourceUpdateError": "Failed to update ingestion source",
-    "sourceDeleteError": "Failed to delete ingestion source",
-    "ingestUploadError": "Failed to upload document",
-    "ingestReadError": "Could not read file"
+    "ingestionSources": "摄取来源",
+    "triggerSuccess": "已触发摄取",
+    "triggerError": "触发摄取失败",
+    "sourceCreated": "摄取来源已创建",
+    "sourceUpdated": "摄取来源已更新",
+    "sourceDeleted": "摄取来源已删除",
+    "sourceCreateError": "创建摄取来源失败",
+    "sourceUpdateError": "更新摄取来源失败",
+    "sourceDeleteError": "删除摄取来源失败",
+    "ingestUploadError": "上传文档失败",
+    "ingestReadError": "无法读取文件"
   },
   "onboarding": {
     "welcome": {

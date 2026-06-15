@@ -1128,17 +1128,17 @@
     "ingestionHistory": "अंतर्ग्रहण स्थिति",
     "saveFirstIngestion": "दस्तावेज़ को प्रोसेस करने से पहले इस नॉलेज बेस को सहेजें।",
     "addParam": "पैरामीटर जोड़ें",
-    "ingestionSources": "Ingestion Sources",
-    "triggerSuccess": "Ingestion triggered",
-    "triggerError": "Failed to trigger ingestion",
-    "sourceCreated": "Ingestion source created",
-    "sourceUpdated": "Ingestion source updated",
-    "sourceDeleted": "Ingestion source deleted",
-    "sourceCreateError": "Failed to create ingestion source",
-    "sourceUpdateError": "Failed to update ingestion source",
-    "sourceDeleteError": "Failed to delete ingestion source",
-    "ingestUploadError": "Failed to upload document",
-    "ingestReadError": "Could not read file"
+    "ingestionSources": "इंजेशन स्रोत",
+    "triggerSuccess": "इंजेशन शुरू किया गया",
+    "triggerError": "इंजेशन शुरू करने में विफल",
+    "sourceCreated": "इंजेशन स्रोत बनाया गया",
+    "sourceUpdated": "इंजेशन स्रोत अपडेट किया गया",
+    "sourceDeleted": "इंजेशन स्रोत हटाया गया",
+    "sourceCreateError": "इंजेशन स्रोत बनाने में विफल",
+    "sourceUpdateError": "इंजेशन स्रोत अपडेट करने में विफल",
+    "sourceDeleteError": "इंजेशन स्रोत हटाने में विफल",
+    "ingestUploadError": "दस्तावेज़ अपलोड करने में विफल",
+    "ingestReadError": "फ़ाइल पढ़ नहीं सका"
   },
   "onboarding": {
     "welcome": {

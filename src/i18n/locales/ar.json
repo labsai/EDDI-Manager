@@ -1128,17 +1128,17 @@
     "ingestionHistory": "حالة الاستيعاب",
     "saveFirstIngestion": "احفظ قاعدة المعرفة هذه أولاً لتمكين استيعاب المستندات.",
     "addParam": "إضافة معلمة",
-    "ingestionSources": "Ingestion Sources",
-    "triggerSuccess": "Ingestion triggered",
-    "triggerError": "Failed to trigger ingestion",
-    "sourceCreated": "Ingestion source created",
-    "sourceUpdated": "Ingestion source updated",
-    "sourceDeleted": "Ingestion source deleted",
-    "sourceCreateError": "Failed to create ingestion source",
-    "sourceUpdateError": "Failed to update ingestion source",
-    "sourceDeleteError": "Failed to delete ingestion source",
-    "ingestUploadError": "Failed to upload document",
-    "ingestReadError": "Could not read file"
+    "ingestionSources": "مصادر الاستيعاب",
+    "triggerSuccess": "تم بدء الاستيعاب",
+    "triggerError": "فشل بدء الاستيعاب",
+    "sourceCreated": "تم إنشاء مصدر الاستيعاب",
+    "sourceUpdated": "تم تحديث مصدر الاستيعاب",
+    "sourceDeleted": "تم حذف مصدر الاستيعاب",
+    "sourceCreateError": "فشل إنشاء مصدر الاستيعاب",
+    "sourceUpdateError": "فشل تحديث مصدر الاستيعاب",
+    "sourceDeleteError": "فشل حذف مصدر الاستيعاب",
+    "ingestUploadError": "فشل رفع المستند",
+    "ingestReadError": "تعذر قراءة الملف"
   },
   "onboarding": {
     "welcome": {
