@@ -323,6 +323,182 @@ describe("sendMessageStreaming", () => {
 
     expect(events[0]).toEqual({ type: "token", data: "just-data" });
   });
+
+  it("concatenates multiple data: lines in a single SSE event per spec §9.2.4", async () => {
+    // SSE spec says multiple data: lines should be joined with \n
+    const sseBody = "event: token\ndata: Hello\ndata: World\n\n";
+
+    server.use(
+      http.post("*/agents/:conversationId/stream", () =>
+        new HttpResponse(sseBody, {
+          status: 200,
+          headers: { "Content-Type": "text/event-stream" },
+        })
+      )
+    );
+
+    const events: SSEEvent[] = [];
+    for await (const event of sendMessageStreaming(
+      "production",
+      "agent1",
+      "conv-mock",
+      { input: "test" }
+    )) {
+      events.push(event);
+    }
+
+    expect(events.length).toBe(1);
+    expect(events[0]).toEqual({ type: "token", data: "Hello\nWorld" });
+  });
+
+  it("concatenates three or more data: lines", async () => {
+    const sseBody = "event: token\ndata: Line 1\ndata: Line 2\ndata: Line 3\n\n";
+
+    server.use(
+      http.post("*/agents/:conversationId/stream", () =>
+        new HttpResponse(sseBody, {
+          status: 200,
+          headers: { "Content-Type": "text/event-stream" },
+        })
+      )
+    );
+
+    const events: SSEEvent[] = [];
+    for await (const event of sendMessageStreaming(
+      "production",
+      "agent1",
+      "conv-mock",
+      { input: "test" }
+    )) {
+      events.push(event);
+    }
+
+    expect(events.length).toBe(1);
+    expect(events[0]).toEqual({ type: "token", data: "Line 1\nLine 2\nLine 3" });
+  });
+
+  it("handles empty data: lines within a multi-line event", async () => {
+    // An empty data: line should produce an empty segment in the joined result
+    const sseBody = "event: token\ndata: Before\ndata: \ndata: After\n\n";
+
+    server.use(
+      http.post("*/agents/:conversationId/stream", () =>
+        new HttpResponse(sseBody, {
+          status: 200,
+          headers: { "Content-Type": "text/event-stream" },
+        })
+      )
+    );
+
+    const events: SSEEvent[] = [];
+    for await (const event of sendMessageStreaming(
+      "production",
+      "agent1",
+      "conv-mock",
+      { input: "test" }
+    )) {
+      events.push(event);
+    }
+
+    expect(events.length).toBe(1);
+    expect(events[0]).toEqual({ type: "token", data: "Before\n\nAfter" });
+  });
+
+  it("handles mixed single-line and multi-line data events in sequence", async () => {
+    const sseBody =
+      "event: token\ndata: single\n\n" +
+      "event: token\ndata: multi1\ndata: multi2\n\n" +
+      "event: token\ndata: single again\n\n" +
+      "event: done\ndata: \n\n";
+
+    server.use(
+      http.post("*/agents/:conversationId/stream", () =>
+        new HttpResponse(sseBody, {
+          status: 200,
+          headers: { "Content-Type": "text/event-stream" },
+        })
+      )
+    );
+
+    const events: SSEEvent[] = [];
+    for await (const event of sendMessageStreaming(
+      "production",
+      "agent1",
+      "conv-mock",
+      { input: "test" }
+    )) {
+      events.push(event);
+    }
+
+    expect(events.length).toBe(4);
+    expect(events[0]).toEqual({ type: "token", data: "single" });
+    expect(events[1]).toEqual({ type: "token", data: "multi1\nmulti2" });
+    expect(events[2]).toEqual({ type: "token", data: "single again" });
+    expect(events[3]).toEqual({ type: "done", data: "" });
+  });
+
+  it("concatenates multi-line data on done events (JSON snapshots)", async () => {
+    // Backend may send large JSON snapshots split across multiple data: lines
+    const jsonPart1 = '{"conversationOutputs":[{"output":';
+    const jsonPart2 = '"Hello from bot"}]}';
+    const sseBody = `event: done\ndata: ${jsonPart1}\ndata: ${jsonPart2}\n\n`;
+
+    server.use(
+      http.post("*/agents/:conversationId/stream", () =>
+        new HttpResponse(sseBody, {
+          status: 200,
+          headers: { "Content-Type": "text/event-stream" },
+        })
+      )
+    );
+
+    const events: SSEEvent[] = [];
+    for await (const event of sendMessageStreaming(
+      "production",
+      "agent1",
+      "conv-mock",
+      { input: "test" }
+    )) {
+      events.push(event);
+    }
+
+    expect(events.length).toBe(1);
+    expect(events[0]!.type).toBe("done");
+    expect(events[0]!.data).toBe(`${jsonPart1}\n${jsonPart2}`);
+  });
+
+  it("handles realistic LLM multi-line markdown response", async () => {
+    // Simulates a backend sending a markdown-formatted LLM response
+    const sseBody =
+      "event: token\ndata: Here are the steps:\ndata: 1. First step\ndata: 2. Second step\ndata: 3. Third step\n\n" +
+      "event: done\ndata: \n\n";
+
+    server.use(
+      http.post("*/agents/:conversationId/stream", () =>
+        new HttpResponse(sseBody, {
+          status: 200,
+          headers: { "Content-Type": "text/event-stream" },
+        })
+      )
+    );
+
+    const events: SSEEvent[] = [];
+    for await (const event of sendMessageStreaming(
+      "production",
+      "agent1",
+      "conv-mock",
+      { input: "test" }
+    )) {
+      events.push(event);
+    }
+
+    expect(events.length).toBe(2);
+    expect(events[0]).toEqual({
+      type: "token",
+      data: "Here are the steps:\n1. First step\n2. Second step\n3. Third step",
+    });
+    expect(events[1]).toEqual({ type: "done", data: "" });
+  });
 });
 
 // ─── Edge cases ───────────────────────────────────────────────────

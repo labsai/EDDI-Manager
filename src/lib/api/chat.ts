@@ -177,7 +177,8 @@ export async function* sendMessageStreaming(
           if (line.startsWith("event:")) {
             eventType = line.slice(6).trim() as SSEEventType;
           } else if (line.startsWith("data:")) {
-            eventData = line.slice(5).trim();
+            // Concatenate multiple data: lines per SSE spec (§9.2.4)
+            eventData += (eventData ? "\n" : "") + line.slice(5).trim();
           }
         }
 
