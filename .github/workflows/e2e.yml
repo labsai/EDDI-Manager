@@ -22,11 +22,11 @@ jobs:
     name: UI E2E (MSW)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.3.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4.4.0
         with:
-          node-version: 20
+          node-version: 20.20.2
           cache: npm
 
       - name: Install dependencies
@@ -38,7 +38,7 @@ jobs:
       - name: Run UI E2E tests
         run: npm run test:e2e
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4.6.2
         if: ${{ !cancelled() }}
         with:
           name: ui-e2e-report
@@ -66,11 +66,11 @@ jobs:
           - database: postgres
             compose-file: docker-compose.integration-postgres.yml
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.3.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4.4.0
         with:
-          node-version: 20
+          node-version: 20.20.2
           cache: npm
 
       # The EDDI Docker image must be available locally or in a registry.
@@ -124,7 +124,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: docker compose -f ${{ matrix.compose-file }} logs > backend-logs.txt 2>&1
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4.6.2
         if: ${{ !cancelled() }}
         with:
           name: backend-e2e-report-${{ matrix.database }}
