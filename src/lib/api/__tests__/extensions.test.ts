@@ -129,7 +129,7 @@ describe("EXTENSION_TO_RESOURCE_SLUG — completeness", () => {
 });
 
 describe("EXTENSION_TYPE_INFO — data integrity", () => {
-  const iconMapKeys = ["FileText", "GitBranch", "Globe", "Brain", "MessageSquareText", "Settings", "FileCode", "Plug"];
+  const iconMapKeys = ["FileText", "GitBranch", "Globe", "Brain", "MessageSquareText", "Settings", "FileCode", "Plug", "BookOpenCheck"];
 
   it("every entry has valid fields, unique order, eddi:// key, and known icon", () => {
     const orders = new Set<number>();
