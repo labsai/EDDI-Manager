@@ -94,6 +94,26 @@ describe("parseTranscriptContent", () => {
     });
     expect(parseTranscriptContent(json)).toBe("From output array");
   });
+
+  it("filters out Java ConversationOutput.toString() dumps", () => {
+    const javaDump = "{context={groupTranscript=[TranscriptEntry[speakerAgentId=user, content=Hello]]}, expressions=unknown(Hello), actions=[send_message, unknown], output=[null]}";
+    expect(parseTranscriptContent(javaDump)).toBe("");
+  });
+
+  it("filters dumps with only two metadata markers", () => {
+    const partial = "{actions=[send_message, unknown], output=[null], someOther=value}";
+    expect(parseTranscriptContent(partial)).toBe("");
+  });
+
+  it("does not filter regular non-JSON curly-brace text", () => {
+    const text = "{ this is just regular text with curly braces }";
+    expect(parseTranscriptContent(text)).toBe(text);
+  });
+
+  it("does not filter content with only one metadata marker", () => {
+    const text = "{actions=[send_message] and some other content}";
+    expect(parseTranscriptContent(text)).toBe(text);
+  });
 });
 
 describe("safeFormatDate", () => {

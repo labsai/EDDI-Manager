@@ -2,6 +2,7 @@
  * Parse transcript entry content, which may be:
  * 1. JSON from backend `extractResponse()` — e.g. `{"output":[{"type":"text","text":"..."}],...}`
  * 2. Plain text (already extracted, or from fixed backend)
+ * 3. Java `toString()` metadata dump (legacy fallback — should be filtered out)
  * Returns the cleaned text string.
  */
 export function parseTranscriptContent(content: string): string {
@@ -44,11 +45,47 @@ export function parseTranscriptContent(content: string): string {
         if (texts.length > 0) return texts.join("\n");
       }
     } catch {
-      // Not valid JSON — treat as plain text
+      // Not valid JSON — might be a Java toString() dump; check below
+    }
+
+    // Detect Java ConversationOutput.toString() dumps — these contain
+    // raw pipeline metadata like context, parser expressions, and actions.
+    // Pattern: starts with "{" but fails JSON parse, and contains known
+    // metadata markers from the EDDI backend.
+    if (isJavaMetadataDump(trimmed)) {
+      return "";
     }
   }
 
   return content;
+}
+
+/**
+ * Detect whether content is a raw Java ConversationOutput.toString() dump
+ * containing pipeline metadata rather than meaningful agent output.
+ * Matches patterns like:
+ *   - `expressions=unknown(...)` (parser output)
+ *   - `actions=[send_message, unknown]` (conversation step actions)
+ *   - `context={groupTranscript=` (group context injection)
+ *   - `output=[null]` (empty output array)
+ *   - `originWorkflowId=` (pipeline origin tracking)
+ */
+const JAVA_METADATA_PATTERNS = [
+  /expressions=unknown\(/,
+  /actions=\[send_message/,
+  /context=\{groupTranscript=/,
+  /output=\[null\]/,
+  /originWorkflowId=/,
+];
+
+function isJavaMetadataDump(content: string): boolean {
+  // Must match at least 2 patterns to avoid false positives
+  let matches = 0;
+  for (const pattern of JAVA_METADATA_PATTERNS) {
+    if (pattern.test(content)) matches++;
+    if (matches >= 2) return true;
+  }
+  return false;
 }
 
 /** Safely format a date/time that may be ISO string, epoch seconds, or epoch millis */
