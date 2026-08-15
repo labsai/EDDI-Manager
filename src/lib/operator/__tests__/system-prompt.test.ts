@@ -507,8 +507,12 @@ describe("test-drive: talking to another agent", () => {
    */
   it("says where the conversation id comes from, and to stop rather than guess", () => {
     const body = defaultOperatorPromptBody("read_write");
-    expect(body).toContain("Location");
-    expect(body).toContain("headers");
+    // Anchored to the actual sentence, not the bare words: "headers" also
+    // appears in the UNCONDITIONAL cheatsheet ("named HTTP tools (method, path,
+    // headers, body template)"), so `toContain("headers")` passed with this
+    // whole section deleted.
+    expect(body).toMatch(/`Location` RESPONSE HEADER/);
+    expect(body).toMatch(/tool\s+result carries under `headers`/);
     expect(body).toMatch(/last path segment/);
     // The failure mode worth naming: a fabricated id is a valid-looking id.
     expect(body).toMatch(/somebody else's conversation/);
