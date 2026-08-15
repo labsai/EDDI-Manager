@@ -4005,6 +4005,7 @@
       "restoring": "Ouverture de la conversation…",
       "placeholder": "Agents, conversations, déploiements, journaux…",
       "pausedPlaceholder": "En attente d'une décision ci-dessus avant que l'opérateur ne puisse continuer…",
+      "readOnlyPlaceholder": "Cette conversation est terminée — démarrez-en une nouvelle pour continuer.",
       "send": "Envoyer",
       "stop": "Arrêter",
       "newConversation": "Démarrer une nouvelle conversation",

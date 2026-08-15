@@ -227,6 +227,63 @@ describe("OperatorPage — conversation history", () => {
     expect(await screen.findByText("A redeploy at 02:14.")).toBeInTheDocument();
   });
 
+  /**
+   * The tablist declared the ARIA roles but not the behaviour: both tabs sat in
+   * the Tab sequence, arrow keys did nothing, and neither panel was associated
+   * with its tab. That announces as tabs to a screen reader and behaves as two
+   * loose buttons.
+   */
+  it("implements the tab pattern for keyboard and screen-reader users", async () => {
+    server.use(http.get("*/conversationstore/conversations", () => HttpResponse.json([])));
+    renderWithProviders(<OperatorPage />);
+
+    const chatTab = await screen.findByTestId("operator-tab-chat");
+    const historyTab = screen.getByTestId("operator-tab-history");
+
+    // Roving tabIndex: only the selected tab is in the Tab sequence.
+    expect(chatTab).toHaveAttribute("tabindex", "0");
+    expect(historyTab).toHaveAttribute("tabindex", "-1");
+    // Each tab names the panel it controls, and the panel names it back.
+    expect(chatTab).toHaveAttribute("aria-controls", "operator-tabpanel-chat");
+    expect(document.getElementById("operator-tabpanel-chat")).toHaveAttribute(
+      "aria-labelledby",
+      "operator-tab-chat",
+    );
+
+    // Arrow keys move selection.
+    chatTab.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await waitFor(() => expect(historyTab).toHaveAttribute("aria-selected", "true"));
+    expect(historyTab).toHaveAttribute("tabindex", "0");
+    expect(chatTab).toHaveAttribute("tabindex", "-1");
+  });
+
+  /**
+   * Every lifecycle state is selectable — reading a finished investigation is
+   * the point of the tab — but ENDED, ERROR and IN_PROGRESS cannot take another
+   * turn, so the composer must close rather than accept a message that will
+   * fail at the backend.
+   */
+  it("opens a finished conversation read-only", async () => {
+    server.use(
+      http.get("*/conversationstore/conversations", () =>
+        HttpResponse.json([descriptor("conv-dead", 5000, "ENDED")]),
+      ),
+      http.get("*/conversationstore/conversations/simple/conv-dead", () =>
+        HttpResponse.json(transcript("what happened here?", "It ended.", "ENDED")),
+      ),
+    );
+
+    renderWithProviders(<OperatorPage />);
+    await userEvent.click(await screen.findByTestId("operator-tab-history"));
+    await userEvent.click(await screen.findByTestId("operator-conversation-conv-dead"));
+
+    // The transcript is readable...
+    expect(await screen.findByText("It ended.")).toBeInTheDocument();
+    // ...and the composer is not.
+    await waitFor(() => expect(screen.getByTestId("operator-input")).toBeDisabled());
+  });
+
   it("shows an empty state when the operator has no conversations yet", async () => {
     server.use(
       http.get("*/conversationstore/conversations", () => HttpResponse.json([])),

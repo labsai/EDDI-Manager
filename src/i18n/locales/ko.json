@@ -3975,6 +3975,7 @@
       "restoring": "대화를 여는 중…",
       "placeholder": "에이전트, 대화, 배포, 로그에 대해 물어보세요…",
       "pausedPlaceholder": "위의 결정을 기다리는 중이라 운영자가 계속할 수 없습니다…",
+      "readOnlyPlaceholder": "이 대화는 종료되었습니다 — 계속하려면 새 대화를 시작하세요.",
       "send": "보내기",
       "stop": "중지",
       "newConversation": "새 대화 시작",

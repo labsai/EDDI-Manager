@@ -3975,6 +3975,7 @@
       "restoring": "Opening that conversation…",
       "placeholder": "Ask about agents, conversations, deployments, logs…",
       "pausedPlaceholder": "Awaiting a decision above before the operator can continue…",
+      "readOnlyPlaceholder": "This conversation is finished — start a new one to continue.",
       "send": "Send",
       "stop": "Stop",
       "newConversation": "Start a new conversation",

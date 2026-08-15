@@ -19,6 +19,7 @@ const h = vi.hoisted(() => ({
   /** Thrown instead of the next snapshot, when set. */
   logError: null as unknown,
   descriptors: [] as ConversationDescriptor[],
+  descriptorPages: null as ConversationDescriptor[][] | null,
   descriptorCalls: [] as Array<{ limit: number; agentId: string }>,
   logCalls: [] as Array<{ conversationId: string; returnCurrentStepOnly: boolean }>,
   /** Runs inside the snapshot read, before it resolves. */
@@ -51,9 +52,12 @@ vi.mock("@/lib/api/conversations", async (importOriginal) => {
       },
     ),
     getConversationDescriptors: vi.fn(
-      async (limit: number, _index: number, _filter: string, agentId: string) => {
+      async (limit: number, index: number, _filter: string, agentId: string) => {
         h.descriptorCalls.push({ limit, agentId });
-        return h.descriptors;
+        // `descriptorPages` drives the paging tests; `descriptors` stays the
+        // single-page shorthand every other test uses.
+        if (h.descriptorPages) return h.descriptorPages[index] ?? [];
+        return index === 0 ? h.descriptors : [];
       },
     ),
   };
@@ -114,6 +118,7 @@ beforeEach(() => {
   h.logs = [];
   h.logError = null;
   h.descriptors = [];
+  h.descriptorPages = null;
   h.descriptorCalls = [];
   h.logCalls = [];
   h.duringLogRead = null;
@@ -237,6 +242,99 @@ describe("hydrate: restoring the stored conversation", () => {
     expect(result.current.error).toBeTruthy();
     // The id survives: the conversation is probably fine, the backend is not.
     expect(sessionStorage.getItem("eddi.operator.conversationId")).toBe("conv-1");
+  });
+});
+
+describe("hydrate: a conversation that cannot take another turn", () => {
+  /**
+   * The stored-id path deliberately does NOT filter by state the way recovery
+   * does — this is the tab's own conversation and the admin should see it. What
+   * must not survive is the ability to type into it: ENDED and ERROR are
+   * terminal, IN_PROGRESS has a turn still executing, and the next send fails
+   * at the backend. So the transcript is restored and the composer closes.
+   */
+  it.each(["ENDED", "ERROR", "EXECUTION_INTERRUPTED", "IN_PROGRESS"] as const)(
+    "restores a %s conversation read-only",
+    async (state) => {
+      storeId("conv-1");
+      h.logs = [{ ...TWO_TURNS, conversationState: state }];
+
+      const { result } = renderHook(() => useOperatorChat(config()));
+      await act(async () => {
+        await result.current.hydrate();
+      });
+
+      expect(result.current.messages).toHaveLength(4);
+      expect(result.current.isReadOnly).toBe(true);
+      expect(result.current.conversationState).toBe(state);
+    },
+  );
+
+  it.each(["READY", "AWAITING_HUMAN"] as const)("leaves a %s conversation writable", async (state) => {
+    storeId("conv-1");
+    h.logs = [{ ...TWO_TURNS, conversationState: state }];
+
+    const { result } = renderHook(() => useOperatorChat(config()));
+    await act(async () => {
+      await result.current.hydrate();
+    });
+
+    expect(result.current.isReadOnly).toBe(false);
+  });
+
+  it("clears read-only when the admin starts a new conversation", async () => {
+    storeId("conv-1");
+    h.logs = [{ ...TWO_TURNS, conversationState: "ENDED" }];
+    const { result } = renderHook(() => useOperatorChat(config()));
+    await act(async () => {
+      await result.current.hydrate();
+    });
+    expect(result.current.isReadOnly).toBe(true);
+
+    await act(async () => {
+      result.current.reset();
+    });
+
+    expect(result.current.isReadOnly).toBe(false);
+  });
+
+  /**
+   * A resume can time out locally and still succeed on the server. Keeping the
+   * failure banner beside a snapshot the backend now reports as READY would
+   * leave a completed approval looking permanently failed.
+   */
+  it("clears a stale resolveError once the conversation is no longer paused", async () => {
+    storeId("conv-1");
+    useOperatorChatStore.setState({ resolveError: "Timed out waiting for the resumed turn to finish." });
+    h.logs = [TWO_TURNS];
+
+    const { result } = renderHook(() => useOperatorChat(config()));
+    await act(async () => {
+      await result.current.hydrate();
+    });
+
+    expect(result.current.resolveError).toBeNull();
+  });
+
+  it("keeps resolveError while the same decision is still outstanding", async () => {
+    storeId("conv-1");
+    useOperatorChatStore.setState({ resolveError: "Timed out waiting for the resumed turn to finish." });
+    h.logs = [
+      {
+        conversationState: "AWAITING_HUMAN",
+        hitlPauseReason: "Deploying agent-9",
+        conversationSteps: [step("deploy it")],
+        conversationOutputs: [textOutput("I need approval to deploy.")],
+      },
+    ];
+
+    const { result } = renderHook(() => useOperatorChat(config()));
+    await act(async () => {
+      await result.current.hydrate();
+    });
+
+    expect(result.current.isPaused).toBe(true);
+    expect(result.current.resolveError).toBeTruthy();
   });
 });
 
@@ -482,6 +580,41 @@ describe("hydrate: recovering after a browser restart", () => {
     });
 
     expect(result.current.conversationId).toBe("conv-mine");
+  });
+
+  /**
+   * This function explicitly refuses to trust the endpoint's ordering — and
+   * reading only page 0 quietly depended on exactly that ordering being
+   * newest-first, because under an oldest-first sort the real newest
+   * conversation sits on the LAST page. With a full first page it keeps
+   * reading.
+   */
+  it("pages past a full first page rather than trusting its order", async () => {
+    const firstPage = Array.from({ length: 20 }, (_, i) =>
+      descriptor(`old-${i}`, { lastModifiedOn: 100 + i }),
+    );
+    h.descriptorPages = [firstPage, [descriptor("conv-actually-newest", { lastModifiedOn: 9000 })]];
+    h.logs = [TWO_TURNS];
+
+    const { result } = renderHook(() => useOperatorChat(config()));
+    await act(async () => {
+      await result.current.hydrate();
+    });
+
+    expect(result.current.conversationId).toBe("conv-actually-newest");
+  });
+
+  it("stops at the first short page — the common case stays one request", async () => {
+    h.descriptorPages = [[descriptor("conv-only", { lastModifiedOn: 500 })]];
+    h.logs = [TWO_TURNS];
+
+    const { result } = renderHook(() => useOperatorChat(config()));
+    await act(async () => {
+      await result.current.hydrate();
+    });
+
+    expect(h.descriptorCalls).toHaveLength(1);
+    expect(result.current.conversationId).toBe("conv-only");
   });
 
   it("starts clean when the operator has no usable conversation at all", async () => {

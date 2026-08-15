@@ -493,17 +493,34 @@ export function OperatorPage() {
         </div>
       )}
 
+      {/* A real ARIA tablist: roving tabIndex, arrow-key selection, and each tab
+          bound to its panel — the pattern `config-editor-layout.tsx` already
+          establishes. Declaring role="tab" without them looks correct to a
+          checker and leaves keyboard and screen-reader users with two buttons
+          that announce as tabs and behave as neither. */}
       <div
         role="tablist"
         aria-label={t("operator.tabs.label", "Operator views")}
         className="flex items-center gap-1 border-b border-border"
+        onKeyDown={(e) => {
+          if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+          e.preventDefault();
+          const next = tab === "chat" ? "history" : "chat";
+          setTab(next);
+          // Focus follows selection, as the APG pattern specifies for
+          // automatically-activated tabs.
+          requestAnimationFrame(() => document.getElementById(`operator-tab-${next}`)?.focus());
+        }}
       >
         {(["chat", "history"] as const).map((value) => (
           <button
             key={value}
+            id={`operator-tab-${value}`}
             type="button"
             role="tab"
             aria-selected={tab === value}
+            aria-controls={`operator-tabpanel-${value}`}
+            tabIndex={tab === value ? 0 : -1}
             onClick={() => setTab(value)}
             className={
               tab === value
@@ -530,7 +547,13 @@ export function OperatorPage() {
             requests). Unlike the chat below there is nothing here worth keeping
             alive: react-query caches the data, so coming back is free. */}
         {tab === "history" && (
-          <div className="min-h-0 min-w-0 overflow-y-auto">
+          <div
+            id="operator-tabpanel-history"
+            role="tabpanel"
+            aria-labelledby="operator-tab-history"
+            tabIndex={0}
+            className="min-h-0 min-w-0 overflow-y-auto"
+          >
             <OperatorHistory
               agentId={config!.agentId!}
               activeConversationId={chat.conversationId}
@@ -549,7 +572,12 @@ export function OperatorPage() {
             unbreakable line inside (an approval card's one-line JSON args) and
             pushes the page into horizontal scroll — the child's own min-w-0 is a
             floor, not a ceiling, so it no longer constrains the track. */}
-        <div className={tab === "chat" ? "flex min-h-0 min-w-0 flex-col" : "hidden"}>
+        <div
+          id="operator-tabpanel-chat"
+          role="tabpanel"
+          aria-labelledby="operator-tab-chat"
+          className={tab === "chat" ? "flex min-h-0 min-w-0 flex-col" : "hidden"}
+        >
         <OperatorChat
           messages={chat.messages}
           events={chat.events}
@@ -583,6 +611,7 @@ export function OperatorPage() {
           renderCallExtra={renderCallExtra}
           isVisible={tab === "chat"}
           isRestoring={isPicking}
+          isReadOnly={chat.isReadOnly}
         />
         </div>
         <OperatorStatusPanel

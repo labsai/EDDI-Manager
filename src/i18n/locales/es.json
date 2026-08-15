@@ -4005,6 +4005,7 @@
       "restoring": "Abriendo esa conversación…",
       "placeholder": "Pregunta por agentes, conversaciones, despliegues, registros…",
       "pausedPlaceholder": "Esperando una decisión arriba antes de que el operador pueda continuar…",
+      "readOnlyPlaceholder": "Esta conversación ha terminado: inicia una nueva para continuar.",
       "send": "Enviar",
       "stop": "Detener",
       "newConversation": "Iniciar una conversación nueva",

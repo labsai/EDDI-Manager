@@ -3975,6 +3975,7 @@
       "restoring": "正在打开该对话…",
       "placeholder": "询问智能体、会话、部署、日志……",
       "pausedPlaceholder": "正在等待上方的决定，之后操作员才能继续…",
+      "readOnlyPlaceholder": "该对话已结束——请开始新的对话以继续。",
       "send": "发送",
       "stop": "停止",
       "newConversation": "开始新会话",

@@ -3975,6 +3975,7 @@
       "restoring": "Unterhaltung wird geöffnet …",
       "placeholder": "Fragen Sie nach Agenten, Konversationen, Deployments, Logs …",
       "pausedPlaceholder": "Wartet auf eine Entscheidung oben, bevor der Operator fortfahren kann…",
+      "readOnlyPlaceholder": "Diese Unterhaltung ist beendet — starten Sie eine neue, um fortzufahren.",
       "send": "Senden",
       "stop": "Stoppen",
       "newConversation": "Neue Konversation beginnen",

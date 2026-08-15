@@ -12,6 +12,7 @@ import {
   extractOutputParts,
   extractInput,
   parseConversationUri,
+  type ConversationState,
   type SimpleConversationMemorySnapshot,
 } from "@/lib/api/conversations";
 import { buildAttachmentContext } from "@/lib/api/attachments";
@@ -91,6 +92,18 @@ export interface OperatorChatState {
    * that is slow or fails must not lock the admin out of starting a new turn.
    */
   isHydrating: boolean;
+  /**
+   * True when the restored conversation cannot take another turn — `ENDED`,
+   * `ERROR`, `EXECUTION_INTERRUPTED`, or a turn still `IN_PROGRESS`.
+   *
+   * The transcript is still shown (it is what the admin asked for), but the
+   * composer closes: sending into any of those fails at the backend, and an
+   * enabled composer over a dead conversation is a trap. Cleared by `reset()`,
+   * because a new conversation is by definition writable.
+   */
+  isReadOnly: boolean;
+  /** Lifecycle state of the restored conversation, for explaining the above. */
+  conversationState: ConversationState | null;
 }
 
 /**
@@ -401,6 +414,16 @@ function snapshotToMessages(snapshot: SimpleConversationMemorySnapshot): ChatMes
 const RECOVERY_PAGE_SIZE = 20;
 
 /**
+ * How many pages of descriptors recovery will read before giving up.
+ *
+ * Bounded rather than exhaustive: this runs on mount, and an operator with
+ * thousands of conversations must not turn a page load into a crawl. 5 × 20 =
+ * 100 covers any realistic operator history; beyond that the admin can pick the
+ * conversation from the History tab explicitly.
+ */
+const RECOVERY_MAX_PAGES = 5;
+
+/**
  * The states a conversation can be restored INTO.
  *
  * Same rule `use-chat.ts` states for the main chat, deliberately reproduced
@@ -446,12 +469,26 @@ function hasLiveTranscript(state: OperatorChatState): boolean {
  * exists to prevent, reached through a state it had forgotten to list.
  */
 async function findLatestOperatorConversation(agentId: string): Promise<string | null> {
-  const descriptors = await getConversationDescriptors(RECOVERY_PAGE_SIZE, 0, "", agentId);
-  const usable = descriptors.filter(
-    (d) => RESUMABLE_STATES.has(d.conversationState) && !isOperatorProbeConversation(d),
-  );
-  if (usable.length === 0) return null;
-  const newest = usable.reduce((best, candidate) =>
+  // Paged, not just page 0. This function explicitly refuses to trust the
+  // endpoint's ordering — and page-0-only quietly depends on exactly that
+  // ordering being newest-first, because with an oldest-first sort the real
+  // newest conversation sits on the LAST page. Reading a bounded number of
+  // pages and taking the maximum across all of them is the version that
+  // actually holds under either sort.
+  const candidates = [];
+  for (let page = 0; page < RECOVERY_MAX_PAGES; page++) {
+    const descriptors = await getConversationDescriptors(RECOVERY_PAGE_SIZE, page, "", agentId);
+    candidates.push(
+      ...descriptors.filter(
+        (d) => RESUMABLE_STATES.has(d.conversationState) && !isOperatorProbeConversation(d),
+      ),
+    );
+    // A short page is the last page. Stopping here is what keeps the common
+    // case (a handful of conversations) at one request.
+    if (descriptors.length < RECOVERY_PAGE_SIZE) break;
+  }
+  if (candidates.length === 0) return null;
+  const newest = candidates.reduce((best, candidate) =>
     conversationRecency(candidate) > conversationRecency(best) ? candidate : best,
   );
   return parseConversationUri(newest.resource) || null;
@@ -517,11 +554,21 @@ function hydratedState(conversationId: string, snapshot: SimpleConversationMemor
     pauseReason: paused ? (snapshot.hitlPauseReason ?? null) : null,
     decidedPausedAt: paused ? (snapshot.hitlPausedAt ?? null) : null,
     pausedPlaceholderId: paused && last?.role === "agent" ? last.id : null,
+    // Whatever the state of the conversation is, its transcript is worth
+    // showing — the admin asked for THIS one, or it is the one their tab was
+    // using. What must not survive is the ability to type into it: `ENDED` and
+    // `ERROR` are terminal and `IN_PROGRESS` has a turn still executing, so the
+    // next send would fail. The composer is closed instead of the transcript
+    // being withheld.
+    isReadOnly: !RESUMABLE_STATES.has(snapshot.conversationState),
+    conversationState: snapshot.conversationState,
+    // `resolveError` records that a human's decision failed to land, so it is
+    // kept while the restored snapshot is STILL awaiting that decision. Once the
+    // backend reports the conversation as no longer paused the decision did
+    // land — keeping the banner then would leave a completed approval looking
+    // permanently failed.
+    ...(paused ? {} : { resolveError: null }),
     // A restored conversation has no live turn and no trace to show for one.
-    // `resolveError` is deliberately NOT cleared here: it records that a human's
-    // decision failed to land, the pause is deliberately kept alongside it, and
-    // erasing it on a re-mount would remove the only evidence the admin has that
-    // their Approve did not take effect.
     events: [],
     liveToolCalls: [],
     liveToolsSettled: false,
@@ -547,6 +594,8 @@ export const useOperatorChatStore = create<OperatorChatStore>((set, get) => ({
   resolveError: null,
   pausedPlaceholderId: null,
   isHydrating: false,
+  isReadOnly: false,
+  conversationState: null,
   abortController: null,
   resolveAbortController: null,
   decidedPausedAt: null,
@@ -586,6 +635,8 @@ export const useOperatorChatStore = create<OperatorChatStore>((set, get) => ({
       resolveError: null,
       pausedPlaceholderId: null,
       isHydrating: false,
+      isReadOnly: false,
+      conversationState: null,
       abortController: null,
       resolveAbortController: null,
       decidedPausedAt: null,
@@ -1286,6 +1337,8 @@ export function useOperatorChat(config: OperatorConfig | null | undefined) {
   const resolveError = useOperatorChatStore((s) => s.resolveError);
   const pausedPlaceholderId = useOperatorChatStore((s) => s.pausedPlaceholderId);
   const isHydrating = useOperatorChatStore((s) => s.isHydrating);
+  const isReadOnly = useOperatorChatStore((s) => s.isReadOnly);
+  const conversationState = useOperatorChatStore((s) => s.conversationState);
 
   const rawSend = useOperatorChatStore((s) => s.send);
   const rawEnsureConversation = useOperatorChatStore((s) => s.ensureConversation);
@@ -1324,6 +1377,8 @@ export function useOperatorChat(config: OperatorConfig | null | undefined) {
     resolveError,
     pausedPlaceholderId,
     isHydrating,
+    isReadOnly,
+    conversationState,
     send,
     ensureConversation,
     hydrate,

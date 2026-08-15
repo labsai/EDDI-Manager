@@ -29,6 +29,17 @@ import { cn } from "@/lib/utils";
  */
 const HISTORY_PAGE_SIZE = 15;
 
+/**
+ * How many descriptors to REQUEST in order to render {@link HISTORY_PAGE_SIZE}.
+ *
+ * The backend applies its limit before this component filters probe
+ * conversations out and sorts, so asking for exactly 15 meant a run of probes
+ * could occupy the whole page — in the worst case rendering an empty list while
+ * real investigations sat just past the cut. Over-fetching and trimming after
+ * the filter is one request either way.
+ */
+const HISTORY_FETCH_SIZE = 50;
+
 interface OperatorHistoryProps {
   /** The operator agent whose conversations these are. */
   agentId: string;
@@ -92,7 +103,7 @@ export function OperatorHistory({
 }: OperatorHistoryProps) {
   const { t } = useTranslation();
   const { data, isLoading: listLoading, isError, error, refetch } = useConversationDescriptors(
-    HISTORY_PAGE_SIZE,
+    HISTORY_FETCH_SIZE,
     0,
     "",
     agentId,
@@ -138,9 +149,11 @@ export function OperatorHistory({
   // Newest first, sorted here rather than trusted from the endpoint: the
   // descriptor store's sort is a per-filter backend setting, not a documented
   // newest-first contract.
-  const sorted = [...conversations].sort(
-    (a, b) => (b.lastModifiedOn ?? b.createdOn ?? 0) - (a.lastModifiedOn ?? a.createdOn ?? 0),
-  );
+  // Sorted BEFORE trimming, so the cap keeps the newest 15 rather than whichever
+  // 15 the backend's own (per-filter, not newest-first) sort happened to return.
+  const sorted = [...conversations]
+    .sort((a, b) => (b.lastModifiedOn ?? b.createdOn ?? 0) - (a.lastModifiedOn ?? a.createdOn ?? 0))
+    .slice(0, HISTORY_PAGE_SIZE);
 
   return (
     <ul className="space-y-2" data-testid="operator-history-list">
