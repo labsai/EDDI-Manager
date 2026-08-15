@@ -4057,6 +4057,18 @@
       "noReply": "応答がないままターンが終了しました",
       "partial_one": "承認しました — {{count}} 件の呼び出しを拒否",
       "partial_other": "承認しました — {{count}} 件の呼び出しを拒否"
+    },
+    "tabs": {
+      "label": "オペレータービュー",
+      "chat": "チャット",
+      "history": "履歴"
+    },
+    "history": {
+      "emptyTitle": "過去の会話はありません",
+      "emptyDescription": "オペレーターとの会話はここに表示され、後から再開できます。",
+      "noOpeningMessage": "(メッセージはまだありません)",
+      "stepCount_one": "{{count}} ステップ",
+      "stepCount_other": "{{count}} ステップ"
     }
   },
   "groupWorkspace": {

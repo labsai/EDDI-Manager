@@ -4057,6 +4057,18 @@
       "noReply": "รอบนี้จบลงโดยไม่มีคำตอบ",
       "partial_one": "อนุมัติแล้ว — ปฏิเสธ {{count}} การเรียก",
       "partial_other": "อนุมัติแล้ว — ปฏิเสธ {{count}} การเรียก"
+    },
+    "tabs": {
+      "label": "มุมมองผู้ดูแล",
+      "chat": "แชท",
+      "history": "ประวัติ"
+    },
+    "history": {
+      "emptyTitle": "ยังไม่มีบทสนทนาก่อนหน้า",
+      "emptyDescription": "บทสนทนากับผู้ดูแลจะแสดงที่นี่ เพื่อให้คุณกลับมาทำต่อได้ภายหลัง",
+      "noOpeningMessage": "(ยังไม่มีข้อความ)",
+      "stepCount_one": "{{count}} ขั้นตอน",
+      "stepCount_other": "{{count}} ขั้นตอน"
     }
   },
   "groupWorkspace": {

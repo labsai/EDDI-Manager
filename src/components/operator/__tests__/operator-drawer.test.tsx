@@ -196,6 +196,26 @@ describe("OperatorDrawer", () => {
       http.get("*/agents/conv-1/approval-status", () =>
         HttpResponse.json({ pauseReason: "Creating a new agent — review the whole config" }),
       ),
+      // Opening the drawer hydrates the stored conversation, and this one is
+      // seeded with an id but no transcript — the shape a 409 pause leaves
+      // after a reload. The read has to agree that it is still paused, or the
+      // restore would (correctly) clear a pause the backend no longer reports.
+      http.get("*/conversationstore/conversations/simple/conv-1", () =>
+        HttpResponse.json({
+          agentId: "op-1",
+          agentVersion: 2,
+          conversationId: "conv-1",
+          environment: "production",
+          conversationState: "AWAITING_HUMAN",
+          hitlPauseReason: "Creating a new agent — review the whole config",
+          conversationSteps: [
+            { conversationStep: [{ key: "input:initial", value: "build me an agent" }] },
+          ],
+          conversationOutputs: [
+            { output: [{ type: "text", text: "I need your approval to run setupAgent." }] },
+          ],
+        }),
+      ),
     );
 
     renderWithProviders(<OperatorDrawer />, { initialRoute: "/manage/agents" });

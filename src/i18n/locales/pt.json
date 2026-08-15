@@ -4088,6 +4088,19 @@
       "partial_one": "Aprovada — {{count}} chamada rejeitada",
       "partial_other": "Aprovada — {{count}} chamadas rejeitadas",
       "partial_many": "Aprovada — {{count}} chamadas rejeitadas"
+    },
+    "tabs": {
+      "label": "Vistas do operador",
+      "chat": "Chat",
+      "history": "Histórico"
+    },
+    "history": {
+      "emptyTitle": "Nenhuma conversa anterior",
+      "emptyDescription": "As conversas com o operador aparecem aqui, para que possa retomá-las mais tarde.",
+      "noOpeningMessage": "(ainda sem mensagem)",
+      "stepCount_one": "{{count}} passo",
+      "stepCount_other": "{{count}} passos",
+      "stepCount_many": "{{count}} passos"
     }
   },
   "groupWorkspace": {

@@ -6,7 +6,14 @@ import {
   type ChatMessage,
   type SSEEvent,
 } from "@/lib/api/chat";
-import { getSimpleConversationLog, extractOutputParts } from "@/lib/api/conversations";
+import {
+  getSimpleConversationLog,
+  getConversationDescriptors,
+  extractOutputParts,
+  extractInput,
+  parseConversationUri,
+  type SimpleConversationMemorySnapshot,
+} from "@/lib/api/conversations";
 import { buildAttachmentContext } from "@/lib/api/attachments";
 import { revokeMessagePreviews, type SentAttachment } from "@/hooks/use-chat";
 import { resumeConversation, type HitlVerdict, type ToolCallDecision } from "@/lib/api/hitl";
@@ -76,6 +83,14 @@ export interface OperatorChatState {
    * `messages` without this (or vice versa) if two surfaces raced.
    */
   pausedPlaceholderId: string | null;
+  /**
+   * True while a stored (or recovered) conversation is being read back.
+   *
+   * Separate from `isStreaming` for the same reason `isResolvingPause` is: no
+   * SSE connection is open, and the composer should stay usable — a restore
+   * that is slow or fails must not lock the admin out of starting a new turn.
+   */
+  isHydrating: boolean;
 }
 
 /**
@@ -92,6 +107,8 @@ interface OperatorChatInternal {
   resolveAbortController: AbortController | null;
   /** `hitlPausedAt` of the pause currently on screen — see pollUntilSettled. */
   decidedPausedAt: string | null;
+  /** In-flight hydrate, if any. Doubles as the "already hydrating" latch. */
+  hydrateAbortController: AbortController | null;
 }
 
 interface OperatorChatActions {
@@ -119,6 +136,18 @@ interface OperatorChatActions {
    *  which calls this on open so an hour-old failure from a different surface
    *  is not the first thing shown. */
   clearError: () => void;
+  /**
+   * Restore the transcript of the conversation this tab was last working in.
+   *
+   * Safe to call from every mounted surface on every mount — see the
+   * implementation for the four separate ways it declines to do anything.
+   */
+  hydrate: (config: OperatorConfig | null | undefined) => Promise<void>;
+  /**
+   * Make `conversationId` the active conversation and load it, replacing
+   * whatever is on screen. The History tab's row click.
+   */
+  selectConversation: (conversationId: string) => Promise<void>;
 }
 
 type OperatorChatStore = OperatorChatState & OperatorChatInternal & OperatorChatActions;
@@ -279,6 +308,116 @@ async function pollUntilSettled(
   }
 }
 
+/**
+ * Rebuild a transcript from a stored conversation.
+ *
+ * Step i's input pairs with output i — the same index alignment
+ * `use-chat.ts`'s `snapshotToMessages` relies on, and the reason this must be
+ * read with `returnCurrentStepOnly: false`: in current-step-only mode the
+ * backend collapses `conversationOutputs` to a single element, so every step
+ * would pair against the last turn's answer.
+ *
+ * What deliberately does NOT come back: the client-side `decision` and `notice`
+ * entries this tab inserts around an approval. They are this tab's record of
+ * what a human did, not backend state, and the server drops its own copy of the
+ * ask from a resolved step. A hydrated view is still coherent — the transcript
+ * reads request → answer — and reconstructing the decisions would mean
+ * asserting, from a transcript that does not say so, that someone approved
+ * something.
+ */
+function snapshotToMessages(snapshot: SimpleConversationMemorySnapshot): ChatMessage[] {
+  const messages: ChatMessage[] = [];
+  const outputs = snapshot.conversationOutputs ?? [];
+  const steps = snapshot.conversationSteps ?? [];
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+    const input = step ? extractInput(step) : undefined;
+    if (input) {
+      messages.push({
+        id: nextId("user"),
+        role: "user",
+        content: input,
+        timestamp: Date.now(),
+      });
+    }
+    for (const part of extractOutputParts(outputs[i])) {
+      messages.push({
+        id: nextId("agent"),
+        role: "agent",
+        content: part,
+        timestamp: Date.now(),
+      });
+    }
+  }
+  return messages;
+}
+
+/**
+ * How many of the operator's conversations to look at when recovering the most
+ * recent one. A page, not one row: see {@link findLatestOperatorConversation}.
+ */
+const RECOVERY_PAGE_SIZE = 20;
+
+/**
+ * The operator's most recent still-usable conversation, or null.
+ *
+ * Used only when this tab has NO stored id — a browser restart, or a first
+ * visit in a new tab. Recovering by lookup rather than moving
+ * {@link CONVERSATION_STORAGE_KEY} to localStorage keeps the storage semantics
+ * the comment there describes (an investigation belongs to its tab) and costs
+ * one request.
+ *
+ * Reads a PAGE and picks the newest itself rather than asking for one row: the
+ * descriptor endpoint's sort is a per-filter setting on the backend, not a
+ * documented newest-first contract, and "resume my last conversation" silently
+ * resuming the OLDEST one is the kind of bug nobody reports precisely.
+ *
+ * `ENDED` conversations are skipped. Deactivating the operator ends all of them
+ * (`endAllActiveConversations`), so after a deactivate/reactivate cycle the
+ * newest conversation is always a dead one — restoring it would show a
+ * transcript whose composer 4xx's on the next message.
+ */
+async function findLatestOperatorConversation(agentId: string): Promise<string | null> {
+  const descriptors = await getConversationDescriptors(RECOVERY_PAGE_SIZE, 0, "", agentId);
+  const usable = descriptors.filter((d) => d.conversationState !== "ENDED");
+  if (usable.length === 0) return null;
+  const newest = usable.reduce((best, candidate) =>
+    (candidate.lastModifiedOn ?? candidate.createdOn ?? 0) > (best.lastModifiedOn ?? best.createdOn ?? 0)
+      ? candidate
+      : best,
+  );
+  return parseConversationUri(newest.resource) || null;
+}
+
+/**
+ * The state a loaded conversation resolves to.
+ *
+ * `pausedPlaceholderId` anchors on the last AGENT bubble, not the last message:
+ * the backend writes its pending-approval message into the paused step's output
+ * exactly like an ordinary answer, so that bubble IS the ask, and
+ * `resolveApproval` inserts the decision after it. Anchoring on the last message
+ * outright would land on a user bubble for a turn that paused before producing
+ * any output, putting the decision above the request it answers.
+ */
+function hydratedState(conversationId: string, snapshot: SimpleConversationMemorySnapshot) {
+  const messages = snapshotToMessages(snapshot);
+  const paused = snapshot.conversationState === "AWAITING_HUMAN";
+  const lastAgentBubble = [...messages].reverse().find((m) => m.role === "agent");
+  return {
+    conversationId,
+    messages,
+    isPaused: paused,
+    pauseReason: paused ? (snapshot.hitlPauseReason ?? null) : null,
+    decidedPausedAt: paused ? (snapshot.hitlPausedAt ?? null) : null,
+    pausedPlaceholderId: paused ? (lastAgentBubble?.id ?? null) : null,
+    // A restored conversation has no live turn and no trace to show for one.
+    events: [],
+    liveToolCalls: [],
+    liveToolsSettled: false,
+    resolveError: null,
+  };
+}
+
 export const useOperatorChatStore = create<OperatorChatStore>((set, get) => ({
   messages: [],
   events: [],
@@ -297,15 +436,20 @@ export const useOperatorChatStore = create<OperatorChatStore>((set, get) => ({
   isResolvingPause: false,
   resolveError: null,
   pausedPlaceholderId: null,
+  isHydrating: false,
   abortController: null,
   resolveAbortController: null,
   decidedPausedAt: null,
+  hydrateAbortController: null,
 
   clearError: () => set({ error: null }),
 
   reset: () => {
     get().abortController?.abort();
     get().resolveAbortController?.abort();
+    // A restore in flight must not land in the clean slate the user just asked
+    // for — the same reason the other two are aborted here.
+    get().hydrateAbortController?.abort();
     // Discard any in-flight lazy create — its resolution must not resurrect a
     // conversation into the clean slate (see ensureConversation).
     creatingConversation = null;
@@ -328,15 +472,117 @@ export const useOperatorChatStore = create<OperatorChatStore>((set, get) => ({
       isResolvingPause: false,
       resolveError: null,
       pausedPlaceholderId: null,
+      isHydrating: false,
       abortController: null,
       resolveAbortController: null,
       decidedPausedAt: null,
+      hydrateAbortController: null,
     });
   },
 
   stop: () => {
     get().abortController?.abort();
     set({ abortController: null, isStreaming: false });
+  },
+
+  /**
+   * Restore the tab's conversation on mount.
+   *
+   * Every mounted surface calls this on mount, and there can be two at once
+   * (the full page and the docked drawer), so it declines in four separate
+   * ways rather than trusting the caller:
+   *
+   * - a hydrate is already in flight (`hydrateAbortController`) — the second
+   *   caller must not double-append the same transcript;
+   * - `messages` is non-empty — there is a live transcript to preserve, and
+   *   overwriting it with the stored one would drop this tab's decision entries;
+   * - a turn is streaming — the same, mid-flight;
+   * - nothing is configured, or nothing is stored and nothing recoverable.
+   *
+   * The 404 case is not an error. A conversation can be purged
+   * (`purgeEndedConversations`) or deleted with the operator it belonged to, and
+   * a stored id pointing at nothing should leave the admin with a working empty
+   * chat, not a red banner about a conversation they had forgotten.
+   */
+  hydrate: async (config) => {
+    const current = get();
+    if (current.hydrateAbortController || current.isStreaming || current.messages.length > 0) return;
+    if (!config?.agentId) return;
+
+    const controller = new AbortController();
+    set({ hydrateAbortController: controller, isHydrating: true });
+    try {
+      let conversationId = get().conversationId;
+      if (!conversationId) {
+        conversationId = await findLatestOperatorConversation(config.agentId);
+        if (controller.signal.aborted || !conversationId) return;
+      }
+
+      let snapshot: SimpleConversationMemorySnapshot;
+      try {
+        // returnCurrentStepOnly MUST be false: the whole point is the whole
+        // transcript, and in current-step-only mode the backend collapses
+        // conversationOutputs to one element (see snapshotToMessages).
+        snapshot = await getSimpleConversationLog(conversationId, false, false);
+      } catch (error) {
+        if (isApiError(error) && error.status === 404) {
+          if (!controller.signal.aborted) {
+            storeConversationId(null);
+            set({ conversationId: null });
+          }
+          return;
+        }
+        throw error;
+      }
+      if (controller.signal.aborted) return;
+      // Re-checked AFTER the reads, not just before them: a send() started
+      // while this was in flight owns the screen, and its optimistic bubbles
+      // must not be replaced by a transcript that predates them.
+      const afterRead = get();
+      if (afterRead.isStreaming || afterRead.messages.length > 0) return;
+
+      storeConversationId(conversationId);
+      set((s) => ({ ...s, ...hydratedState(conversationId, snapshot) }));
+    } catch (error) {
+      if (!controller.signal.aborted) set({ error: getErrorMessage(error) });
+    } finally {
+      if (get().hydrateAbortController === controller) {
+        set({ hydrateAbortController: null, isHydrating: false });
+      }
+    }
+  },
+
+  /**
+   * Load a conversation the admin picked out of the History tab.
+   *
+   * Unlike {@link hydrate} this REPLACES what is on screen — an explicit pick
+   * is an instruction, not an offer — so it goes through `reset()` first. That
+   * also aborts any in-flight turn, hydrate or pause resolution, and frees the
+   * current bubbles' attachment previews, which a bare `set()` here would leak.
+   */
+  selectConversation: async (conversationId) => {
+    get().reset();
+
+    const controller = new AbortController();
+    set({ hydrateAbortController: controller, isHydrating: true, conversationId });
+    try {
+      const snapshot = await getSimpleConversationLog(conversationId, false, false);
+      // A reset() (or another pick) during the read wins — this one is stale.
+      if (controller.signal.aborted || get().hydrateAbortController !== controller) return;
+      storeConversationId(conversationId);
+      set((s) => ({ ...s, ...hydratedState(conversationId, snapshot) }));
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      // Unlike hydrate, a 404 here IS worth reporting: the admin clicked a row
+      // that the list said existed, and silently showing an empty chat would
+      // read as "this conversation was empty" rather than "it is gone".
+      set({ error: getErrorMessage(error), conversationId: null });
+      storeConversationId(null);
+    } finally {
+      if (get().hydrateAbortController === controller) {
+        set({ hydrateAbortController: null, isHydrating: false });
+      }
+    }
   },
 
   ensureConversation: async (config) => {
@@ -877,13 +1123,16 @@ export function useOperatorChat(config: OperatorConfig | null | undefined) {
   const isResolvingPause = useOperatorChatStore((s) => s.isResolvingPause);
   const resolveError = useOperatorChatStore((s) => s.resolveError);
   const pausedPlaceholderId = useOperatorChatStore((s) => s.pausedPlaceholderId);
+  const isHydrating = useOperatorChatStore((s) => s.isHydrating);
 
   const rawSend = useOperatorChatStore((s) => s.send);
   const rawEnsureConversation = useOperatorChatStore((s) => s.ensureConversation);
+  const rawHydrate = useOperatorChatStore((s) => s.hydrate);
   const stop = useOperatorChatStore((s) => s.stop);
   const reset = useOperatorChatStore((s) => s.reset);
   const resolveApproval = useOperatorChatStore((s) => s.resolveApproval);
   const clearError = useOperatorChatStore((s) => s.clearError);
+  const selectConversation = useOperatorChatStore((s) => s.selectConversation);
 
   // The actions that need config bound in: resolveApproval only ever needs the
   // conversation id already in the store, same as today.
@@ -896,6 +1145,7 @@ export function useOperatorChat(config: OperatorConfig | null | undefined) {
     () => rawEnsureConversation(config),
     [rawEnsureConversation, config],
   );
+  const hydrate = useCallback(() => rawHydrate(config), [rawHydrate, config]);
 
   return {
     messages,
@@ -911,11 +1161,14 @@ export function useOperatorChat(config: OperatorConfig | null | undefined) {
     isResolvingPause,
     resolveError,
     pausedPlaceholderId,
+    isHydrating,
     send,
     ensureConversation,
+    hydrate,
     stop,
     reset,
     resolveApproval,
     clearError,
+    selectConversation,
   };
 }

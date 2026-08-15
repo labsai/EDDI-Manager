@@ -4057,6 +4057,18 @@
       "noReply": "Der Durchlauf endete ohne Antwort",
       "partial_one": "Genehmigt — {{count}} Aufruf abgelehnt",
       "partial_other": "Genehmigt — {{count}} Aufrufe abgelehnt"
+    },
+    "tabs": {
+      "label": "Operator-Ansichten",
+      "chat": "Chat",
+      "history": "Verlauf"
+    },
+    "history": {
+      "emptyTitle": "Keine früheren Unterhaltungen",
+      "emptyDescription": "Unterhaltungen mit dem Operator erscheinen hier, damit Sie sie später fortsetzen können.",
+      "noOpeningMessage": "(noch keine Nachricht)",
+      "stepCount_one": "{{count}} Schritt",
+      "stepCount_other": "{{count}} Schritte"
     }
   },
   "groupWorkspace": {

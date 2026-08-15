@@ -4088,6 +4088,19 @@
       "partial_one": "Approuvée — {{count}} appel rejeté",
       "partial_other": "Approuvée — {{count}} appels rejetés",
       "partial_many": "Approuvée — {{count}} appels rejetés"
+    },
+    "tabs": {
+      "label": "Vues de l'opérateur",
+      "chat": "Discussion",
+      "history": "Historique"
+    },
+    "history": {
+      "emptyTitle": "Aucune conversation passée",
+      "emptyDescription": "Les conversations avec l'opérateur apparaissent ici pour que vous puissiez les reprendre plus tard.",
+      "noOpeningMessage": "(pas encore de message)",
+      "stepCount_one": "{{count}} étape",
+      "stepCount_other": "{{count}} étapes",
+      "stepCount_many": "{{count}} étapes"
     }
   },
   "groupWorkspace": {
