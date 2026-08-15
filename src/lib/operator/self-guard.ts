@@ -145,6 +145,18 @@ export function findSelfTargetedCalls(
     // text it merely READ from this platform would come back as text it was
     // TOLD. Blocked for the same reason as a self-write to its own document —
     // the target is the thing doing the reviewing.
+    //
+    // DEFENSE IN DEPTH, NOT A BOUNDARY — and more obviously so for this case
+    // than for the agent one above. Everything in this module is Manager-side:
+    // the same pause can still be approved through the backend `/resume` API,
+    // the Slack buttons, or the MCP `resume_conversation` tool, none of which
+    // consult this file, and the POST then executes. The agent case at least has
+    // a second, backend-side control behind it (a self-targeted gate rewrite
+    // still has to get past `gate-guard`'s refusal of a `toolApprovals`-carrying
+    // body); this one has none. Closing it properly means rejecting a tool call
+    // whose resolved URI targets its own acting conversation in the ENGINE, at
+    // approval-execution time. Until that exists, treat this as reducing the
+    // likelihood of the route being taken, not as preventing it.
     if (actingConversationId && uriTargetsAgent(preview.uri, actingConversationId)) {
       found.push({ callId: call.callId, agentId: actingConversationId, target: "conversation" });
     }

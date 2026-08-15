@@ -12,6 +12,7 @@ import {
   endpointsForScope,
   buildToolApprovals,
   grantsConversationTesting,
+  grantsGroupDiscussion,
 } from "../tool-scopes";
 
 /**
@@ -525,6 +526,62 @@ describe("test-drive: talking to another agent", () => {
     const body = defaultOperatorPromptBody("read_write");
     expect(body).toContain("{}");
     expect(body).toContain('{"input": "your message"}');
+  });
+
+  /**
+   * A group is not "an agent you can also talk to", and the prompt must not
+   * imply it is. The granted set can START a discussion and read it back;
+   * /followup, /continue and /human-input are all ungranted, and the start
+   * answers with a JSON body rather than the Location header the agent
+   * mechanics describe.
+   *
+   * These pin the branch itself: without them the section could become
+   * unconditional, lose its JSON-body mechanics, or wrongly reuse the agent
+   * instructions, and the existing "the endpoint is granted" assertions would
+   * all still pass.
+   */
+  it("describes group discussions on their own terms", () => {
+    const body = defaultOperatorPromptBody("read_write");
+    expect(body).toContain("Starting a group discussion");
+    expect(body).toMatch(/cannot\s+talk into it afterwards/);
+    expect(body).toContain('{"question": "..."}');
+    expect(body).toMatch(/as a JSON BODY/);
+    // The agent-only mechanic must NOT be repeated for groups.
+    expect(body).toMatch(/No `Location` header is involved here/);
+  });
+
+  it("tells the operator to read a group's config before starting a discussion", () => {
+    // The approver sees one question, not what the group will then do — which
+    // may be many agents over many turns.
+    expect(defaultOperatorPromptBody("read_write")).toMatch(
+      /Read the group's own configuration BEFORE starting one/,
+    );
+  });
+
+  it("omits the group section entirely when the group endpoint is not granted", () => {
+    const withoutGroups = endpointsForScope("read_write").filter(
+      (e) => e !== "POST /groups/{groupId}/conversations",
+    );
+    const body = buildOperatorPromptBody(withoutGroups);
+
+    expect(body).not.toContain("Starting a group discussion");
+    expect(body).not.toContain('{"question": "..."}');
+    // ...while the agent test-drive it still holds is untouched.
+    expect(body).toContain("Testing an agent by talking to it");
+  });
+
+  it("omits the group section for read_only, which has no group POST", () => {
+    expect(defaultOperatorPromptBody("read_only")).not.toContain("Starting a group discussion");
+  });
+
+  it("grantsGroupDiscussion tracks the group endpoint alone", () => {
+    // Separate from grantsConversationTesting on purpose: removing the group
+    // endpoint must silence the group prose even while agent test-drive stays.
+    expect(grantsGroupDiscussion(endpointsForScope("read_write"))).toBe(true);
+    expect(grantsGroupDiscussion(endpointsForScope("read_only"))).toBe(false);
+    expect(
+      grantsGroupDiscussion(["POST /agents/{agentId}/start", "POST /agents/{conversationId}"]),
+    ).toBe(false);
   });
 
   it("says nothing about test-driving when the endpoints are not granted", () => {
