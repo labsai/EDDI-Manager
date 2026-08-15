@@ -182,6 +182,46 @@ describe("OperatorDrawer", () => {
     await waitFor(() => expect(screen.queryByTestId("operator-drawer-panel")).not.toBeInTheDocument());
   });
 
+  /**
+   * The drawer restores the tab's conversation when OPENED, not on mount.
+   *
+   * Both halves need pinning and neither was: deleting the effect entirely left
+   * all 15 drawer tests green, and so did moving it to mount — the exact thing
+   * its own comment forbids, because the drawer is mounted app-wide and would
+   * then issue a conversation read on every page load for an admin who never
+   * opens it.
+   */
+  it("reads the stored conversation only once the drawer is opened", async () => {
+    serveConfig(activeConfig());
+    sessionStorage.setItem("eddi.operator.conversationId", "conv-1");
+    useOperatorChatStore.setState({ conversationId: "conv-1" });
+    const reads: string[] = [];
+    server.use(
+      http.get("*/conversationstore/conversations/simple/:id", ({ params }) => {
+        reads.push(String(params.id));
+        return HttpResponse.json({
+          agentId: "op-1",
+          agentVersion: 2,
+          conversationId: "conv-1",
+          environment: "production",
+          conversationState: "READY",
+          conversationSteps: [{ conversationStep: [{ key: "input:initial", value: "what is deployed?" }] }],
+          conversationOutputs: [{ output: [{ type: "text", text: "Three agents." }] }],
+        });
+      }),
+    );
+
+    renderWithProviders(<OperatorDrawer />, { initialRoute: "/manage/agents" });
+    // Mounted but closed: nothing may be read.
+    await waitFor(() => expect(screen.getByTestId("operator-drawer-fab")).toBeInTheDocument());
+    expect(reads).toEqual([]);
+
+    await userEvent.click(screen.getByTestId("operator-drawer-fab"));
+
+    expect(await screen.findByText("Three agents.")).toBeInTheDocument();
+    expect(reads).toEqual(["conv-1"]);
+  });
+
   it("shows the compact pause notice, not the full approval banner, when paused", async () => {
     serveConfig(activeConfig());
     // Seeded directly on the shared, public chat state — this test is about

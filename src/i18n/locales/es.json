@@ -4002,6 +4002,7 @@
     },
     "chat": {
       "empty": "Pregunta sobre tu instalación. El operador lo consulta y te muestra cada llamada que hace.",
+      "restoring": "Abriendo esa conversación…",
       "placeholder": "Pregunta por agentes, conversaciones, despliegues, registros…",
       "pausedPlaceholder": "Esperando una decisión arriba antes de que el operador pueda continuar…",
       "send": "Enviar",

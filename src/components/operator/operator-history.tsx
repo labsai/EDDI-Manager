@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { useConversationDescriptors } from "@/hooks/use-conversations";
+import { isOperatorProbeConversation } from "@/hooks/use-operator-chat";
 import {
   getSimpleConversationLog,
   extractInput,
@@ -117,7 +118,10 @@ export function OperatorHistory({
     );
   }
 
-  const conversations = data ?? [];
+  // Probe conversations are activation's, not the admin's — see
+  // isOperatorProbeConversation. A few reconfigures and "Check again" clicks
+  // would otherwise evict real investigations from this capped page.
+  const conversations = (data ?? []).filter((c) => !isOperatorProbeConversation(c));
   if (conversations.length === 0) {
     return (
       <EmptyState

@@ -141,10 +141,21 @@ describe("OperatorPage — conversation history", () => {
     expect(rows[0]).toHaveAttribute("data-testid", "operator-conversation-conv-new");
   });
 
+  /**
+   * The newest conversation is deliberately NOT the one clicked.
+   *
+   * With a single-entry fixture the mount restore had already rendered that
+   * exact transcript before the click, so this test passed with
+   * `selectConversation`'s body replaced by `return` — it was asserting the
+   * restore, not the pick. The swap is what proves the click did anything.
+   */
   it("loads a picked conversation into the chat and switches back to it", async () => {
     server.use(
       http.get("*/conversationstore/conversations", () =>
-        HttpResponse.json([descriptor("conv-a", 5000)]),
+        HttpResponse.json([descriptor("conv-newest", 9000), descriptor("conv-a", 5000)]),
+      ),
+      http.get("*/conversationstore/conversations/simple/conv-newest", () =>
+        HttpResponse.json(transcript("the restored one", "restored answer")),
       ),
       http.get("*/conversationstore/conversations/simple/conv-a", () =>
         HttpResponse.json(transcript("why is agent-9 failing?", "Its vault key is missing.")),
@@ -161,6 +172,9 @@ describe("OperatorPage — conversation history", () => {
     );
     expect(await screen.findByText("Its vault key is missing.")).toBeInTheDocument();
     expect(useOperatorChatStore.getState().conversationId).toBe("conv-a");
+    // The transcript the mount restore had put up must be GONE — a pick
+    // replaces, it does not append.
+    expect(screen.queryByText("restored answer")).not.toBeInTheDocument();
   });
 
   /**
@@ -169,8 +183,13 @@ describe("OperatorPage — conversation history", () => {
    */
   it("restores the pause when a paused conversation is picked", async () => {
     server.use(
+      // Again the newest is a different, unpaused conversation, so isPaused
+      // cannot already be true from the mount restore when the click happens.
       http.get("*/conversationstore/conversations", () =>
-        HttpResponse.json([descriptor("conv-paused", 5000, "AWAITING_HUMAN")]),
+        HttpResponse.json([descriptor("conv-newest", 9000), descriptor("conv-paused", 5000, "AWAITING_HUMAN")]),
+      ),
+      http.get("*/conversationstore/conversations/simple/conv-newest", () =>
+        HttpResponse.json(transcript("something else", "an answer")),
       ),
       http.get("*/conversationstore/conversations/simple/conv-paused", () =>
         HttpResponse.json(

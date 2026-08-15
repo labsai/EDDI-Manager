@@ -581,6 +581,8 @@ export function OperatorPage() {
           onDecide={handleDecide}
           blockedCalls={blockedCalls}
           renderCallExtra={renderCallExtra}
+          isVisible={tab === "chat"}
+          isRestoring={isPicking}
         />
         </div>
         <OperatorStatusPanel

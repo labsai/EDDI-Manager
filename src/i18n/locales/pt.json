@@ -4002,6 +4002,7 @@
     },
     "chat": {
       "empty": "Pergunte sobre a sua instalação. O operador consulta e mostra-lhe cada chamada que faz.",
+      "restoring": "A abrir essa conversa…",
       "placeholder": "Pergunte sobre agentes, conversas, implantações, registos…",
       "pausedPlaceholder": "A aguardar uma decisão acima antes de o operador poder continuar…",
       "send": "Enviar",

@@ -1,4 +1,4 @@
-import { useState, useRef, type ReactNode } from "react";
+import { useState, useRef, useLayoutEffect, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
@@ -34,6 +34,19 @@ export interface OperatorChatProps {
   liveToolsSettled?: boolean;
   /** Completed turns' traces, keyed by the agent message they belong to. */
   tracesByMessageId: Record<string, PipelineEvent[]>;
+  /**
+   * False while another tab is showing this pane. The pane stays MOUNTED (a
+   * streaming turn and the composer draft must survive the switch), but
+   * `display:none` still destroys the scroll container's position, so becoming
+   * visible again has to restore it.
+   */
+  isVisible?: boolean;
+  /**
+   * True while a conversation picked from History is being read back. Without
+   * it an empty `messages` renders the starter-prompt empty state, which is
+   * indistinguishable from a brand-new chat for the whole duration of the read.
+   */
+  isRestoring?: boolean;
   isStreaming: boolean;
   error: string | null;
   onSend: (input: string, attachments?: SentAttachment[]) => void;
@@ -112,6 +125,8 @@ export function OperatorChat({
   liveToolCalls,
   liveToolsSettled,
   tracesByMessageId,
+  isVisible = true,
+  isRestoring = false,
   isStreaming,
   error,
   onSend,
@@ -153,6 +168,18 @@ export function OperatorChat({
     deps: [messages, events.length, isStreaming],
     bottomThreshold: 80,
   });
+
+  // Coming back from another tab. `display:none` resets scrollTop to 0, and the
+  // auto-scroll effect above only fires when its deps change — none of which do
+  // on a tab flip — so without this the admin lands on message 1 of a long
+  // transcript with no new content to bring them back down. Worse if a turn
+  // streamed while hidden: that effect ran against an element whose
+  // scrollHeight was 0, leaving the "scroll to bottom" affordance hidden too.
+  const wasVisibleRef = useRef(isVisible);
+  useLayoutEffect(() => {
+    if (isVisible && !wasVisibleRef.current) scrollToBottom("auto");
+    wasVisibleRef.current = isVisible;
+  }, [isVisible, scrollToBottom]);
 
   // Same staging as the main chat panel — picker, paste, chips, per-turn cap.
   const {
@@ -214,7 +241,15 @@ export function OperatorChat({
         aria-relevant="additions text"
         aria-label={t("operator.chat.transcript", "Operator conversation")}
       >
-        {messages.length === 0 && (
+        {messages.length === 0 && isRestoring && (
+          <div className="space-y-3 py-8 text-center" role="status" data-testid="operator-restoring">
+            <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground/60" />
+            <p className="text-sm text-muted-foreground">
+              {t("operator.chat.restoring", "Opening that conversation…")}
+            </p>
+          </div>
+        )}
+        {messages.length === 0 && !isRestoring && (
           <div className="space-y-3 py-8 text-center">
             <Bot className="mx-auto h-10 w-10 text-muted-foreground/40" />
             <p className="text-sm text-muted-foreground">{t("operator.chat.empty", "Ask about your deployment. The operator looks things up and shows you every call it makes.")}</p>

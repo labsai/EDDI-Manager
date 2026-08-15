@@ -4002,6 +4002,7 @@
     },
     "chat": {
       "empty": "Interrogez votre déploiement. L'opérateur fait les recherches et vous montre chaque appel qu'il effectue.",
+      "restoring": "Ouverture de la conversation…",
       "placeholder": "Agents, conversations, déploiements, journaux…",
       "pausedPlaceholder": "En attente d'une décision ci-dessus avant que l'opérateur ne puisse continuer…",
       "send": "Envoyer",

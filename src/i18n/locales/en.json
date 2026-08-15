@@ -3972,6 +3972,7 @@
     },
     "chat": {
       "empty": "Ask about your deployment. The operator looks things up and shows you every call it makes.",
+      "restoring": "Opening that conversation…",
       "placeholder": "Ask about agents, conversations, deployments, logs…",
       "pausedPlaceholder": "Awaiting a decision above before the operator can continue…",
       "send": "Send",

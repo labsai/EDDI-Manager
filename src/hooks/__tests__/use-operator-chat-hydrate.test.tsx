@@ -60,7 +60,7 @@ vi.mock("@/lib/api/conversations", async (importOriginal) => {
 });
 
 import { useOperatorChat, useOperatorChatStore } from "../use-operator-chat";
-import type { OperatorConfig } from "@/lib/api/operator";
+import { OPERATOR_PROBE_USER_ID, type OperatorConfig } from "@/lib/api/operator";
 
 function config(): OperatorConfig {
   return {
@@ -458,6 +458,30 @@ describe("hydrate: recovering after a browser restart", () => {
     });
 
     expect(result.current.conversationId).toBe("conv-later");
+  });
+
+  /**
+   * The activation probes run against the operator's OWN agent, and
+   * `runPostActivationProbes` is fire-and-forget after activation returns — so
+   * for ~30 seconds the newest conversation for that agent is a machine one
+   * that is about to be ended. A second tab opened in that window used to
+   * restore the canary as the admin's own transcript ("List the agents on this
+   * platform. Use your tools; do not guess.") and then sit on a dead
+   * conversation.
+   */
+  it("never adopts an activation probe's own conversation", async () => {
+    h.descriptors = [
+      descriptor("conv-canary", { lastModifiedOn: 9000, userId: OPERATOR_PROBE_USER_ID }),
+      descriptor("conv-mine", { lastModifiedOn: 100 }),
+    ];
+    h.logs = [TWO_TURNS];
+
+    const { result } = renderHook(() => useOperatorChat(config()));
+    await act(async () => {
+      await result.current.hydrate();
+    });
+
+    expect(result.current.conversationId).toBe("conv-mine");
   });
 
   it("starts clean when the operator has no usable conversation at all", async () => {

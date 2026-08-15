@@ -3972,6 +3972,7 @@
     },
     "chat": {
       "empty": "Fragen Sie nach Ihrer Installation. Der Operator schlägt nach und zeigt Ihnen jeden Aufruf, den er macht.",
+      "restoring": "Unterhaltung wird geöffnet …",
       "placeholder": "Fragen Sie nach Agenten, Konversationen, Deployments, Logs …",
       "pausedPlaceholder": "Wartet auf eine Entscheidung oben, bevor der Operator fortfahren kann…",
       "send": "Senden",

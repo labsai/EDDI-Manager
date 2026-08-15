@@ -18,7 +18,7 @@ import { buildAttachmentContext } from "@/lib/api/attachments";
 import { revokeMessagePreviews, type SentAttachment } from "@/hooks/use-chat";
 import { resumeConversation, type HitlVerdict, type ToolCallDecision } from "@/lib/api/hitl";
 import type { PipelineEvent } from "@/hooks/use-debug-events";
-import type { OperatorConfig } from "@/lib/api/operator";
+import { OPERATOR_PROBE_USER_ID, type OperatorConfig } from "@/lib/api/operator";
 import { getErrorMessage, isApiError } from "@/lib/api-client";
 
 /**
@@ -447,12 +447,32 @@ function hasLiveTranscript(state: OperatorChatState): boolean {
  */
 async function findLatestOperatorConversation(agentId: string): Promise<string | null> {
   const descriptors = await getConversationDescriptors(RECOVERY_PAGE_SIZE, 0, "", agentId);
-  const usable = descriptors.filter((d) => RESUMABLE_STATES.has(d.conversationState));
+  const usable = descriptors.filter(
+    (d) => RESUMABLE_STATES.has(d.conversationState) && !isOperatorProbeConversation(d),
+  );
   if (usable.length === 0) return null;
   const newest = usable.reduce((best, candidate) =>
     conversationRecency(candidate) > conversationRecency(best) ? candidate : best,
   );
   return parseConversationUri(newest.resource) || null;
+}
+
+/**
+ * Whether a conversation was started by activation's own probes rather than by
+ * the admin.
+ *
+ * The read canary and the write probe both run against the operator's OWN
+ * agent, and `runPostActivationProbes` is deliberately fire-and-forget after
+ * activation returns — so for ~30 seconds the newest conversation for that
+ * agent is a machine one that is about to be ended. A tab opened in that window
+ * used to restore it, showing "List the agents on this platform. Use your
+ * tools; do not guess." as the admin's own transcript and then sitting on a
+ * dead conversation. Also keeps them out of the History list, where a few
+ * reconfigures and "Check again" clicks could otherwise evict real
+ * investigations from a capped page.
+ */
+export function isOperatorProbeConversation(descriptor: { userId?: string }): boolean {
+  return descriptor.userId === OPERATOR_PROBE_USER_ID;
 }
 
 /**
