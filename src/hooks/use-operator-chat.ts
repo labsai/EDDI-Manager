@@ -162,6 +162,48 @@ type OperatorChatStore = OperatorChatState & OperatorChatInternal & OperatorChat
 const CONVERSATION_STORAGE_KEY = "eddi.operator.conversationId";
 
 /**
+ * Set when the admin explicitly discarded the conversation ("Start a new
+ * conversation"), so recovery does not hand it straight back.
+ *
+ * Needed because `reset()` clears the stored id, and "no stored id" is the exact
+ * signal {@link findLatestOperatorConversation} reads as "fresh tab, restore the
+ * newest". Nothing ends the conversation server-side, so it stays `READY` and
+ * stays newest — making it the FIRST thing recovery picks. Without this flag,
+ * clearing the chat and reopening the drawer brought the whole discarded
+ * transcript back, pause included.
+ *
+ * Stored rather than kept in memory: a reload also leaves no stored id, and the
+ * resurrection would simply happen one navigation later.
+ *
+ * Scoped to the tab like the id itself, and cleared the moment a conversation is
+ * deliberately adopted again — a new one via `ensureConversation`, or an old one
+ * picked from History.
+ */
+const RECOVERY_DECLINED_STORAGE_KEY = "eddi.operator.recoveryDeclined";
+
+function readRecoveryDeclined(): boolean {
+  try {
+    return sessionStorage.getItem(RECOVERY_DECLINED_STORAGE_KEY) === "1";
+  } catch {
+    // Storage unavailable — see readStoredConversationId. Defaulting to "not
+    // declined" only costs an offer to restore, never a lost conversation.
+    return false;
+  }
+}
+
+function storeRecoveryDeclined(declined: boolean): void {
+  try {
+    if (declined) {
+      sessionStorage.setItem(RECOVERY_DECLINED_STORAGE_KEY, "1");
+    } else {
+      sessionStorage.removeItem(RECOVERY_DECLINED_STORAGE_KEY);
+    }
+  } catch {
+    // Ignored — see readStoredConversationId.
+  }
+}
+
+/**
  * The one in-flight conversation create, when any — module-level because the
  * store is module-level and every surface shares it. See ensureConversation.
  */
@@ -359,6 +401,29 @@ function snapshotToMessages(snapshot: SimpleConversationMemorySnapshot): ChatMes
 const RECOVERY_PAGE_SIZE = 20;
 
 /**
+ * The states a conversation can be restored INTO.
+ *
+ * Same rule `use-chat.ts` states for the main chat, deliberately reproduced
+ * rather than loosened: `ENDED` and `ERROR` are terminal and `IN_PROGRESS`
+ * means a turn is still executing, so dropping into any of them is worse than a
+ * clean start — the composer would be live over a conversation that rejects the
+ * next message.
+ */
+const RESUMABLE_STATES: ReadonlySet<string> = new Set(["READY", "AWAITING_HUMAN"]);
+
+/**
+ * Whether there is something on screen that a restore must not overwrite.
+ *
+ * One predicate, used by hydrate's pre-check AND its post-read re-check, so the
+ * two cannot drift apart — the post-read check exists because a `send()` that
+ * started mid-read owns the screen, and it is only correct if it asks the same
+ * question the pre-check did.
+ */
+function hasLiveTranscript(state: OperatorChatState): boolean {
+  return state.isStreaming || state.messages.length > 0;
+}
+
+/**
  * The operator's most recent still-usable conversation, or null.
  *
  * Used only when this tab has NO stored id — a browser restart, or a first
@@ -372,49 +437,74 @@ const RECOVERY_PAGE_SIZE = 20;
  * documented newest-first contract, and "resume my last conversation" silently
  * resuming the OLDEST one is the kind of bug nobody reports precisely.
  *
- * `ENDED` conversations are skipped. Deactivating the operator ends all of them
- * (`endAllActiveConversations`), so after a deactivate/reactivate cycle the
- * newest conversation is always a dead one — restoring it would show a
- * transcript whose composer 4xx's on the next message.
+ * Only `READY` and `AWAITING_HUMAN` are restored, reusing the rule
+ * {@link RESUMABLE_STATES} already states for the main chat: `ENDED` and
+ * `ERROR` are terminal and `IN_PROGRESS` means a turn is still executing, so
+ * dropping into any of them is worse than a clean start. An earlier version
+ * excluded only `ENDED` and therefore restored `ERROR` conversations into a live
+ * composer — the very "composer 4xx's on the next message" failure the exclusion
+ * exists to prevent, reached through a state it had forgotten to list.
  */
 async function findLatestOperatorConversation(agentId: string): Promise<string | null> {
   const descriptors = await getConversationDescriptors(RECOVERY_PAGE_SIZE, 0, "", agentId);
-  const usable = descriptors.filter((d) => d.conversationState !== "ENDED");
+  const usable = descriptors.filter((d) => RESUMABLE_STATES.has(d.conversationState));
   if (usable.length === 0) return null;
   const newest = usable.reduce((best, candidate) =>
-    (candidate.lastModifiedOn ?? candidate.createdOn ?? 0) > (best.lastModifiedOn ?? best.createdOn ?? 0)
-      ? candidate
-      : best,
+    conversationRecency(candidate) > conversationRecency(best) ? candidate : best,
   );
   return parseConversationUri(newest.resource) || null;
 }
 
 /**
+ * How recent a conversation is, for "restore my last one".
+ *
+ * One definition, shared with the History list's own ordering — two copies of
+ * this expression let the conversation the tab restores and the row the list
+ * shows first disagree about which is newest, which is exactly the silent
+ * mismatch the sorting exists to prevent.
+ */
+export function conversationRecency(descriptor: {
+  lastModifiedOn?: number;
+  createdOn?: number;
+}): number {
+  return descriptor.lastModifiedOn ?? descriptor.createdOn ?? 0;
+}
+
+/**
  * The state a loaded conversation resolves to.
  *
- * `pausedPlaceholderId` anchors on the last AGENT bubble, not the last message:
- * the backend writes its pending-approval message into the paused step's output
- * exactly like an ordinary answer, so that bubble IS the ask, and
- * `resolveApproval` inserts the decision after it. Anchoring on the last message
- * outright would land on a user bubble for a turn that paused before producing
- * any output, putting the decision above the request it answers.
+ * `pausedPlaceholderId` anchors ONLY on a trailing agent bubble — the last
+ * message must itself be the agent's. The backend writes its pending-approval
+ * message into the paused step's output exactly like an ordinary answer, so when
+ * the paused turn produced output that bubble IS the ask and `resolveApproval`
+ * inserts the decision after it.
+ *
+ * When the paused turn produced NO output the trailing message is the user's
+ * request, and there is no ask bubble to anchor on. `null` is correct there:
+ * `resolveApproval` appends instead, which is the same shape the 409 pause path
+ * already uses. Searching backwards for the last agent bubble — as this used to
+ * — found the PREVIOUS turn's answer and spliced the decision and the result
+ * above the request that asked for them.
  */
 function hydratedState(conversationId: string, snapshot: SimpleConversationMemorySnapshot) {
   const messages = snapshotToMessages(snapshot);
   const paused = snapshot.conversationState === "AWAITING_HUMAN";
-  const lastAgentBubble = [...messages].reverse().find((m) => m.role === "agent");
+  const last = messages[messages.length - 1];
   return {
     conversationId,
     messages,
     isPaused: paused,
     pauseReason: paused ? (snapshot.hitlPauseReason ?? null) : null,
     decidedPausedAt: paused ? (snapshot.hitlPausedAt ?? null) : null,
-    pausedPlaceholderId: paused ? (lastAgentBubble?.id ?? null) : null,
+    pausedPlaceholderId: paused && last?.role === "agent" ? last.id : null,
     // A restored conversation has no live turn and no trace to show for one.
+    // `resolveError` is deliberately NOT cleared here: it records that a human's
+    // decision failed to land, the pause is deliberately kept alongside it, and
+    // erasing it on a re-mount would remove the only evidence the admin has that
+    // their Approve did not take effect.
     events: [],
     liveToolCalls: [],
     liveToolsSettled: false,
-    resolveError: null,
   };
 }
 
@@ -454,6 +544,9 @@ export const useOperatorChatStore = create<OperatorChatStore>((set, get) => ({
     // conversation into the clean slate (see ensureConversation).
     creatingConversation = null;
     storeConversationId(null);
+    // The admin asked for a clean slate; recovery must not undo that on the next
+    // mount. See RECOVERY_DECLINED_STORAGE_KEY.
+    storeRecoveryDeclined(true);
     // Free the sent bubbles' attachment preview URLs before dropping them —
     // takeForSend keeps them alive for the bubble thumbnails, so without this
     // every sent image leaks its blob (pinning the File) until page unload.
@@ -505,18 +598,27 @@ export const useOperatorChatStore = create<OperatorChatStore>((set, get) => ({
    * chat, not a red banner about a conversation they had forgotten.
    */
   hydrate: async (config) => {
-    const current = get();
-    if (current.hydrateAbortController || current.isStreaming || current.messages.length > 0) return;
     if (!config?.agentId) return;
+    const current = get();
+    if (current.hydrateAbortController || hasLiveTranscript(current)) return;
+    // A decision is being resolved. `resolveApproval` deliberately does not set
+    // `isStreaming`, and the 409 pause path deliberately empties `messages`, so
+    // during its 90-second poll every OTHER guard here is false — and a hydrate
+    // that lands in that window reads the resumed answer, writes it, and then
+    // has it appended a SECOND time when the poll settles.
+    if (current.isResolvingPause) return;
+
+    const storedId = current.conversationId;
+    // "Nothing stored" means two different things: a fresh tab (restore the
+    // newest) and "the admin just cleared the chat" (restore nothing). Only the
+    // tombstone can tell them apart.
+    if (!storedId && readRecoveryDeclined()) return;
 
     const controller = new AbortController();
     set({ hydrateAbortController: controller, isHydrating: true });
     try {
-      let conversationId = get().conversationId;
-      if (!conversationId) {
-        conversationId = await findLatestOperatorConversation(config.agentId);
-        if (controller.signal.aborted || !conversationId) return;
-      }
+      const conversationId = storedId ?? (await findLatestOperatorConversation(config.agentId));
+      if (controller.signal.aborted || !conversationId) return;
 
       let snapshot: SimpleConversationMemorySnapshot;
       try {
@@ -527,24 +629,44 @@ export const useOperatorChatStore = create<OperatorChatStore>((set, get) => ({
       } catch (error) {
         if (isApiError(error) && error.status === 404) {
           if (!controller.signal.aborted) {
+            // Clear the PAUSE with the id. Leaving `isPaused` up while
+            // `conversationId` is null renders an approval card whose Approve
+            // hits `resolveApproval`'s `if (!conversationId) return` — no
+            // request, no spinner, no error, permanently.
             storeConversationId(null);
-            set({ conversationId: null });
+            set({
+              conversationId: null,
+              isPaused: false,
+              pauseReason: null,
+              pausedPlaceholderId: null,
+              decidedPausedAt: null,
+            });
           }
           return;
         }
         throw error;
       }
       if (controller.signal.aborted) return;
-      // Re-checked AFTER the reads, not just before them: a send() started
-      // while this was in flight owns the screen, and its optimistic bubbles
-      // must not be replaced by a transcript that predates them.
+      // Re-checked AFTER the reads, not just before them: a send() started while
+      // this was in flight owns the screen, and its optimistic bubbles must not
+      // be replaced by a transcript that predates them.
       const afterRead = get();
-      if (afterRead.isStreaming || afterRead.messages.length > 0) return;
+      if (hasLiveTranscript(afterRead) || afterRead.isResolvingPause) return;
+      // ...and an attachment drop can claim a conversation without producing any
+      // message at all: `ensureConversation` creates one and uploads INTO it, so
+      // overwriting the id here would orphan the file in a conversation nothing
+      // references — the exact hazard that function's in-flight dedupe exists to
+      // prevent. It does not participate in that protocol, so it defers instead.
+      if (afterRead.conversationId !== storedId || creatingConversation) return;
 
       storeConversationId(conversationId);
       set((s) => ({ ...s, ...hydratedState(conversationId, snapshot) }));
     } catch (error) {
-      if (!controller.signal.aborted) set({ error: getErrorMessage(error) });
+      // A recovery lookup the admin never asked for must fail as quietly as the
+      // 404 above: a speculative read planting a red banner over an empty chat
+      // is worse than simply not restoring anything. A read of a STORED id is
+      // different — that conversation is one the tab was demonstrably using.
+      if (!controller.signal.aborted && storedId) set({ error: getErrorMessage(error) });
     } finally {
       if (get().hydrateAbortController === controller) {
         set({ hydrateAbortController: null, isHydrating: false });
@@ -561,23 +683,40 @@ export const useOperatorChatStore = create<OperatorChatStore>((set, get) => ({
    * current bubbles' attachment previews, which a bare `set()` here would leak.
    */
   selectConversation: async (conversationId) => {
-    get().reset();
-
+    // Read FIRST, touch the store second — the rule `use-chat.ts` records for
+    // the same operation: "Clearing up front meant a failed read wiped the
+    // conversation the user was looking at and left a blank pane with nothing to
+    // go back to." An earlier version reset() before reading, so one 500 on a
+    // stale row cost the admin the investigation they were in the middle of.
     const controller = new AbortController();
-    set({ hydrateAbortController: controller, isHydrating: true, conversationId });
+    set({ hydrateAbortController: controller, isHydrating: true });
     try {
       const snapshot = await getSimpleConversationLog(conversationId, false, false);
-      // A reset() (or another pick) during the read wins — this one is stale.
+      // A reset() or a newer pick during the read wins — this one is stale.
       if (controller.signal.aborted || get().hydrateAbortController !== controller) return;
+      // A turn the admin started while this loaded owns the screen. The same
+      // check hydrate makes, and for the same reason: replacing `messages`
+      // wholesale would drop the live user bubble and the streaming placeholder,
+      // so every subsequent token would be written to a bubble that no longer
+      // exists and the answer would vanish.
+      if (get().isStreaming) return;
+
+      // Now that the pick is known-good, swap: reset() aborts the in-flight
+      // resolve, frees the outgoing bubbles' attachment previews, and clears the
+      // traces — none of which may happen before we know there is something to
+      // swap TO. It also sets the recovery tombstone, which this call then
+      // clears, because adopting a conversation is the opposite of declining one.
+      get().reset();
       storeConversationId(conversationId);
-      set((s) => ({ ...s, ...hydratedState(conversationId, snapshot) }));
+      storeRecoveryDeclined(false);
+      set((s) => ({ ...s, ...hydratedState(conversationId, snapshot), hydrateAbortController: controller, isHydrating: true }));
     } catch (error) {
-      if (controller.signal.aborted) return;
-      // Unlike hydrate, a 404 here IS worth reporting: the admin clicked a row
-      // that the list said existed, and silently showing an empty chat would
-      // read as "this conversation was empty" rather than "it is gone".
-      set({ error: getErrorMessage(error), conversationId: null });
-      storeConversationId(null);
+      if (controller.signal.aborted || get().hydrateAbortController !== controller) return;
+      // Reported, unlike hydrate's silent 404: the admin clicked a row the list
+      // said existed. Nothing else is touched — whatever was on screen stays,
+      // because a failed pick is a failed navigation, not a reason to lose the
+      // conversation they already had.
+      set({ error: getErrorMessage(error) });
     } finally {
       if (get().hydrateAbortController === controller) {
         set({ hydrateAbortController: null, isHydrating: false });
@@ -610,6 +749,9 @@ export const useOperatorChatStore = create<OperatorChatStore>((set, get) => ({
         // discarded staging).
         if (creatingConversation === creating) {
           storeConversationId(conversationId);
+          // Adopting a conversation is the opposite of declining one: the admin
+          // is working again, so a later restore of THIS id is wanted.
+          storeRecoveryDeclined(false);
           set({ conversationId });
         }
         return conversationId;

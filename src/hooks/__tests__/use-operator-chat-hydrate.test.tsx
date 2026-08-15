@@ -117,8 +117,12 @@ beforeEach(() => {
   h.descriptorCalls = [];
   h.logCalls = [];
   h.duringLogRead = null;
-  sessionStorage.clear();
+  // reset() AFTER the store reset, not before: reset() deliberately writes the
+  // "the admin cleared this chat, do not restore it" tombstone, so clearing
+  // storage first would leave every test starting as if the user had just
+  // pressed New conversation — and recovery would correctly decline.
   useOperatorChatStore.getState().reset();
+  sessionStorage.clear();
 });
 
 /** Put a conversation id in storage the way a previous visit would have. */
@@ -381,9 +385,15 @@ describe("hydrate: recovering after a browser restart", () => {
    * newest conversation is always a dead one. Restoring it would show a
    * transcript whose composer fails on the next message.
    */
-  it("skips ENDED conversations", async () => {
+  it("restores only READY and AWAITING_HUMAN, never a terminal or running one", async () => {
+    // ENDED and ERROR are terminal; IN_PROGRESS means a turn is still
+    // executing. Restoring any of them puts a live composer over a conversation
+    // that rejects the next message — the failure the filter exists to prevent,
+    // and one an earlier ENDED-only filter reached through ERROR.
     h.descriptors = [
-      descriptor("conv-dead", { lastModifiedOn: 9000, conversationState: "ENDED" }),
+      descriptor("conv-ended", { lastModifiedOn: 9000, conversationState: "ENDED" }),
+      descriptor("conv-error", { lastModifiedOn: 8000, conversationState: "ERROR" }),
+      descriptor("conv-running", { lastModifiedOn: 7000, conversationState: "IN_PROGRESS" }),
       descriptor("conv-live", { lastModifiedOn: 100 }),
     ];
     h.logs = [TWO_TURNS];
@@ -394,6 +404,60 @@ describe("hydrate: recovering after a browser restart", () => {
     });
 
     expect(result.current.conversationId).toBe("conv-live");
+  });
+
+  /**
+   * "Start a new conversation" must stay started.
+   *
+   * `reset()` clears the stored id, and "no stored id" is the exact signal
+   * recovery reads as "fresh tab, restore the newest". Nothing ends the
+   * conversation server-side, so it stays READY and stays newest — making the
+   * discarded conversation the FIRST thing recovery picks. Before the tombstone
+   * this took three clicks to reproduce: clear the chat, close the drawer,
+   * reopen it, and the whole transcript was back, pause included.
+   */
+  it("does not resurrect a conversation the admin explicitly cleared", async () => {
+    storeId("conv-1");
+    h.logs = [TWO_TURNS];
+    const { result } = renderHook(() => useOperatorChat(config()));
+    await act(async () => {
+      await result.current.hydrate();
+    });
+    expect(result.current.messages).toHaveLength(4);
+
+    // The admin presses "Start a new conversation"...
+    await act(async () => {
+      result.current.reset();
+    });
+    // ...and the backend still happily offers that conversation back.
+    h.descriptors = [descriptor("conv-1", { lastModifiedOn: 9000 })];
+    h.logs = [TWO_TURNS];
+
+    await act(async () => {
+      await result.current.hydrate();
+    });
+
+    expect(result.current.messages).toEqual([]);
+    expect(result.current.conversationId).toBeNull();
+    expect(h.descriptorCalls).toEqual([]);
+  });
+
+  /** ...but a conversation deliberately adopted afterwards IS restorable again. */
+  it("recovers again once a new conversation has been started", async () => {
+    useOperatorChatStore.getState().reset();
+    await act(async () => {
+      await useOperatorChatStore.getState().ensureConversation(config());
+    });
+    useOperatorChatStore.setState({ conversationId: null });
+    h.descriptors = [descriptor("conv-later", { lastModifiedOn: 9000 })];
+    h.logs = [TWO_TURNS];
+
+    const { result } = renderHook(() => useOperatorChat(config()));
+    await act(async () => {
+      await result.current.hydrate();
+    });
+
+    expect(result.current.conversationId).toBe("conv-later");
   });
 
   it("starts clean when the operator has no usable conversation at all", async () => {

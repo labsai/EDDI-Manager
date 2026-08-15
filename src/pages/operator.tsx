@@ -95,12 +95,22 @@ export function OperatorPage() {
     void hydrate();
   }, [isActiveOperator, hydrate]);
 
+  /**
+   * True only while an explicit History pick is loading.
+   *
+   * Deliberately NOT `chat.isHydrating`, which is also true during the silent
+   * mount restore — feeding that to the list disabled every row for a load that
+   * had nothing to do with a pick, with no spinner to explain it.
+   */
+  const [isPicking, setIsPicking] = useState(false);
+
   const handleSelectConversation = useCallback(
     (conversationId: string) => {
       // Switch first: the load is what the Chat tab renders, and leaving the
       // admin on the list while it happens hides the thing they just asked for.
       setTab("chat");
-      void chat.selectConversation(conversationId);
+      setIsPicking(true);
+      void chat.selectConversation(conversationId).finally(() => setIsPicking(false));
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [chat.selectConversation],
@@ -514,20 +524,32 @@ export function OperatorPage() {
           conversations wants, and moving it would make the tabs feel like two
           different screens. Only the left cell swaps. */}
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[1fr_20rem]">
-        <div className={tab === "history" ? "min-h-0 overflow-y-auto" : "hidden"}>
-          <OperatorHistory
-            agentId={config!.agentId!}
-            activeConversationId={chat.conversationId}
-            onSelect={handleSelectConversation}
-            isLoading={chat.isHydrating}
-          />
-        </div>
+        {/* Rendered only while showing. `hidden` is display:none, which does NOT
+            unmount — the list and one full-transcript read per row fired on
+            every operator page load for a tab nobody had opened (measured: 17
+            requests). Unlike the chat below there is nothing here worth keeping
+            alive: react-query caches the data, so coming back is free. */}
+        {tab === "history" && (
+          <div className="min-h-0 min-w-0 overflow-y-auto">
+            <OperatorHistory
+              agentId={config!.agentId!}
+              activeConversationId={chat.conversationId}
+              onSelect={handleSelectConversation}
+              isLoading={isPicking}
+            />
+          </div>
+        )}
 
         {/* Kept MOUNTED while History is showing, not unmounted and rebuilt.
             OperatorChat owns scroll position and composer draft state, and a
             streaming turn keeps running while the admin looks through history —
             a remount would drop the draft and jump the transcript to the top. */}
-        <div className={tab === "chat" ? "flex min-h-0 flex-col" : "hidden"}>
+        {/* min-w-0 belongs on the GRID ITEM, which is now this wrapper rather
+            than OperatorChat itself. Without it the track grows to the widest
+            unbreakable line inside (an approval card's one-line JSON args) and
+            pushes the page into horizontal scroll — the child's own min-w-0 is a
+            floor, not a ceiling, so it no longer constrains the track. */}
+        <div className={tab === "chat" ? "flex min-h-0 min-w-0 flex-col" : "hidden"}>
         <OperatorChat
           messages={chat.messages}
           events={chat.events}

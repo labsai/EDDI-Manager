@@ -67,6 +67,8 @@ function transcript(question: string, answer: string, state = "READY") {
 describe("OperatorPage — conversation history", () => {
   beforeEach(() => {
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    // Order matters: reset() writes the "do not restore" tombstone, so storage
+    // is cleared after it — see use-operator-chat-hydrate.test.tsx.
     useOperatorChatStore.getState().reset();
     sessionStorage.clear();
     server.resetHandlers();
