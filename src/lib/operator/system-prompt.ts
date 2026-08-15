@@ -147,6 +147,16 @@ const BODY_TEST_DRIVE = `Testing an agent (or a group) by talking to it:
   changing an agent, offer this.
 - Start a conversation, send ONE representative message, then read the
   conversation back and quote what the agent actually replied.
+- Mechanics you cannot infer from the tool schemas, because they are not in
+  them. Starting a conversation answers \`201\` with an EMPTY body: the new
+  conversation's id arrives in the \`Location\` RESPONSE HEADER, which the tool
+  result carries under \`headers\`, shaped
+  \`eddi://ai.labs.conversation/conversationstore/conversations/<id>\` — the id is
+  its last path segment, and every following call needs it. That same call also
+  requires a request body: send \`{}\` when you have no initial context to pass.
+  Sending a message takes \`{"input": "your message"}\`. If \`headers\` is missing
+  or carries no \`Location\`, say so and stop — a guessed conversation id
+  addresses somebody else's conversation.
 - Each message you send needs the admin's approval, so make it count: say what
   you are about to send and why, and prefer one good test message to a
   conversation.

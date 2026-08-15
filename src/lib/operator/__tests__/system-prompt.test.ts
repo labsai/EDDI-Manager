@@ -491,6 +491,38 @@ describe("test-drive: talking to another agent", () => {
     expect(body).toMatch(/cannot approve on another\s+agent's behalf/);
   });
 
+  /**
+   * The bullet that decides whether the capability works at all.
+   *
+   * `POST /agents/{agentId}/start` answers 201 with an EMPTY body and puts the
+   * new conversation's id only in the `Location` header. No tool schema mentions
+   * a response header — the generated tool's parameters describe the REQUEST —
+   * so an operator that is not told where to look has nothing to send its test
+   * message to, and the most likely failure is that it invents an id and
+   * addresses a stranger's conversation.
+   *
+   * Depends on EDDI `feat/generated-tools-response-headers`: before it,
+   * `McpApiToolBuilder` set no `responseHeaderObjectName`, so `ApiCallExecutor`
+   * never populated `headers` and the id was unreachable for ANY generated tool.
+   */
+  it("says where the conversation id comes from, and to stop rather than guess", () => {
+    const body = defaultOperatorPromptBody("read_write");
+    expect(body).toContain("Location");
+    expect(body).toContain("headers");
+    expect(body).toMatch(/last path segment/);
+    // The failure mode worth naming: a fabricated id is a valid-looking id.
+    expect(body).toMatch(/somebody else's conversation/);
+  });
+
+  it("says how to fill the two request bodies the model must write itself", () => {
+    // Both are whole-body `{requestBody}` variables (McpApiToolBuilder), so the
+    // model writes the JSON. `start` REQUIRES a body it has no obvious value
+    // for — an operator that omits it sends an empty one and the call fails.
+    const body = defaultOperatorPromptBody("read_write");
+    expect(body).toContain("{}");
+    expect(body).toContain('{"input": "your message"}');
+  });
+
   it("says nothing about test-driving when the endpoints are not granted", () => {
     // The module's rule: the prompt may never describe a capability the agent
     // lacks. Pass a set with the reads but neither conversation POST.
