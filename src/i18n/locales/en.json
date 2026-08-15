@@ -271,7 +271,13 @@
     "importError": "Failed to import agent",
     "chat": "Chat",
     "deployAndChat": "Deploy & Chat",
-    "openExternalChat": "Open in new tab"
+    "openExternalChat": "Open in new tab",
+    "liveIn": "Live in {{environment}}",
+    "chatIn": "Chat in {{environment}}",
+    "openExternalChatIn": "Open {{environment}} chat in a new tab",
+    "deployToProduction": "Deploy to production",
+    "undeployFromProduction": "Undeploy from production",
+    "deployFailedIn": "Deployment failed in {{environment}}"
   },
   "agentDetail": {
     "a2aDescHint": "Shown in the Agent Card — helps other agents understand what this agent does",
@@ -3348,7 +3354,8 @@
     "deployed": "Deployed",
     "deploying": "Deploying...",
     "error": "Error",
-    "notDeployed": "Not deployed"
+    "notDeployed": "Not deployed",
+    "checking": "Checking…"
   },
   "userData": {
     "subtitle": "Manage per-user memories, properties, and conversation bindings",
@@ -3981,7 +3988,8 @@
       "newConversation": "Start a new conversation",
       "transcript": "Operator conversation",
       "pauseCompactFallback": "The operator needs your approval before continuing.",
-      "pauseCompactReview": "Review to approve →"
+      "pauseCompactReview": "Review to approve →",
+      "resolving": "Running the approved step — this can take a moment…"
     },
     "drawer": {
       "title": "Platform Operator",
@@ -4018,6 +4026,7 @@
         "inlineCredential": "This request embeds what looks like a credential literal instead of a ${vault:…} reference. A written-in secret is stored in plain text and cannot be rotated from the vault — reject and ask for the vault reference."
       },
       "blockedSelfTarget": "An agent may not modify its own definition, and this request targets the operator's own agent ({{agentId}}). Approving is unavailable for the whole batch while it is present — reject, and make this change from that agent's own page.",
+      "blockedSelfConversation": "An agent may not send a message into the conversation it is running in, and this request targets this one ({{agentId}}). That would write its own text in as though a human had said it. Approving is unavailable for the whole batch while it is present — reject.",
       "blockedGateCarrying": "This request writes an LLM configuration that sets its own approval gate (toolApprovals), which would replace the gate reviewing it. Approving is unavailable for the whole batch while it is present — reject, and change the gate from the agent's own page.",
       "blockedGateUnverifiable": "This request writes an LLM configuration whose body cannot be read in full — it is either too large to display or not valid JSON — so it cannot be confirmed free of an approval-gate override. Approving is unavailable for the whole batch while it is present — reject, and make this change from the agent's own page.",
       "blockedGateUnpinned": "This request writes an LLM configuration but is not pinned, so what actually runs can differ from what is shown here and cannot be confirmed free of an approval-gate override. Approving is unavailable for the whole batch while it is present — reject, and make this change from the agent's own page."
@@ -4264,5 +4273,9 @@
     "ready": "Ready",
     "title": "Your Digital Workforce",
     "unnamed": "Unnamed Agent"
+  },
+  "environments": {
+    "production": "Production",
+    "test": "Test"
   }
 }

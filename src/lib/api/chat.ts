@@ -1,6 +1,7 @@
 import { api } from "../api-client";
 import { parseSseFrame } from "./sse-utils";
 import type { SimpleConversationMemorySnapshot } from "./conversations";
+import type { Environment } from "@/lib/constants";
 
 // --- Types ---
 
@@ -86,22 +87,34 @@ export function parseConversationIdFromLocation(location: string): string {
 
 // --- API Functions ---
 
-/** Start a new conversation. Returns the conversation ID extracted from Location header.
+/**
+ * Start a new conversation. Returns the conversation ID extracted from the
+ * Location header.
  *
- *  `userId` is optional and is passed straight through to the backend, which
- *  stores it on the conversation descriptor. Its one use today is letting
- *  machine-started conversations be told apart from an admin's own: the operator
- *  activation probes tag theirs (see `OPERATOR_PROBE_USER_ID`) so that restoring
- *  "your last conversation" cannot adopt a canary that is about to be ended
- *  underneath it. */
+ * The environment is REQUIRED on the wire. The backend
+ * (`IRestAgentEngine.startConversation`) reads `?environment=` and defaults it to
+ * `production` — and this function used to accept the argument as `_environment`
+ * and never send it, so every conversation the Manager started went to
+ * production regardless of what the caller asked for. An agent deployed only to
+ * `test` was therefore unreachable from the UI, and the failure read as a broken
+ * agent rather than as the wrong environment.
+ *
+ * `userId` is optional and is passed straight through to the backend, which
+ * stores it on the conversation descriptor. Its one use today is letting
+ * machine-started conversations be told apart from an admin's own: the operator
+ * activation probes tag theirs (see `OPERATOR_PROBE_USER_ID`) so that restoring
+ * "your last conversation" cannot adopt a canary that is about to be ended
+ * underneath it.
+ */
 export async function startConversation(
-  _environment: string,
+  environment: Environment,
   agentId: string,
   userId?: string
 ): Promise<string> {
-  const query = userId ? `?userId=${encodeURIComponent(userId)}` : "";
+  const params = new URLSearchParams({ environment });
+  if (userId) params.set("userId", userId);
   const result = await api.post<{ location: string }>(
-    `/agents/${agentId}/start${query}`
+    `/agents/${agentId}/start?${params.toString()}`
   );
   return parseConversationIdFromLocation(result.location);
 }

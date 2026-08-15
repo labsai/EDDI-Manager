@@ -245,7 +245,13 @@
     "chat": "Chat",
     "deployAndChat": "Desplegar y chatear",
     "openExternalChat": "Abrir en nueva pestaña",
-    "count_many": "{{count}} agentes"
+    "count_many": "{{count}} agentes",
+    "liveIn": "Activo en {{environment}}",
+    "chatIn": "Chatear en {{environment}}",
+    "openExternalChatIn": "Abrir el chat de {{environment}} en una pestaña nueva",
+    "deployToProduction": "Desplegar en producción",
+    "undeployFromProduction": "Retirar de producción",
+    "deployFailedIn": "El despliegue falló en {{environment}}"
   },
   "agentDetail": {
     "a2aDescHint": "Se muestra en la Agent Card — ayuda a otros agentes a entender qué hace este agente",
@@ -3337,7 +3343,8 @@
     "deployed": "Desplegado",
     "deploying": "Desplegando...",
     "error": "Error",
-    "notDeployed": "No desplegado"
+    "notDeployed": "No desplegado",
+    "checking": "Comprobando…"
   },
   "userData": {
     "subtitle": "Gestione los recuerdos, las propiedades y los vínculos de conversación por usuario",
@@ -4011,7 +4018,8 @@
       "newConversation": "Iniciar una conversación nueva",
       "transcript": "Conversación con el operador",
       "pauseCompactFallback": "El operador necesita tu aprobación para continuar.",
-      "pauseCompactReview": "Revisar para aprobar →"
+      "pauseCompactReview": "Revisar para aprobar →",
+      "resolving": "Ejecutando el paso aprobado: puede tardar un momento…"
     },
     "drawer": {
       "title": "Operador de plataforma",
@@ -4048,6 +4056,7 @@
         "inlineCredential": "Esta solicitud incrusta lo que parece una credencial literal en lugar de una referencia ${vault:…}. Un secreto escrito directamente se almacena en texto plano y no puede rotarse desde la bóveda — recházala y pide la referencia de la bóveda."
       },
       "blockedSelfTarget": "Un agente no puede modificar su propia definición, y esta solicitud apunta al propio agente del operador ({{agentId}}). Mientras esté presente, no se puede aprobar todo el lote: recházala y haz este cambio desde la página de ese agente.",
+      "blockedSelfConversation": "Un agente no puede enviar un mensaje a la conversación en la que se está ejecutando, y esta solicitud apunta a esta ({{agentId}}). Escribiría su propio texto como si lo hubiera dicho una persona. Mientras esté presente, no se puede aprobar todo el lote: recházala.",
       "blockedGateCarrying": "Esta solicitud escribe una configuración de LLM que establece su propia puerta de aprobación (toolApprovals), lo que reemplazaría la puerta que la está revisando. La aprobación no está disponible para todo el lote mientras esté presente — rechace y cambie la puerta desde la página del agente.",
       "blockedGateUnverifiable": "Esta solicitud escribe una configuración de LLM cuyo cuerpo no se puede leer por completo — es demasiado grande para mostrarse o no es JSON válido —, por lo que no se puede confirmar que no anule la puerta de aprobación. La aprobación no está disponible para todo el lote mientras esté presente — rechace y realice este cambio desde la página del agente.",
       "blockedGateUnpinned": "Esta solicitud escribe una configuración de LLM pero no está fijada, por lo que lo que realmente se ejecuta puede diferir de lo que se muestra aquí y no se puede confirmar que no anule la puerta de aprobación. La aprobación no está disponible para todo el lote mientras esté presente — rechace y realice este cambio desde la página del agente."
@@ -4297,5 +4306,9 @@
     "ready": "Listo",
     "title": "Tu plantilla digital",
     "unnamed": "Agente sin nombre"
+  },
+  "environments": {
+    "production": "Producción",
+    "test": "Prueba"
   }
 }

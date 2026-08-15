@@ -1,4 +1,5 @@
 import { startConversation, sendMessageStreaming, endConversation } from "@/lib/api/chat";
+import { operatorEnvironment } from "@/lib/operator/operator-environment";
 import { resumeConversation, getApprovalStatus } from "@/lib/api/hitl";
 import {
   OPERATOR_PROBE_USER_ID,
@@ -171,7 +172,7 @@ async function runProbe(
 
   let conversationId: string | null = null;
   try {
-    conversationId = await startConversation(config.environment, config.agentId, OPERATOR_PROBE_USER_ID);
+    conversationId = await startConversation(operatorEnvironment(config), config.agentId, OPERATOR_PROBE_USER_ID);
 
     let toolCalls = 0;
     let sawExpectedToolCall = false;
@@ -179,7 +180,7 @@ async function runProbe(
     let finalState: string | undefined;
 
     const stream = sendMessageStreaming(
-      config.environment,
+      operatorEnvironment(config),
       config.agentId,
       conversationId,
       { input: buildWriteCanaryPrompt(expectedToolName, config.agentId) },
