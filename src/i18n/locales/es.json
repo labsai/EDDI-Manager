@@ -2814,8 +2814,8 @@
     "contentIdentical": "Contenido idéntico",
     "targetContent": "Destino",
     "sourceContent": "Origen",
-    "diffHiddenLines": "… {{lines}} líneas sin cambios: haz clic para mostrarlas",
-    "diffRawComparison": "Uno de los lados no es JSON válido, así que esta es una comparación de texto plano: las diferencias de solo formato también aparecen como cambios."
+    "diffHiddenLines": "Mostrar {{lines}} líneas sin cambios",
+    "diffRawComparison": "JSON no válido: se compara como texto plano, así que una diferencia solo de formato también aparece como un cambio."
   },
   "syncPage": {
     "title": "Sincronización de agentes",

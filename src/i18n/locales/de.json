@@ -2953,8 +2953,8 @@
     "contentIdentical": "Inhalt identisch",
     "targetContent": "Ziel",
     "sourceContent": "Quelle",
-    "diffHiddenLines": "… {{lines}} unveränderte Zeilen – zum Anzeigen klicken",
-    "diffRawComparison": "Eine Seite ist kein gültiges JSON, daher ist dies ein reiner Textvergleich – auch reine Formatierungsunterschiede erscheinen als Änderungen."
+    "diffHiddenLines": "{{lines}} unveränderte Zeilen anzeigen",
+    "diffRawComparison": "Kein gültiges JSON – Vergleich als reiner Text, daher erscheint auch ein reiner Formatierungsunterschied als Änderung."
   },
   "syncPage": {
     "title": "Agenten-Synchronisierung",

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { diffLines, type ChangeObject } from "diff";
 import { Equal, AlertTriangle } from "lucide-react";
+import { parseRedactedJson } from "@/lib/redacted-json";
 
 interface ResourceDiffViewerProps {
   sourceContent: string | null;
@@ -60,9 +61,9 @@ export function ResourceDiffViewer({
 
     return {
       lines: toDiffLines(diffLines(target.text, source.text)),
-      // Only one side needs to be unparseable for the comparison to fall back to
-      // raw text, and the reader has to be told: a formatting-only difference
-      // then renders as a full rewrite.
+      // One unparseable side is enough to drop the comparison to raw text, and
+      // the reader has to be told: the other side is still re-printed, so a
+      // difference of formatting alone then renders as a whole-document rewrite.
       rawComparison: !source.parsed || !target.parsed,
     };
   }, [sourceContent, targetContent]);
@@ -107,7 +108,11 @@ export function ResourceDiffViewer({
           <span className="inline-block h-2 w-2 rounded-sm bg-red-500/60" aria-hidden="true" />
           {targetLabel}
         </span>
-        <span aria-hidden="true">→</span>
+        {/* The arrow is direction, not decoration: bidi does not mirror U+2192,
+            so in Arabic it would point away from the side it means. */}
+        <span aria-hidden="true" className="inline-block rtl:-scale-x-100">
+          →
+        </span>
         <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
           <span className="inline-block h-2 w-2 rounded-sm bg-emerald-500/60" aria-hidden="true" />
           {sourceLabel}
@@ -119,9 +124,11 @@ export function ResourceDiffViewer({
           data-testid="diff-raw-comparison"
         >
           <AlertTriangle className="mt-px h-3 w-3 shrink-0" aria-hidden="true" />
+          {/* Not "one side": both can fail, and claiming the other one parsed
+              would be a statement this component cannot make. */}
           {t(
             "importDialog.diffRawComparison",
-            "One side isn't valid JSON, so this is a plain-text comparison — differences in formatting alone also show up as changes.",
+            "Not valid JSON — compared as plain text, so a difference of formatting alone also shows up as a change.",
           )}
         </p>
       )}
@@ -135,10 +142,12 @@ export function ResourceDiffViewer({
               className="flex w-full items-center gap-2 border-s-2 border-transparent bg-secondary/30 px-2 py-0.5 text-start text-[10px] font-sans text-muted-foreground hover:bg-secondary/60"
               data-testid="diff-context-gap"
             >
+              <span aria-hidden="true">…</span>
               {/* `lines`, not `count` — `count` would put i18next into plural
                   lookup (`_one`/`_other`), and a gap is never shorter than
-                  MIN_COLLAPSIBLE_GAP anyway. */}
-              {t("importDialog.diffHiddenLines", "… {{lines}} unchanged lines — click to show", {
+                  MIN_COLLAPSIBLE_GAP anyway. "Show", not "click to show":
+                  this is reachable by keyboard too. */}
+              {t("importDialog.diffHiddenLines", "Show {{lines}} unchanged lines", {
                 lines: entry.count,
               })}
             </button>
@@ -180,58 +189,18 @@ interface NormalizedJson {
 function normalizeJson(content: string | null): NormalizedJson {
   if (!content) return { text: "", parsed: true };
 
-  const direct = parseJson(content);
-  if (direct.ok) return { text: printJson(direct.value), parsed: true };
-
-  const repaired = parseJson(repairRedactedFields(content));
-  if (repaired.ok) return { text: printJson(repaired.value), parsed: true };
+  // Tolerant of the one malformed shape EDDI's redaction filter produces — see
+  // `redacted-json.ts`. Without it a single credential field costs the reader
+  // the whole diff: the body falls back to its raw single line, and every line
+  // of the other side reads as deleted.
+  const parsed = parseRedactedJson(content);
+  if (parsed.ok) return { text: printJson(parsed.value), parsed: true };
 
   return { text: content, parsed: false };
 }
 
-function parseJson(content: string): { ok: true; value: unknown } | { ok: false } {
-  try {
-    return { ok: true, value: JSON.parse(content) };
-  } catch {
-    return { ok: false };
-  }
-}
-
 function printJson(value: unknown): string {
   return JSON.stringify(deepSortKeys(value), null, 2);
-}
-
-/**
- * A credential field as EDDI's `SecretRedactionFilter` leaves it in a JSON body.
- *
- * The filter's generic rule matches `<name>":"<value>` — the key's closing
- * quote, the colon and the value's opening quote included — and replaces the
- * lot with `<name>=<REDACTED>`. So `"apiKey":"sk-…"` comes back as
- * `"apiKey=<REDACTED>"`: a bare string where a key/value pair was, which no
- * longer parses. (A numeric value loses its closing quote too:
- * `"token":12345678,` → `"token=<REDACTED>,`.) The `sk-…` and `Bearer …` rules
- * replace only the value and leave the document valid; this is the one rule
- * that does not.
- *
- * Capture groups: the `{`/`,` that puts the match in KEY position (so a value
- * that legitimately contains `apiKey=<REDACTED>` is left alone), then the key
- * text ending in one of the filter's names. The optional tail swallows what a
- * secret with a space in it leaves behind (`"password=<REDACTED> more"`) up to
- * the closing quote; a lookahead insists a value delimiter follows.
- */
-const REDACTED_FIELD = /([{,]\s*)"([^"\\]*?(?:api[_-]?key|token|secret|password|authorization))=<REDACTED>(?:[^",}\]]*")?(?=\s*[,}\]])/gi;
-
-/**
- * Re-quote a key the redaction filter mangled — see {@link REDACTED_FIELD}.
- *
- * One unparseable field otherwise costs the reader the whole diff: the proposed
- * body falls back to its raw single line, and every line of the stored document
- * reads as deleted. Only used after a straight parse has already failed, and if
- * the repair does not yield valid JSON the raw text is used exactly as before.
- */
-function repairRedactedFields(content: string): string {
-  if (!content.includes("=<REDACTED>")) return content;
-  return content.replace(REDACTED_FIELD, '$1"$2":"<REDACTED>"');
 }
 
 function deepSortKeys(value: unknown): unknown {
@@ -278,18 +247,17 @@ function collapseUnchanged(lines: DiffLine[], expandedGaps: ReadonlySet<number>)
 
   const rows: DiffRow[] = [];
   let gapId = 0;
-  for (let i = 0; i < lines.length; ) {
-    const line = lines[i]!;
-    if (keep[i]) {
-      rows.push({ row: "line", line });
-      i++;
-      continue;
-    }
+  let i = 0;
+  while (i < lines.length) {
     const start = i;
-    while (i < lines.length && !keep[i]) i++;
+    const kept = keep[i];
+    while (i < lines.length && keep[i] === kept) i++;
     const run = lines.slice(start, i);
-    const id = gapId++;
-    if (run.length < MIN_COLLAPSIBLE_GAP || expandedGaps.has(id)) {
+
+    // Gap ids are assigned to every dropped run, folded or not, so that adding
+    // a short run above a long one does not renumber what the user expanded.
+    const id = kept ? -1 : gapId++;
+    if (kept || run.length < MIN_COLLAPSIBLE_GAP || expandedGaps.has(id)) {
       for (const line of run) rows.push({ row: "line", line });
     } else {
       rows.push({ row: "gap", id, count: run.length });

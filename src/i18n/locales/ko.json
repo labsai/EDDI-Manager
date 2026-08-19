@@ -2787,8 +2787,8 @@
     "contentIdentical": "내용 동일함",
     "targetContent": "대상 (Target)",
     "sourceContent": "원본 (Source)",
-    "diffHiddenLines": "… 변경되지 않은 {{lines}}줄 — 클릭하여 표시",
-    "diffRawComparison": "한쪽이 유효한 JSON이 아니므로 일반 텍스트 비교입니다. 서식만 다른 경우에도 변경으로 표시됩니다."
+    "diffHiddenLines": "변경되지 않은 {{lines}}줄 표시",
+    "diffRawComparison": "유효한 JSON이 아니므로 일반 텍스트로 비교합니다. 서식만 다른 경우에도 변경으로 표시됩니다."
   },
   "syncPage": {
     "title": "에이전트 동기화",

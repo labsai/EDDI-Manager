@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ResourceDiffViewer } from "@/components/agents/resource-diff-viewer";
 
@@ -74,44 +74,21 @@ describe("ResourceDiffViewer", () => {
       expect(screen.getByText("Content identical")).toBeInTheDocument();
     });
 
-    // The shapes below are what EDDI's SecretRedactionFilter actually produces:
-    // its generic rule matches `<name>":"<value>` — key's closing quote, colon
-    // and the value's opening quote included — and writes `<name>=<REDACTED>`
-    // over the lot. Verified by running the filter's rules over JSON bodies.
-    it.each([
-      ['{"modelName":"claude-sonnet-5","apiKey=<REDACTED>","threshold":9}', "a string value"],
-      ['{"token=<REDACTED>,"threshold":9}', "a numeric value (no closing quote left)"],
-      ['{"clientSecret=<REDACTED>","threshold":9}', "a key that merely ends in a filter name"],
-      ['{"x-api-key=<REDACTED>","threshold":9}', "a hyphenated key"],
-      ['{\n  "apiKey=<REDACTED>",\n  "threshold": 9\n}', "a pretty-printed body"],
-      ['{"password=<REDACTED> more","threshold":9}', "a secret with a space in it"],
-      ['{"llm":{"apiKey=<REDACTED>"},"threshold":9}', "a nested object"],
-      ['{"apiKey=<REDACTED>","password=<REDACTED>","threshold":9}', "two redacted fields"],
-    ])("still formats a body the redaction filter left unparseable — %s", (source) => {
-      renderDiff(source, '{"apiKey":"stored","threshold":5}');
+    it("formats a body the redaction filter left unparseable, rather than dropping to raw text", () => {
+      // `"apiKey":"sk-…"` comes back from SecretRedactionFilter as
+      // `"apiKey=<REDACTED>"`. The full shape matrix lives in
+      // `lib/__tests__/redacted-json.test.ts`; this pins that the viewer routes
+      // through it, because the visible cost of not doing so is the whole diff.
+      renderDiff(
+        '{"modelName":"claude-sonnet-5","apiKey=<REDACTED>","threshold":9}',
+        '{"modelName":"claude-sonnet-5","apiKey":"stored","threshold":5}',
+      );
 
-      // Parsed, so no raw-text caveat — and the threshold change is rendered
-      // as a proper one-line change rather than a whole-document rewrite.
       expect(screen.queryByTestId("diff-raw-comparison")).not.toBeInTheDocument();
       expect(screen.getByText(/"threshold": 9/)).toBeInTheDocument();
       expect(screen.getByText(/"threshold": 5/)).toBeInTheDocument();
-    });
-
-    it("leaves a value that legitimately reads apiKey=<REDACTED> alone when repairing", () => {
-      // `"note":"apiKey=abcdefghij"` redacts to a VALID string; only the mangled
-      // key beside it triggers the repair, which must not touch the value.
-      renderDiff('{"note":"apiKey=<REDACTED>","apiKey=<REDACTED>"}', '{"note":"x","apiKey":"stored"}');
-      expect(screen.queryByTestId("diff-raw-comparison")).not.toBeInTheDocument();
-      expect(screen.getByText(/"note": "apiKey=<REDACTED>"/)).toBeInTheDocument();
-    });
-
-    it("never rewrites a body that already parses", () => {
-      // An escaped JSON document nested in a string carries the marker in
-      // valid form; repairing it would corrupt the outer document.
-      const nested = JSON.stringify({ requestBody: '{"apiKey=<REDACTED>"}' });
-      renderDiff(nested, JSON.stringify({ requestBody: "{}" }));
-      expect(screen.queryByTestId("diff-raw-comparison")).not.toBeInTheDocument();
-      expect(screen.getByText(/apiKey=<REDACTED>/)).toBeInTheDocument();
+      // Unchanged, so rendered once as shared context — not twice as a rewrite.
+      expect(screen.getAllByText(/"modelName": "claude-sonnet-5"/)).toHaveLength(1);
     });
 
     it("says so when a side genuinely isn't JSON, rather than implying a rewrite", () => {
@@ -152,6 +129,26 @@ describe("ResourceDiffViewer", () => {
     it("does not fold a short run — the fold row would cost as much as it saves", () => {
       renderDiff('{"a": 1, "b": 2, "c": 3}', '{"a": 9, "b": 2, "c": 3}');
       expect(screen.queryByTestId("diff-context-gap")).not.toBeInTheDocument();
+    });
+
+    it("expands the fold that was clicked when several are on screen", () => {
+      // Gap ids are handed out to every dropped run, folded or not, so a short
+      // unfolded run above a long one cannot renumber it out from under a click.
+      const wide = Object.fromEntries(
+        Array.from({ length: 40 }, (_, i) => [`k${String(i).padStart(2, "0")}`, i]),
+      );
+      renderDiff(
+        JSON.stringify({ ...wide, k00: 999, k20: 999 }),
+        JSON.stringify(wide),
+      );
+
+      const gaps = screen.getAllByTestId("diff-context-gap");
+      expect(gaps.length).toBeGreaterThan(1);
+      fireEvent.click(gaps[gaps.length - 1]!);
+
+      // The last fold opened; the first is still folded.
+      expect(screen.getByText(/"k39": 39/)).toBeInTheDocument();
+      expect(screen.getAllByTestId("diff-context-gap")).toHaveLength(gaps.length - 1);
     });
 
     it("forgets expanded folds when the content changes — gap ids are positional", async () => {

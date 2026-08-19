@@ -2814,8 +2814,8 @@
     "contentIdentical": "Conteúdo idêntico",
     "targetContent": "Alvo",
     "sourceContent": "Origem",
-    "diffHiddenLines": "… {{lines}} linhas inalteradas — clique para mostrar",
-    "diffRawComparison": "Um dos lados não é JSON válido, portanto esta é uma comparação de texto simples — diferenças apenas de formatação também aparecem como alterações."
+    "diffHiddenLines": "Mostrar {{lines}} linhas inalteradas",
+    "diffRawComparison": "JSON inválido — comparado como texto simples, portanto uma diferença apenas de formatação também aparece como alteração."
   },
   "syncPage": {
     "title": "Sincronização",

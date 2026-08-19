@@ -2895,8 +2895,8 @@
     "contentIdentical": "المحتوى متطابق",
     "targetContent": "الهدف",
     "sourceContent": "المصدر",
-    "diffHiddenLines": "… {{lines}} أسطر دون تغيير — انقر للعرض",
-    "diffRawComparison": "أحد الجانبين ليس JSON صالحًا، لذا فهذه مقارنة نصية بحتة — وتظهر اختلافات التنسيق وحدها أيضًا كتغييرات."
+    "diffHiddenLines": "إظهار {{lines}} أسطر دون تغيير",
+    "diffRawComparison": "ليس JSON صالحًا — تجري المقارنة كنص عادي، لذا يظهر اختلاف التنسيق وحده أيضًا كتغيير."
   },
   "syncPage": {
     "title": "مزامنة الوكلاء",

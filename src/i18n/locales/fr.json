@@ -2814,8 +2814,8 @@
     "contentIdentical": "Contenu identique",
     "targetContent": "Cible",
     "sourceContent": "Source",
-    "diffHiddenLines": "… {{lines}} lignes inchangées — cliquez pour les afficher",
-    "diffRawComparison": "L'un des côtés n'est pas du JSON valide : il s'agit donc d'une comparaison de texte brut — de simples différences de mise en forme apparaissent aussi comme des modifications."
+    "diffHiddenLines": "Afficher {{lines}} lignes inchangées",
+    "diffRawComparison": "JSON non valide — comparaison en texte brut : une simple différence de mise en forme apparaît donc aussi comme une modification."
   },
   "syncPage": {
     "title": "Synchronisation d'agents",

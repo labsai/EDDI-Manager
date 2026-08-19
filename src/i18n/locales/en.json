@@ -3006,8 +3006,8 @@
     "contentIdentical": "Content identical",
     "targetContent": "Target",
     "sourceContent": "Source",
-    "diffHiddenLines": "… {{lines}} unchanged lines — click to show",
-    "diffRawComparison": "One side isn't valid JSON, so this is a plain-text comparison — differences in formatting alone also show up as changes."
+    "diffHiddenLines": "Show {{lines}} unchanged lines",
+    "diffRawComparison": "Not valid JSON — compared as plain text, so a difference of formatting alone also shows up as a change."
   },
   "sync": {
     "actionCreate": "New",

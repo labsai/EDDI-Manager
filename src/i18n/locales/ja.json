@@ -2787,8 +2787,8 @@
     "contentIdentical": "同一コンテンツ",
     "targetContent": "ターゲット",
     "sourceContent": "ソース",
-    "diffHiddenLines": "… {{lines}} 行は変更なし — クリックして表示",
-    "diffRawComparison": "一方が有効な JSON ではないため、これはプレーンテキストの比較です。書式だけの違いも変更として表示されます。"
+    "diffHiddenLines": "変更のない {{lines}} 行を表示",
+    "diffRawComparison": "有効な JSON ではないため、プレーンテキストとして比較します。書式だけの違いも変更として表示されます。"
   },
   "syncPage": {
     "title": "エージェントの同期",
