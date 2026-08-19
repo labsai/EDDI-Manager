@@ -9,6 +9,22 @@ function renderDiff(source: string | null, target: string | null) {
   );
 }
 
+/**
+ * Rendered diff rows, optionally narrowed to one kind.
+ *
+ * Asserting through the row selector rather than on loose text is what lets a
+ * test say "this line is an ADDITION" — the thing that actually distinguishes a
+ * working diff from a whole-document rewrite, and the one thing a colour class
+ * cannot be queried for.
+ */
+function rowTexts(kind?: "added" | "removed" | "context"): string[] {
+  return screen
+    .getAllByTestId("diff-line")
+    .filter((row) => !kind || row.getAttribute("data-diff-kind") === kind)
+    // The marker gutter is a sibling span; drop it so assertions read as content.
+    .map((row) => row.lastElementChild?.textContent ?? "");
+}
+
 describe("ResourceDiffViewer", () => {
   it("renders nothing when both contents are null", () => {
     const { container } = renderDiff(null, null);
@@ -85,10 +101,12 @@ describe("ResourceDiffViewer", () => {
       );
 
       expect(screen.queryByTestId("diff-raw-comparison")).not.toBeInTheDocument();
-      expect(screen.getByText(/"threshold": 9/)).toBeInTheDocument();
-      expect(screen.getByText(/"threshold": 5/)).toBeInTheDocument();
-      // Unchanged, so rendered once as shared context — not twice as a rewrite.
-      expect(screen.getAllByText(/"modelName": "claude-sonnet-5"/)).toHaveLength(1);
+      expect(rowTexts("added")).toContain('  "threshold": 9');
+      expect(rowTexts("removed")).toContain('  "threshold": 5');
+      // Unchanged, so one shared context row — not a line on each side, which
+      // is what a whole-document rewrite would have produced.
+      expect(rowTexts("context")).toContain('  "modelName": "claude-sonnet-5",');
+      expect(rowTexts().filter((line) => line.includes("modelName"))).toHaveLength(1);
     });
 
     it("says so when a side genuinely isn't JSON, rather than implying a rewrite", () => {
@@ -112,18 +130,27 @@ describe("ResourceDiffViewer", () => {
 
       const gap = screen.getByTestId("diff-context-gap");
       expect(gap).toHaveTextContent(/unchanged lines/);
-      expect(screen.queryByText(/k19/)).not.toBeInTheDocument();
+      expect(rowTexts().some((line) => line.includes("k19"))).toBe(false);
       // The change itself and its immediate context stay visible.
-      expect(screen.getByText(/"k00": 999/)).toBeInTheDocument();
-      expect(screen.getByText(/"k01": 1/)).toBeInTheDocument();
+      expect(rowTexts("added")).toContain('  "k00": 999,');
+      expect(rowTexts("context")).toContain('  "k01": 1,');
     });
 
     it("expands a fold on click — nothing is hidden that can't be got back", async () => {
       renderDiff(JSON.stringify({ ...many, k00: 999 }), JSON.stringify(many));
 
       await userEvent.click(screen.getByTestId("diff-context-gap"));
-      expect(screen.getByText(/k19/)).toBeInTheDocument();
+      expect(rowTexts("context")).toContain('  "k19": 19');
       expect(screen.queryByTestId("diff-context-gap")).not.toBeInTheDocument();
+    });
+
+    it("gives the fold row the app's focus treatment, since it is keyboard-reachable", async () => {
+      renderDiff(JSON.stringify({ ...many, k00: 999 }), JSON.stringify(many));
+
+      const gap = screen.getByTestId("diff-context-gap");
+      await userEvent.tab();
+      expect(gap).toHaveFocus();
+      expect(gap.className).toMatch(/focus-visible:ring-2/);
     });
 
     it("does not fold a short run — the fold row would cost as much as it saves", () => {
@@ -147,7 +174,7 @@ describe("ResourceDiffViewer", () => {
       fireEvent.click(gaps[gaps.length - 1]!);
 
       // The last fold opened; the first is still folded.
-      expect(screen.getByText(/"k39": 39/)).toBeInTheDocument();
+      expect(rowTexts("context")).toContain('  "k39": 39');
       expect(screen.getAllByTestId("diff-context-gap")).toHaveLength(gaps.length - 1);
     });
 

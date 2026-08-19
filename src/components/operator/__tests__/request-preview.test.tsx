@@ -228,6 +228,14 @@ describe("RequestPreview", () => {
 
 /* ─── Whole-document PUT diff ─── */
 
+/** Diff rows inside a rendered preview, optionally narrowed to one kind. */
+function diffRows(diff: HTMLElement, kind?: "added" | "removed" | "context"): string[] {
+  return within(diff)
+    .getAllByTestId("diff-line")
+    .filter((row) => !kind || row.getAttribute("data-diff-kind") === kind)
+    .map((row) => row.lastElementChild?.textContent ?? "");
+}
+
 const STORED = { id: "r1", name: "Greeting rules", threshold: 5, description: "unchanged" };
 const PROPOSED = { ...STORED, threshold: 9 };
 
@@ -289,8 +297,9 @@ describe("RequestPreview — whole-document PUT diff", () => {
 
     const diff = await screen.findByTestId("request-preview-diff-c1");
     expect(within(diff).queryByTestId("diff-raw-comparison")).not.toBeInTheDocument();
-    expect(within(diff).getByText(/"threshold": 9/)).toBeInTheDocument();
-    expect(within(diff).getAllByText(/"description": "unchanged"/)).toHaveLength(1);
+    expect(diffRows(diff, "added")).toContain('  "threshold": 9');
+    // Unchanged, so one shared context row — not one on each side.
+    expect(diffRows(diff).filter((line) => line.includes("unchanged"))).toHaveLength(1);
     // The redaction note still explains why apiKey shows as changed.
     expect(screen.getByTestId("request-preview-diff-redaction-note-c1")).toBeInTheDocument();
   });
@@ -305,10 +314,10 @@ describe("RequestPreview — whole-document PUT diff", () => {
     );
 
     const diff = await screen.findByTestId("request-preview-diff-c1");
-    expect(within(diff).getByText(/"threshold": 9/)).toBeInTheDocument();
-    expect(within(diff).getByText(/"threshold": 5/)).toBeInTheDocument();
+    expect(diffRows(diff, "added")).toContain('  "threshold": 9');
+    expect(diffRows(diff, "removed")).toContain('  "threshold": 5');
     // The fields that did not change are rendered once, as shared context.
-    expect(within(diff).getAllByText(/"description": "unchanged"/)).toHaveLength(1);
+    expect(diffRows(diff).filter((line) => line.includes("unchanged"))).toHaveLength(1);
   });
 
   it("keeps the full proposed document reachable behind a toggle", async () => {

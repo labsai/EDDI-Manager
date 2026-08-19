@@ -139,7 +139,12 @@ export function ResourceDiffViewer({
               key={`gap-${entry.id}`}
               type="button"
               onClick={() => expandGap(entry.id)}
-              className="flex w-full items-center gap-2 border-s-2 border-transparent bg-secondary/30 px-2 py-0.5 text-start text-[10px] font-sans text-muted-foreground hover:bg-secondary/60"
+              // A flush full-width row, not a button-shaped control — so a
+              // native element rather than the `Button` primitive, whose whole
+              // cva base (rounded-lg, justify-center, h-8 px-3) would have to be
+              // overridden at the call site. It does owe the primitive's focus
+              // treatment though, inset so the ring stays inside the diff box.
+              className="flex w-full items-center gap-2 border-s-2 border-transparent bg-secondary/30 px-2 py-0.5 text-start text-[10px] font-sans text-muted-foreground transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
               data-testid="diff-context-gap"
             >
               <span aria-hidden="true">…</span>
@@ -154,6 +159,11 @@ export function ResourceDiffViewer({
           ) : (
             <div
               key={`line-${i}`}
+              // Rows are what the tests assert on, so they carry a selector —
+              // and the kind alongside it, because "this line is an ADDITION"
+              // is the assertion that matters and colour cannot be queried.
+              data-testid="diff-line"
+              data-diff-kind={entry.line.kind}
               className={`flex ${
                 entry.line.kind === "added"
                   ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-s-2 border-emerald-500"
