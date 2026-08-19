@@ -71,12 +71,13 @@ const MANGLED_MARKER = "=<REDACTED>";
 const REMNANT_CHOICES = ["drop", "keep"] as const;
 
 /**
- * Cap on the exhaustive per-field search: 2^n candidates, each one a parse.
- * Above it only the two uniform choices are tried. A body with more than this
- * many credential fields is already pathological; the cap is a runtime bound,
- * not a judgement about what is worth repairing.
+ * Cap on the exhaustive per-field search, which costs 2^n parses of the whole
+ * body. The uniform pair above already answers any number of fields that AGREE,
+ * so this only bounds the mixed case — and a document mixing more than six
+ * disagreeing credential fields is not a scenario, it is an attack surface.
+ * Six keeps the worst case at 64 parses; ten would have been 1024.
  */
-const MAX_SEARCHED_FIELDS = 10;
+const MAX_SEARCHED_FIELDS = 6;
 
 export type ParseResult = { ok: true; value: unknown } | { ok: false };
 

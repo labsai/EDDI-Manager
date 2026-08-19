@@ -138,6 +138,16 @@ describe("parseRedactedJson", () => {
     });
   });
 
+  it("stays bounded on a body stuffed with unrepairable credential fields", () => {
+    // The per-field search is 2^n parses, so it is capped. This body defeats
+    // every candidate; the point is that it gives up quickly rather than
+    // grinding through combinations of a document it cannot explain.
+    const body = `{${Array.from({ length: 30 }, (_, i) => `"apiKey${i}=<REDACTED>,x`).join("")}}`;
+    const started = performance.now();
+    expect(parseRedactedJson(body).ok).toBe(false);
+    expect(performance.now() - started).toBeLessThan(1_000);
+  });
+
   it("runs in linear time on a large body — the key scan cannot cross a quote", () => {
     // The backend went possessive on its own quantifiers over ReDoS; this
     // regex is reachable from the same untrusted request bodies.
