@@ -2894,7 +2894,9 @@
     "importing": "يتم استيراد الوكيل...",
     "contentIdentical": "المحتوى متطابق",
     "targetContent": "الهدف",
-    "sourceContent": "المصدر"
+    "sourceContent": "المصدر",
+    "diffHiddenLines": "… {{lines}} أسطر دون تغيير — انقر للعرض",
+    "diffRawComparison": "أحد الجانبين ليس JSON صالحًا، لذا فهذه مقارنة نصية بحتة — وتظهر اختلافات التنسيق وحدها أيضًا كتغييرات."
   },
   "syncPage": {
     "title": "مزامنة الوكلاء",

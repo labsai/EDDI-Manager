@@ -2813,7 +2813,9 @@
     "importing": "Import de l'agent en cours…",
     "contentIdentical": "Contenu identique",
     "targetContent": "Cible",
-    "sourceContent": "Source"
+    "sourceContent": "Source",
+    "diffHiddenLines": "… {{lines}} lignes inchangées — cliquez pour les afficher",
+    "diffRawComparison": "L'un des côtés n'est pas du JSON valide : il s'agit donc d'une comparaison de texte brut — de simples différences de mise en forme apparaissent aussi comme des modifications."
   },
   "syncPage": {
     "title": "Synchronisation d'agents",

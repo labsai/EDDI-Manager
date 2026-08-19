@@ -3005,7 +3005,9 @@
     "importing": "Importing agent...",
     "contentIdentical": "Content identical",
     "targetContent": "Target",
-    "sourceContent": "Source"
+    "sourceContent": "Source",
+    "diffHiddenLines": "… {{lines}} unchanged lines — click to show",
+    "diffRawComparison": "One side isn't valid JSON, so this is a plain-text comparison — differences in formatting alone also show up as changes."
   },
   "sync": {
     "actionCreate": "New",

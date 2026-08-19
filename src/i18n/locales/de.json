@@ -2952,7 +2952,9 @@
     "importing": "Agent wird importiert…",
     "contentIdentical": "Inhalt identisch",
     "targetContent": "Ziel",
-    "sourceContent": "Quelle"
+    "sourceContent": "Quelle",
+    "diffHiddenLines": "… {{lines}} unveränderte Zeilen – zum Anzeigen klicken",
+    "diffRawComparison": "Eine Seite ist kein gültiges JSON, daher ist dies ein reiner Textvergleich – auch reine Formatierungsunterschiede erscheinen als Änderungen."
   },
   "syncPage": {
     "title": "Agenten-Synchronisierung",

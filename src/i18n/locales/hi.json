@@ -2786,7 +2786,9 @@
     "importing": "एजेंट आयात हो रहा है...",
     "contentIdentical": "सामग्री समान है",
     "targetContent": "लक्ष्य",
-    "sourceContent": "स्रोत"
+    "sourceContent": "स्रोत",
+    "diffHiddenLines": "… {{lines}} अपरिवर्तित पंक्तियाँ — दिखाने के लिए क्लिक करें",
+    "diffRawComparison": "एक पक्ष मान्य JSON नहीं है, इसलिए यह सादा-पाठ तुलना है — केवल स्वरूपण के अंतर भी परिवर्तन के रूप में दिखते हैं।"
   },
   "syncPage": {
     "title": "सिंक",

@@ -2786,7 +2786,9 @@
     "importing": "エージェントをインポート中...",
     "contentIdentical": "同一コンテンツ",
     "targetContent": "ターゲット",
-    "sourceContent": "ソース"
+    "sourceContent": "ソース",
+    "diffHiddenLines": "… {{lines}} 行は変更なし — クリックして表示",
+    "diffRawComparison": "一方が有効な JSON ではないため、これはプレーンテキストの比較です。書式だけの違いも変更として表示されます。"
   },
   "syncPage": {
     "title": "エージェントの同期",

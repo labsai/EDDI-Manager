@@ -2786,7 +2786,9 @@
     "importing": "正在导入智能体...",
     "contentIdentical": "内容一致",
     "targetContent": "目标",
-    "sourceContent": "源"
+    "sourceContent": "源",
+    "diffHiddenLines": "… {{lines}} 行未更改 — 点击显示",
+    "diffRawComparison": "其中一侧不是有效的 JSON，因此这是纯文本比较——仅格式上的差异也会显示为更改。"
   },
   "syncPage": {
     "title": "智能体同步",

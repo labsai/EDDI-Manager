@@ -2813,7 +2813,9 @@
     "importing": "A importar agente...",
     "contentIdentical": "Conteúdo idêntico",
     "targetContent": "Alvo",
-    "sourceContent": "Origem"
+    "sourceContent": "Origem",
+    "diffHiddenLines": "… {{lines}} linhas inalteradas — clique para mostrar",
+    "diffRawComparison": "Um dos lados não é JSON válido, portanto esta é uma comparação de texto simples — diferenças apenas de formatação também aparecem como alterações."
   },
   "syncPage": {
     "title": "Sincronização",
