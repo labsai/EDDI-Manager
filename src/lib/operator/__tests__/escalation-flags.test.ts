@@ -422,6 +422,16 @@ describe("a body the redaction filter left unparseable", () => {
     expect(detectEscalationFlags(body).map((f) => f.id)).toContain("agentCreatedWithoutGate");
   });
 
+  it("still runs them when the secret itself contained a comma", () => {
+    // Reported on the PR: the filter's value class stops at a comma, so the
+    // tail of the secret is left inside the string. An earlier version of the
+    // repair stopped at that comma too, the body stayed unparseable, and this
+    // grant went unwarned with only the credential flag to show for it.
+    const body = '{"name":"board","password=<REDACTED>,rest","dynamicAgents":{"enabled":true,"allowCreation":true}}';
+    const ids = detectEscalationFlags(body).map((f) => f.id).sort();
+    expect(ids).toEqual(["dynamicAgentCreation", "inlineCredential"].sort());
+  });
+
   it("keeps returning only the credential flag for a body that is genuinely not JSON", () => {
     // The repair explains one shape; it must not turn a form post into an object.
     const flags = detectEscalationFlags("api_key=sk-ant-api03-CeIJ4onq59Mf_oN4mICgfgScyJO5bfxFSS3Sdvo1Zgo2F7z");

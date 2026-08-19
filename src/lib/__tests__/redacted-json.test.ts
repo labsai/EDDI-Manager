@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseRedactedJson, repairRedactedFields } from "@/lib/redacted-json";
+import { parseRedactedJson } from "@/lib/redacted-json";
 
 /**
  * The inputs below are what EDDI's `SecretRedactionFilter` actually emits, not
@@ -42,6 +42,61 @@ describe("parseRedactedJson", () => {
     });
   });
 
+  /**
+   * The filter's value class excludes `,`, whitespace, `;`, `{`, `}` and `]`, so
+   * a secret containing one of those is cut at it and the rest is left inside
+   * the string. Each of these leaves a different amount of debris after the
+   * marker, and the field's own closing quote is what ends it — not the first
+   * delimiter, which is where an earlier version of this repair stopped.
+   */
+  describe("a secret the filter cut short", () => {
+    it.each([
+      ['{"password=<REDACTED>,rest","n":1}', "a comma"],
+      ['{"password=<REDACTED>}rest","n":1}', "a closing brace"],
+      ['{"apiKey=<REDACTED>]rest","n":1}', "a closing bracket"],
+      ['{"password=<REDACTED> rest","n":1}', "a space"],
+      ['{"password=<REDACTED>;rest","n":1}', "a semicolon"],
+      ['{"password=<REDACTED>,a,b,c","n":1}', "several commas"],
+      ['{"llm":{"apiKey=<REDACTED>,rest"},"n":1}', "a comma, nested"],
+    ])("discards the debris after %#: %s", (body) => {
+      const result = parseRedactedJson(body);
+      expect(result.ok).toBe(true);
+      // Everything after the marker is secret material: it must not survive
+      // into the repaired value, and `n` must still be readable beside it.
+      const rendered = JSON.stringify(result.ok ? result.value : null);
+      expect(rendered).not.toMatch(/rest|a,b,c/);
+      expect(rendered).toContain('"<REDACTED>"');
+      expect(rendered).toContain('"n":1');
+    });
+
+    it("keeps the sibling fields — the reported case", () => {
+      // Reported on the PR: this parsed as a failure, so `detectEscalationFlags`
+      // returned only `inlineCredential` and the allowCreation grant beside it
+      // went unwarned.
+      const result = parseRedactedJson(
+        '{"password=<REDACTED>,rest","dynamicAgents":{"enabled":true,"allowCreation":true}}',
+      );
+      expect(result.ok && result.value).toEqual({
+        password: "<REDACTED>",
+        dynamicAgents: { enabled: true, allowCreation: true },
+      });
+    });
+
+    it("decides each field separately when a body mixes both shapes", () => {
+      // `token` lost its closing quote (numeric value) while `password` kept one
+      // (its secret held a comma). No single uniform reading repairs both.
+      const result = parseRedactedJson(
+        '{"token=<REDACTED>,"password=<REDACTED>,rest","apiKey=<REDACTED>","n":1}',
+      );
+      expect(result.ok && result.value).toEqual({
+        token: "<REDACTED>",
+        password: "<REDACTED>",
+        apiKey: "<REDACTED>",
+        n: 1,
+      });
+    });
+  });
+
   describe("what it must not touch", () => {
     it("returns a body that already parses untouched", () => {
       // `"note":"apiKey=abcdefghij"` is what the filter correctly produces for a
@@ -59,8 +114,8 @@ describe("parseRedactedJson", () => {
 
     it("does not rewrite a vault reference", () => {
       const body = '{"apiKey":"${vault:anthropic}"}';
-      expect(repairRedactedFields(body)).toBe(body);
-      expect(parseRedactedJson(body).ok).toBe(true);
+      const result = parseRedactedJson(body);
+      expect(result.ok && result.value).toEqual({ apiKey: "${vault:anthropic}" });
     });
 
     it("only rewrites in key position", () => {
@@ -77,9 +132,9 @@ describe("parseRedactedJson", () => {
       expect(parseRedactedJson('{"a":1,,}').ok).toBe(false);
     });
 
-    it("short-circuits a body with no marker at all", () => {
-      const body = '{"a":1}';
-      expect(repairRedactedFields(body)).toBe(body);
+    it("leaves a body with no marker at all alone", () => {
+      const result = parseRedactedJson('{"a":1}');
+      expect(result.ok && result.value).toEqual({ a: 1 });
     });
   });
 
