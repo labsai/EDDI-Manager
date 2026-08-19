@@ -4081,6 +4081,8 @@
       "diffFailed": "Não foi possível carregar a versão armazenada para comparação — o documento proposto completo está abaixo.",
       "diffForbidden": "Comparar com a versão armazenada requer acesso de editor — o documento proposto completo está abaixo.",
       "diffRedactionNote": "As credenciais estão ocultas na versão proposta, pelo que aparecem aqui como alterações mesmo quando não mudaram.",
+      "diffStored": "Armazenado v{{version}}",
+      "diffProposed": "Proposto",
       "showFullRequest": "Mostrar o documento proposto completo",
       "hideFullRequest": "Ocultar o documento proposto completo",
       "expandBody": "Expandir",

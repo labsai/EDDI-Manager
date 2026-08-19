@@ -266,6 +266,33 @@ describe("RequestPreview — whole-document PUT diff", () => {
 
     const diff = await screen.findByTestId("request-preview-diff-c1");
     expect(diff).toHaveTextContent(/threshold/);
+    // The legend speaks the approver's language, not the import dialog's.
+    expect(diff).toHaveTextContent("Stored v3");
+    expect(diff).toHaveTextContent("Proposed");
+    expect(diff).not.toHaveTextContent(/Target/);
+  });
+
+  it("survives the redaction filter's mangled credential field — the shape from the report", async () => {
+    // SecretRedactionFilter rewrites `"apiKey":"sk-…"` as `"apiKey=<REDACTED>"`,
+    // which no longer parses. Before the repair this put the proposed body on
+    // one raw line and every stored line in red.
+    serveStored({ ...STORED, apiKey: "sk-ant-stored" });
+    renderWithProviders(
+      <RequestPreview
+        preview={putPreview({
+          body: '{"id":"r1","name":"Greeting rules","threshold":9,"description":"unchanged","apiKey=<REDACTED>"}',
+        })}
+        pinned
+        callId="c1"
+      />,
+    );
+
+    const diff = await screen.findByTestId("request-preview-diff-c1");
+    expect(within(diff).queryByTestId("diff-raw-comparison")).not.toBeInTheDocument();
+    expect(within(diff).getByText(/"threshold": 9/)).toBeInTheDocument();
+    expect(within(diff).getAllByText(/"description": "unchanged"/)).toHaveLength(1);
+    // The redaction note still explains why apiKey shows as changed.
+    expect(screen.getByTestId("request-preview-diff-redaction-note-c1")).toBeInTheDocument();
   });
 
   it("diffs a compact request body against the stored document without reporting a rewrite", async () => {

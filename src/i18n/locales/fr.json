@@ -4081,6 +4081,8 @@
       "diffFailed": "Impossible de charger la version enregistrée pour comparaison — le document proposé complet figure ci-dessous.",
       "diffForbidden": "La comparaison avec la version enregistrée nécessite un accès éditeur — le document proposé complet figure ci-dessous.",
       "diffRedactionNote": "Les identifiants sont masqués dans la version proposée : ils apparaissent donc ici comme des modifications même s'ils sont inchangés.",
+      "diffStored": "Enregistré v{{version}}",
+      "diffProposed": "Proposé",
       "showFullRequest": "Afficher le document proposé complet",
       "hideFullRequest": "Masquer le document proposé complet",
       "expandBody": "Développer",

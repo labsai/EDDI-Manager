@@ -1,17 +1,24 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { diffLines } from "diff";
+import { diffLines, type ChangeObject } from "diff";
 import { Equal, AlertTriangle } from "lucide-react";
 
 interface ResourceDiffViewerProps {
   sourceContent: string | null;
   targetContent: string | null;
+  /**
+   * What the two sides are called in the header legend. Defaults to the import
+   * vocabulary ("Target" → "Source"); the approval preview passes "Stored v3" →
+   * "Proposed", which is what an approver is actually looking at.
+   */
+  labels?: { target: string; source: string };
 }
 
 /** Unchanged lines kept either side of a change, git-style. */
 const CONTEXT_LINES = 3;
 /** A gap this short is not worth a fold — the fold row costs a line itself. */
 const MIN_COLLAPSIBLE_GAP = 4;
+const NO_GAPS: ReadonlySet<number> = new Set();
 
 type LineKind = "added" | "removed" | "context";
 
@@ -22,9 +29,14 @@ interface DiffLine {
 
 type DiffRow = { row: "line"; line: DiffLine } | { row: "gap"; id: number; count: number };
 
+interface ComputedDiff {
+  lines: DiffLine[];
+  /** True when at least one side could not be parsed and the comparison is raw text. */
+  rawComparison: boolean;
+}
+
 /**
- * Side-by-side-ish diff viewer for JSON resource content.
- * Uses jsdiff's diffLines to compute a unified colored diff.
+ * Unified diff viewer for JSON resource content, via jsdiff's `diffLines`.
  *
  * Both sides are normalised first — parsed, deep key-sorted and re-printed with
  * the same indentation — so that only real content differences show up. Without
@@ -34,26 +46,37 @@ type DiffRow = { row: "line"; line: DiffLine } | { row: "gap"; id: number; count
 export function ResourceDiffViewer({
   sourceContent,
   targetContent,
+  labels,
 }: ResourceDiffViewerProps) {
   const { t } = useTranslation();
-  const [expandedGaps, setExpandedGaps] = useState<Set<number>>(() => new Set());
 
-  const diff = useMemo(() => {
+  const diff = useMemo<ComputedDiff | "identical" | null>(() => {
     if (!sourceContent && !targetContent) return null;
 
     const source = normalizeJson(sourceContent);
     const target = normalizeJson(targetContent);
 
-    if (source.text === target.text) return "identical" as const;
+    if (source.text === target.text) return "identical";
 
     return {
       lines: toDiffLines(diffLines(target.text, source.text)),
       // Only one side needs to be unparseable for the comparison to fall back to
-      // raw text, and the approver has to be told: a formatting-only difference
+      // raw text, and the reader has to be told: a formatting-only difference
       // then renders as a full rewrite.
       rawComparison: !source.parsed || !target.parsed,
     };
   }, [sourceContent, targetContent]);
+
+  // Expanded folds are remembered against the diff they belong to. Gap ids are
+  // positional, so a set kept across a content change would open the wrong run
+  // in the new diff (the sync page re-previews into the same viewer).
+  const [expanded, setExpanded] = useState<{ of: unknown; ids: ReadonlySet<number> }>({
+    of: null,
+    ids: NO_GAPS,
+  });
+  const expandedGaps = expanded.of === diff ? expanded.ids : NO_GAPS;
+  const expandGap = (id: number) =>
+    setExpanded((prev) => ({ of: diff, ids: new Set(prev.of === diff ? prev.ids : NO_GAPS).add(id) }));
 
   const rows = useMemo(
     () => (diff && diff !== "identical" ? collapseUnchanged(diff.lines, expandedGaps) : []),
@@ -71,10 +94,24 @@ export function ResourceDiffViewer({
     );
   }
 
+  const targetLabel = labels?.target ?? t("importDialog.targetContent", "Target");
+  const sourceLabel = labels?.source ?? t("importDialog.sourceContent", "Source");
+
   return (
     <div className="overflow-auto rounded-lg border bg-card text-xs font-mono max-h-80">
-      <div className="flex items-center justify-between px-3 py-1.5 border-b bg-secondary/50 text-[10px] text-muted-foreground">
-        <span>{t("importDialog.targetContent", "Target")} → {t("importDialog.sourceContent", "Source")}</span>
+      {/* The header doubles as the legend: which colour is which side is the
+          first thing a reader needs and the thing a bare "Target → Source"
+          never said. */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 px-3 py-1.5 border-b bg-secondary/50 text-[10px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1 text-red-700 dark:text-red-400">
+          <span className="inline-block h-2 w-2 rounded-sm bg-red-500/60" aria-hidden="true" />
+          {targetLabel}
+        </span>
+        <span aria-hidden="true">→</span>
+        <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
+          <span className="inline-block h-2 w-2 rounded-sm bg-emerald-500/60" aria-hidden="true" />
+          {sourceLabel}
+        </span>
       </div>
       {diff.rawComparison && (
         <p
@@ -94,7 +131,7 @@ export function ResourceDiffViewer({
             <button
               key={`gap-${entry.id}`}
               type="button"
-              onClick={() => setExpandedGaps((open) => new Set(open).add(entry.id))}
+              onClick={() => expandGap(entry.id)}
               className="flex w-full items-center gap-2 border-s-2 border-transparent bg-secondary/30 px-2 py-0.5 text-start text-[10px] font-sans text-muted-foreground hover:bg-secondary/60"
               data-testid="diff-context-gap"
             >
@@ -123,7 +160,7 @@ export function ResourceDiffViewer({
                   would collapse; `wrap-anywhere` wraps an over-long line
                   instead of pushing every other line behind a scrollbar. */}
               <span className="min-w-0 flex-1 whitespace-pre-wrap wrap-anywhere">
-                {entry.line.text || " "}
+                {entry.line.text || " "}
               </span>
             </div>
           ),
@@ -146,7 +183,7 @@ function normalizeJson(content: string | null): NormalizedJson {
   const direct = parseJson(content);
   if (direct.ok) return { text: printJson(direct.value), parsed: true };
 
-  const repaired = parseJson(repairRedactionMarkers(content));
+  const repaired = parseJson(repairRedactedFields(content));
   if (repaired.ok) return { text: printJson(repaired.value), parsed: true };
 
   return { text: content, parsed: false };
@@ -165,23 +202,36 @@ function printJson(value: unknown): string {
 }
 
 /**
- * Re-quote a redaction marker that was substituted into the raw request text.
+ * A credential field as EDDI's `SecretRedactionFilter` leaves it in a JSON body.
  *
- * EDDI's `SecretRedactionFilter` writes `<REDACTED>` over the matched secret,
- * and depending on what the pattern consumed that can take one or both of the
- * value's quotes with it — leaving `"apiKey":<REDACTED>"` or `"apiKey":"<REDACTED>`,
- * neither of which parses. One unparseable field then costs the approver the
- * whole diff: the proposed body falls back to its raw single line and every
- * line of the stored document reads as deleted.
+ * The filter's generic rule matches `<name>":"<value>` — the key's closing
+ * quote, the colon and the value's opening quote included — and replaces the
+ * lot with `<name>=<REDACTED>`. So `"apiKey":"sk-…"` comes back as
+ * `"apiKey=<REDACTED>"`: a bare string where a key/value pair was, which no
+ * longer parses. (A numeric value loses its closing quote too:
+ * `"token":12345678,` → `"token=<REDACTED>,`.) The `sk-…` and `Bearer …` rules
+ * replace only the value and leave the document valid; this is the one rule
+ * that does not.
  *
- * Only used as a fallback after a straight parse has already failed, so a body
- * where the marker sits legitimately inside a string (`${vault:<REDACTED>}`) is
- * never rewritten — and if this repair does corrupt such a body, the re-parse
- * fails too and the raw text is used exactly as before.
+ * Capture groups: the `{`/`,` that puts the match in KEY position (so a value
+ * that legitimately contains `apiKey=<REDACTED>` is left alone), then the key
+ * text ending in one of the filter's names. The optional tail swallows what a
+ * secret with a space in it leaves behind (`"password=<REDACTED> more"`) up to
+ * the closing quote; a lookahead insists a value delimiter follows.
  */
-function repairRedactionMarkers(content: string): string {
-  if (!content.includes("<REDACTED>")) return content;
-  return content.replace(/"?<REDACTED>"?/g, '"<REDACTED>"');
+const REDACTED_FIELD = /([{,]\s*)"([^"\\]*?(?:api[_-]?key|token|secret|password|authorization))=<REDACTED>(?:[^",}\]]*")?(?=\s*[,}\]])/gi;
+
+/**
+ * Re-quote a key the redaction filter mangled — see {@link REDACTED_FIELD}.
+ *
+ * One unparseable field otherwise costs the reader the whole diff: the proposed
+ * body falls back to its raw single line, and every line of the stored document
+ * reads as deleted. Only used after a straight parse has already failed, and if
+ * the repair does not yield valid JSON the raw text is used exactly as before.
+ */
+function repairRedactedFields(content: string): string {
+  if (!content.includes("=<REDACTED>")) return content;
+  return content.replace(REDACTED_FIELD, '$1"$2":"<REDACTED>"');
 }
 
 function deepSortKeys(value: unknown): unknown {
@@ -198,7 +248,7 @@ function deepSortKeys(value: unknown): unknown {
 }
 
 /** Flatten jsdiff chunks into one line per rendered row. */
-function toDiffLines(changes: ReturnType<typeof diffLines>): DiffLine[] {
+function toDiffLines(changes: ChangeObject<string>[]): DiffLine[] {
   const lines: DiffLine[] = [];
   for (const change of changes) {
     const kind: LineKind = change.added ? "added" : change.removed ? "removed" : "context";
@@ -217,7 +267,7 @@ function toDiffLines(changes: ReturnType<typeof diffLines>): DiffLine[] {
  * every identical line back puts the approver right back to finding the edit by
  * eye. Each fold is expandable — nothing is hidden that cannot be got back.
  */
-function collapseUnchanged(lines: DiffLine[], expandedGaps: Set<number>): DiffRow[] {
+function collapseUnchanged(lines: DiffLine[], expandedGaps: ReadonlySet<number>): DiffRow[] {
   const keep = lines.map((line) => line.kind !== "context");
   lines.forEach((line, i) => {
     if (line.kind === "context") return;

@@ -4051,6 +4051,8 @@
       "diffFailed": "无法加载用于比较的已存储版本——完整的拟议文档见下方。",
       "diffForbidden": "与已存储版本比较需要编辑者权限——完整的拟议文档见下方。",
       "diffRedactionNote": "拟议版本中的凭据值已被隐去，因此即使未更改也会在此显示为变更。",
+      "diffStored": "已存储 v{{version}}",
+      "diffProposed": "提议",
       "showFullRequest": "显示完整的拟议文档",
       "hideFullRequest": "隐藏完整的拟议文档",
       "expandBody": "展开",
