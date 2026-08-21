@@ -1126,9 +1126,9 @@ export const handlers = [
     ]);
   }),
 
-  // Read conversation (v6: GET /agents/:conversationId)
-  // Conversation snapshot — what `readConversation` reads on load and on the
-  // GET that follows starting a conversation.
+  // Read conversation (v6: GET /agents/:conversationId) — the snapshot
+  // `readConversation` reads on load and on the GET that follows starting a
+  // conversation.
   //
   // The shape here is load-bearing and was wrong: this used to return
   // `conversationSteps: [{ output, actions, quickReplies }]` and no

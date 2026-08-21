@@ -17,8 +17,10 @@ import { test as base, expect } from "@playwright/test";
  * importing from `@playwright/test` regardless.
  */
 
-/** Kept in sync by hand with `UNHANDLED_API_REQUESTS_KEY` in src/test/mocks/browser.ts. */
-const UNHANDLED_API_REQUESTS_KEY = "__EDDI_UNHANDLED_API__";
+// Shared with the recorder rather than re-declared here — see that module for
+// why it is not simply exported from `browser.ts`. `tsconfig.e2e.json` maps
+// `@/*` to `./src/*`.
+import { UNHANDLED_API_REQUESTS_KEY } from "@/test/mocks/unhandled-api";
 
 export const test = base.extend<{ failOnUnhandledApiCalls: void }>({
   failOnUnhandledApiCalls: [

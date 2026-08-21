@@ -1,5 +1,6 @@
 import { setupWorker } from "msw/browser";
 import { browserHandlers } from "./browser-handlers";
+import { UNHANDLED_API_REQUESTS_KEY } from "./unhandled-api";
 
 export const worker = setupWorker(...browserHandlers);
 
@@ -21,7 +22,7 @@ export const worker = setupWorker(...browserHandlers);
  * Playwright gives each test a fresh context — so it starts empty on its own,
  * with nothing to clear.
  */
-export const UNHANDLED_API_REQUESTS_KEY = "__EDDI_UNHANDLED_API__";
+export { UNHANDLED_API_REQUESTS_KEY };
 
 /**
  * Paths the dev server owns. `browser-handlers.ts` already passes these through
