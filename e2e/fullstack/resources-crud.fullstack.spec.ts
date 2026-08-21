@@ -16,17 +16,17 @@ import {
  */
 const RESOURCE_TYPES = [
   {
-    name: "Behavior Rules",
+    name: "Rules",
     urlType: "behavior",
-    store: "behaviorstore",
-    plural: "behaviorsets",
+    store: "rulestore",
+    plural: "rulesets",
     createPayload: { behaviorGroups: [] },
   },
   {
-    name: "HTTP Calls",
+    name: "API Calls",
     urlType: "httpcalls",
-    store: "httpcallsstore",
-    plural: "httpcalls",
+    store: "apicallstore",
+    plural: "apicalls",
     createPayload: { targetServerUrl: "", httpCalls: [] },
   },
   {
@@ -39,15 +39,15 @@ const RESOURCE_TYPES = [
   {
     name: "Dictionaries",
     urlType: "dictionaries",
-    store: "regulardictionarystore",
-    plural: "regulardictionaries",
+    store: "dictionarystore",
+    plural: "dictionaries",
     createPayload: { words: [], phrases: [], regExs: [] },
   },
   {
-    name: "LangChain",
+    name: "LLM",
     urlType: "langchain",
-    store: "langchainstore",
-    plural: "langchains",
+    store: "llmstore",
+    plural: "llms",
     createPayload: { tasks: [] },
   },
   {
@@ -123,7 +123,7 @@ test.describe("Resources — Full Stack", () => {
   test("resource detail page renders content", async ({ page, request }) => {
     // Create a behavior resource to view in detail
     const createRes = await request.post(
-      `${API_BASE}/behaviorstore/behaviorsets`,
+      `${API_BASE}/rulestore/rulesets`,
       { data: { behaviorGroups: [] } }
     );
     expect(createRes.status()).toBe(201);
@@ -131,7 +131,7 @@ test.describe("Resources — Full Stack", () => {
       createRes.headers()["location"]!
     );
     cleanup.push({
-      storePath: "behaviorstore/behaviorsets",
+      storePath: "rulestore/rulesets",
       id,
       version,
     });
