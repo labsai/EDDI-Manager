@@ -667,8 +667,34 @@ export const handlers = [
   }),
 
   // Agent descriptors
-  http.get("*/agentstore/agents/descriptors", () => {
-    return HttpResponse.json(AGENTS_MOCK);
+  // Honours `filter`, `limit` and `index`, because the backend does.
+  //
+  // It used to return all eight agents whatever was asked of it, which made the
+  // Agents page's search unverifiable: disconnecting the query entirely
+  // (`useInfiniteAgentDescriptors("")`) left all 28 tests in `agents.test.tsx`
+  // green, because no possible assertion could tell filtered from unfiltered.
+  // Checked against a live EDDI 6.3.0: `filter=zzzznomatch` returns 0 of 17.
+  http.get("*/agentstore/agents/descriptors", ({ request }) => {
+    const url = new URL(request.url);
+    const filter = (url.searchParams.get("filter") ?? "").toLowerCase();
+    const limit = Number(url.searchParams.get("limit") ?? "20");
+    const index = Number(url.searchParams.get("index") ?? "0");
+
+    // Matches the resource URI as well as name and description, because the
+    // backend does — `getAgentDescriptorsWithVersions` looks an agent up with
+    // `filter=${agentId}`, and a mock that only searched the display fields
+    // returned nothing for it, breaking every detail-page test. Verified
+    // against a live EDDI 6.3.0: `filter=<agent id>` returns exactly that one.
+    const matched = filter
+      ? AGENTS_MOCK.filter(
+          (a) =>
+            a.name.toLowerCase().includes(filter) ||
+            a.description.toLowerCase().includes(filter) ||
+            a.resource.toLowerCase().includes(filter),
+        )
+      : AGENTS_MOCK;
+
+    return HttpResponse.json(matched.slice(index, index + limit));
   }),
 
   // Get agent
