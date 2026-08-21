@@ -41,13 +41,10 @@ on:
   pull_request:
     branches: [main]
     paths:
-      # The guarded sources. Mirrors `mutate` in stryker.config.json, including
-      # its system-prompt exclusion, so a prose-only edit there does not book a
-      # 50-minute no-op. (It does not mirror the `!src/**/__tests__/**` entry:
-      # not mutating tests is not a reason to skip the job when they change —
-      # quite the opposite, see below.)
+      # The guarded sources, mirroring `mutate` in stryker.config.json. (It does
+      # not mirror the `!src/**/__tests__/**` entry: not mutating tests is no
+      # reason to skip the job when they change — quite the opposite, see below.)
       - "src/lib/operator/**"
-      - "!src/lib/operator/system-prompt.ts"
       - "src/lib/api/updates.ts"
       - "src/lib/hitl-tool-approvals.ts"
       # The tests that kill those mutants. `src/lib/operator/**` already covers
