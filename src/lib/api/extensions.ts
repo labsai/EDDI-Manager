@@ -60,8 +60,8 @@ export const EXTENSION_TYPE_INFO: Record<
   "eddi://ai.labs.behavior": { label: "Behavior", icon: "FileText", order: 2, color: "text-pink-400" },
   "eddi://ai.labs.rules": { label: "Rules", icon: "GitBranch", order: 3, color: "text-blue-400" },
   "eddi://ai.labs.property": { label: "Property Setter", icon: "Settings", order: 4, color: "text-teal-400" },
-  "eddi://ai.labs.httpcalls": { label: "HTTP Calls (legacy)", icon: "Globe", order: 5, color: "text-orange-400" },
-  "eddi://ai.labs.apicalls": { label: "HTTP Calls", icon: "Globe", order: 6, color: "text-orange-400" },
+  "eddi://ai.labs.apicalls": { label: "API Calls", icon: "Globe", order: 5, color: "text-orange-400" },
+  "eddi://ai.labs.httpcalls": { label: "API Calls (legacy)", icon: "Globe", order: 6, color: "text-orange-400" },
   "eddi://ai.labs.llm": { label: "LLM", icon: "Brain", order: 7, color: "text-purple-400" },
   "eddi://ai.labs.output": { label: "Output", icon: "MessageSquareText", order: 8, color: "text-emerald-400" },
   "eddi://ai.labs.templating": { label: "Templating", icon: "FileCode", order: 9, color: "text-cyan-400" },
@@ -117,9 +117,14 @@ export function getExtensionTypeConfig(
  */
 export const EXTENSION_TO_RESOURCE_SLUG: Record<string, string> = {
   "eddi://ai.labs.dictionary": "dictionary",
+  // Renamed step types appear under BOTH spellings: the backend registers each
+  // one twice, stored workflows carry whichever was current when they were
+  // saved, and a missing entry silently makes the step look store-less — the
+  // pipeline builder then offers no config to attach.
   "eddi://ai.labs.rules": "rules",
-  "eddi://ai.labs.httpcalls": "apicalls",
+  "eddi://ai.labs.behavior": "rules",
   "eddi://ai.labs.apicalls": "apicalls",
+  "eddi://ai.labs.httpcalls": "apicalls",
   "eddi://ai.labs.llm": "llm",
   "eddi://ai.labs.output": "output",
   "eddi://ai.labs.property": "propertysetter",

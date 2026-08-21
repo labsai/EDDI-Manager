@@ -111,8 +111,25 @@ describe("EXTENSION_TO_RESOURCE_SLUG — completeness", () => {
     expect(EXTENSION_TO_RESOURCE_SLUG["eddi://ai.labs.rag"]).toBe("rag");
   });
 
-  it("maps legacy ai.labs.httpcalls → apicalls", () => {
+  /**
+   * Both spellings of a renamed step type must map to the one store. The
+   * backend registers each renamed task twice and reports whichever name the
+   * stored workflow used, so a missing entry makes the step look store-less
+   * and the pipeline builder offers no config to attach to it.
+   */
+  it("maps both spellings of the renamed api-calls step → apicalls", () => {
+    expect(EXTENSION_TO_RESOURCE_SLUG["eddi://ai.labs.apicalls"]).toBe("apicalls");
     expect(EXTENSION_TO_RESOURCE_SLUG["eddi://ai.labs.httpcalls"]).toBe("apicalls");
+  });
+
+  it("maps both spellings of the renamed rules step → rules", () => {
+    expect(EXTENSION_TO_RESOURCE_SLUG["eddi://ai.labs.rules"]).toBe("rules");
+    expect(EXTENSION_TO_RESOURCE_SLUG["eddi://ai.labs.behavior"]).toBe("rules");
+  });
+
+  it("labels the v6 api-calls step as current and the v5 spelling as legacy", () => {
+    expect(EXTENSION_TYPE_INFO["eddi://ai.labs.apicalls"]?.label).toBe("API Calls");
+    expect(EXTENSION_TYPE_INFO["eddi://ai.labs.httpcalls"]?.label).toBe("API Calls (legacy)");
   });
 
   it("hasResourceStore returns true for rag", () => {
