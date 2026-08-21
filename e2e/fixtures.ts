@@ -29,8 +29,23 @@ export const test = base.extend<{ failOnUnhandledApiCalls: void }>({
       // that is the test's own failure to report, not this fixture's.
       if (page.isClosed()) return;
 
+      // Read `sessionStorage` first — it is where the recorder writes, and it
+      // survives the `page.goto()` that every spec's `beforeEach` performs. The
+      // `window` array is only ever populated if `sessionStorage` was
+      // unavailable, so concatenating is exact rather than double-counting.
       const unhandled = await page
-        .evaluate((key) => (window as unknown as Record<string, string[] | undefined>)[key] ?? [], UNHANDLED_API_REQUESTS_KEY)
+        .evaluate((key) => {
+          let stored: string[] = [];
+          try {
+            const raw = sessionStorage.getItem(key);
+            if (raw) stored = JSON.parse(raw) as string[];
+          } catch {
+            // fall through to the in-document fallback below
+          }
+          const fallback =
+            (window as unknown as Record<string, string[] | undefined>)[key] ?? [];
+          return [...stored, ...fallback];
+        }, UNHANDLED_API_REQUESTS_KEY)
         .catch(() => [] as string[]);
 
       expect(
