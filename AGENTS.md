@@ -102,11 +102,21 @@ in a Playwright spec fails the build instead of surfacing at run time.
 
 One gate is deliberately **not** in that list: mutation testing. It asks the
 question the others cannot — whether the suite would have *complained* — but a
-full run is ~50 minutes, so CI runs it only when a PR touches the guarded scope
-(`src/lib/operator/**`, `src/lib/api/updates.ts`, `src/lib/hitl-tool-approvals.ts`).
-If you change those files, expect the job and read its survivors: a survivor is
-a line that was broken while every test still passed. See CONTRIBUTING.md, and
-`stryker.config.json` for what is in scope and why.
+full run is ~50 minutes, so it is not something to run before every push. CI
+runs it on a PR that touches the guarded scope, weekly on a schedule, and on
+demand via `workflow_dispatch`.
+
+The scope is `src/lib/operator/**` (**except `system-prompt.ts`**),
+`src/lib/api/updates.ts` and `src/lib/hitl-tool-approvals.ts`. Four things are
+excluded on purpose and each is argued in `stryker.config.json`: tests
+themselves (`src/**/__tests__/**`), `system-prompt.ts` (59% English prose in
+template literals), `api-client.ts` (75 importers, so every mutant replays most
+of the suite), and static mutants — module-level constants, which cost a full
+runner restart each. A constant you need guarded needs a unit test asserting its
+contents; this gate will not do it.
+
+If you change a file in scope, expect the job and read its survivors: a survivor
+is a line that was broken while every test still passed. See CONTRIBUTING.md.
 
 ### i18n — MANDATORY
 

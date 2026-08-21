@@ -7,14 +7,16 @@ name: Mutation Testing
 # initially killed — and this is what stops the answer depending on someone
 # remembering to ask. Its first full run found two operator files scoring 0%.
 #
+# Runs on three triggers: a PR that touches the guarded scope, a weekly full
+# run, and manually via workflow_dispatch.
+#
 # ## Why this is not a normal PR gate
 #
 # A full run is ~50 minutes: Stryker first replays the instrumented suite once
 # to learn which tests reach which code (~11 min), then runs ~1,400 mutants.
 # Putting that in front of every PR would be indefensible, and a job like that
 # gets switched off within a fortnight. So it runs only when a PR touches the
-# guarded scope — see `paths:` below, which mirrors `mutate` in
-# stryker.config.json. Most PRs skip it entirely and pay nothing.
+# guarded scope — see `paths:` below. Most PRs skip it entirely and pay nothing.
 #
 # ## Why the whole scope, and not just the changed files
 #
@@ -39,18 +41,38 @@ on:
   pull_request:
     branches: [main]
     paths:
-      # Mirrors `mutate` in stryker.config.json — including the exclusion, so a
-      # prose-only edit to the system prompt does not book a 50-minute no-op.
+      # The guarded sources, mirroring `mutate` in stryker.config.json —
+      # including its exclusion, so a prose-only edit to the system prompt does
+      # not book a 50-minute no-op.
       - "src/lib/operator/**"
       - "!src/lib/operator/system-prompt.ts"
       - "src/lib/api/updates.ts"
       - "src/lib/hitl-tool-approvals.ts"
+      # And the files that decide what the gate measures at all: the config
+      # itself, the scripts that invoke it, and the Vitest/Vite setup Stryker
+      # runs the suite through. A change to any of these can move the score
+      # without touching a guarded source file.
       - "stryker.config.json"
       - ".github/workflows/mutation.yml"
+      - "package.json"
+      - "vitest.config.ts"
+      - "vite.config.ts"
+      #
+      # package-lock.json is deliberately NOT here. It changes on every
+      # dependency bump, and a Dependabot PR is exactly the "drift no PR
+      # caused" case the weekly run below exists to catch. Adding an hour to
+      # every dependency PR is the surest way to get this job switched off.
   schedule:
     # Sundays 03:00 UTC — off the critical path.
     - cron: "0 3 * * 0"
   workflow_dispatch:
+
+# `npm ci` runs dependency lifecycle scripts and `stryker run` executes the
+# suite against mutated source. Neither needs to write anything back, so the
+# job gets read-only contents and checkout is told not to leave a credential
+# in .git/config for that code to find.
+permissions:
+  contents: read
 
 concurrency:
   group: mutation-${{ github.ref }}
@@ -66,6 +88,8 @@ jobs:
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v7
         with:

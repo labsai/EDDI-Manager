@@ -127,14 +127,29 @@ lands in `reports/mutation/`.
 Budget about **50 minutes** for the full scope. Roughly 11 of those go on a
 single instrumented replay of the suite, before the first mutant runs, so
 Stryker can learn which tests reach which code; the rest covers ~1,400
-mutants. That first step is why the scope is small and why CI runs this only
-when a PR touches the guarded files.
+mutants. That first step is why the scope is kept small.
 
-Two things are deliberately **not** measured, both documented at length in
-`stryker.config.json`: static mutants (module-level constants — each one costs
-a full suite restart, and they held 98% of the runtime), and `api-client.ts`
-(75 importers, so every mutant in it replays most of the suite). Neither is
-unimportant; both are guarded by ordinary unit tests instead.
+Three things are deliberately **not** measured, each argued at length in
+`stryker.config.json`:
+
+- **static mutants** — module-level constants. Stryker cannot swap one in
+  without reloading the module, so each costs a full suite restart; measured,
+  they were 14% of the mutants and 98% of the runtime.
+- **`api-client.ts`** — 75 importers, so virtually every component test
+  executes it and each of its mutants replays most of the suite.
+- **`src/lib/operator/system-prompt.ts`** — 59% of it is English prose inside
+  template literals. The only test that could kill those mutants is one
+  pinning the exact wording, which would fail on every legitimate copy edit.
+
+(Tests themselves — `src/**/__tests__/**` — are excluded for the obvious
+reason.) None of these are unimportant; they are guarded by ordinary unit
+tests instead.
+
+CI runs this three ways: on a PR that touches the guarded scope or the files
+that decide what it measures, weekly on a schedule, and on demand via
+`workflow_dispatch`. `package-lock.json` is not a trigger — a dependency bump
+is exactly the drift the weekly run exists to catch, and an extra hour on every
+Dependabot PR is how a job like this gets switched off.
 
 `thresholds.break` is a ratchet: raise it when the score rises, never lower it
 to make a build pass. A drop means a test stopped noticing something it used
