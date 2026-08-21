@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within, fireEvent } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { renderWithProviders, userEvent } from "@/test/test-utils";
 import { server } from "@/test/mocks/server";
+
+import { toast } from "sonner";
 
 import { WorkforceDashboard } from "../workforce-dashboard";
 
@@ -16,6 +18,10 @@ import { WorkforceDashboard } from "../workforce-dashboard";
  * until someone said so. Asserting on the dialog alone would still pass if the
  * confirm button were wired to nothing at all.
  */
+
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
 
 class ResizeObserverMock {
   observe() {}
@@ -110,5 +116,52 @@ describe("WorkforceDashboard bulk delete", () => {
       "Dissolve this task force?",
     );
     expect(within(dialog).getByText(/cannot be undone/i)).toBeInTheDocument();
+  });
+
+  /**
+   * The dialog disables its confirm button on `deleteGroup.isPending`, and the
+   * first attempt at a re-entrancy guard read the same value. Both come from one
+   * render: the render in which the button is clickable is exactly the one whose
+   * closure captured `isPending === false`, so guarding on it caught nothing the
+   * disabled attribute had not already caught. Two clicks in a single tick
+   * deleted the same task force twice. The guard is a ref now.
+   */
+  it("deletes once even if the confirm is clicked twice in a tick", async () => {
+    const deleted = watchDeletes();
+    const user = userEvent.setup();
+    renderWithProviders(<WorkforceDashboard />);
+
+    await selectFirstTaskForce(user);
+    await user.click(screen.getByTestId("bulk-delete-btn"));
+
+    const dialog = await screen.findByRole("dialog");
+    const confirm = within(dialog).getByRole("button", { name: "Delete" });
+
+    // Not user.click twice — that awaits between them and the button is disabled
+    // by the second. Two synchronous clicks are what a real double-click delivers
+    // before React has re-rendered.
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+
+    await waitFor(() => expect(deleted.length).toBeGreaterThan(0));
+    expect(deleted).toEqual([deleted[0]]);
+  });
+
+  /**
+   * The title was pluralised and the toast one line below it was not, so the same
+   * run that asked "Dissolve this task force?" reported "Deleted 1 task forces".
+   */
+  it("reports a single deletion in the singular", async () => {
+    watchDeletes();
+    const user = userEvent.setup();
+    renderWithProviders(<WorkforceDashboard />);
+
+    await selectFirstTaskForce(user);
+    await user.click(screen.getByTestId("bulk-delete-btn"));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalled());
+    expect(toast.success).toHaveBeenCalledWith("Deleted 1 task force");
   });
 });

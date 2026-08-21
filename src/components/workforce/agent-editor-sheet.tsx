@@ -96,6 +96,8 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
   const [newSkill, setNewSkill] = useState("");
   const [newConfidence, setNewConfidence] = useState<ConfidenceLevel>("medium");
 
+  const [discardOpen, setDiscardOpen] = useState(false);
+
   // Sync from fetched data
   useEffect(() => {
     if (agent) {
@@ -131,6 +133,12 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
   useEffect(() => {
     setPromptSynced(false);
     setDiscardOpen(false);
+    // The capability draft is pure UI state — unlike description/capabilities
+    // there is no effect syncing it from `agent`, so a half-typed skill stayed
+    // on screen for the NEXT agent and Add would have written it there.
+    setAddingCapability(false);
+    setNewSkill("");
+    setNewConfidence("medium");
   }, [agentId]);
 
   // ── Dirty tracking ──────────────────────────────────────────
@@ -159,7 +167,6 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
 
   // ── Leaving the sheet ───────────────────────────────────────
 
-  const [discardOpen, setDiscardOpen] = useState(false);
 
   // The dialog covers the four in-app exits. Reloading or closing the tab is
   // a fifth, and the browser is the only thing that can ask about that one.

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -282,11 +282,17 @@ function WorkforceDashboard() {
     });
   }, []);
 
+  // A ref, not `deleteGroup.isPending`. The dialog already disables its confirm
+  // button on `isPending`, but both come from the same render: the render in
+  // which the button is clickable is exactly the one whose closure captured
+  // `isPending === false`, so guarding on it cannot catch anything the disabled
+  // attribute did not already catch. Two clicks in one tick deleted the same
+  // group twice. A ref updates synchronously, so the second call sees it.
+  const bulkDeleting = useRef(false);
+
   const handleBulkDelete = useCallback(async () => {
-    // `isPending` drops to false between the sequential deletes below, so it
-    // disables the button for a human double-click but not for a run already
-    // in flight.
-    if (deleteGroup.isPending) return;
+    if (bulkDeleting.current) return;
+    bulkDeleting.current = true;
     let successCount = 0;
     let failCount = 0;
     for (const id of selectedIds) {
@@ -299,12 +305,15 @@ function WorkforceDashboard() {
         failCount++;
       }
     }
+    bulkDeleting.current = false;
     setBulkDeleteOpen(false);
     setSelectedIds(new Set());
     setBulkMode(false);
     if (failCount === 0) {
       toast.success(
-        t("Workforce.dashboard.deletedCount", "Deleted {{count}} task forces", {
+        t("Workforce.dashboard.deletedCount", {
+          defaultValue: "Deleted {{count}} task force",
+          defaultValue_other: "Deleted {{count}} task forces",
           count: successCount,
         }),
       );
