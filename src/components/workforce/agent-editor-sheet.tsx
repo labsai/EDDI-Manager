@@ -13,6 +13,7 @@ import { AdvisorAvatar } from "@/components/workforce/advisor-avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -148,20 +149,35 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
     }
   }, [description]);
 
+  // ── Leaving the sheet ───────────────────────────────────────
+
+  const [discardOpen, setDiscardOpen] = useState(false);
+
+  /**
+   * Every exit runs through here.
+   *
+   * There are four of them — Escape, the backdrop, the X, and Cancel — and
+   * only the first two used to check `isDirty` at all. The X and Cancel threw
+   * away unsaved edits without a word. The two that did check used
+   * window.confirm, which is unstyled, untranslatable beyond the string, and
+   * cannot be asserted on; the repo already has UnsavedChangesDialog for
+   * exactly this, and config-editor-layout uses it.
+   */
+  const requestClose = useCallback(() => {
+    if (isDirty) {
+      setDiscardOpen(true);
+      return;
+    }
+    onClose();
+  }, [isDirty, onClose]);
+
   // ── Escape key ──────────────────────────────────────────────
 
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (isDirty) {
-          if (!window.confirm(t("Workforce.agentEditor.discardChanges", "You have unsaved changes. Discard?"))) {
-            return;
-          }
-        }
-        onClose();
-      }
+      if (e.key === "Escape") requestClose();
     },
-    [onClose, isDirty, t],
+    [requestClose],
   );
 
   useEffect(() => {
@@ -261,14 +277,7 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
       {/* Backdrop overlay */}
       <div
         className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
-        onClick={() => {
-          if (isDirty) {
-            if (!window.confirm(t("Workforce.agentEditor.discardChanges", "You have unsaved changes. Discard?"))) {
-              return;
-            }
-          }
-          onClose();
-        }}
+        onClick={requestClose}
         aria-hidden="true"
       />
 
@@ -307,7 +316,7 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={onClose}
+            onClick={requestClose}
             className="shrink-0"
             aria-label={t("Workforce.agentEditor.close", "Close")}
           >
@@ -641,7 +650,7 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
         {/* ── Footer (sticky) ─────────────────────────────── */}
         {!isLoading && !isError && agent && (
           <div className="shrink-0 border-t border-border ps-6 pe-6 py-4 flex items-center justify-end gap-3">
-            <Button variant="ghost" onClick={onClose}>
+            <Button variant="ghost" onClick={requestClose}>
               {t("Workforce.agentEditor.cancel", "Cancel")}
             </Button>
             <Button
@@ -655,6 +664,16 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
           </div>
         )}
       </div>
+
+      <UnsavedChangesDialog
+        open={discardOpen}
+        onConfirm={onClose}
+        onCancel={() => setDiscardOpen(false)}
+        message={t(
+          "Workforce.agentEditor.discardChanges",
+          "You have unsaved changes. Discard?",
+        )}
+      />
     </>
   );
 }

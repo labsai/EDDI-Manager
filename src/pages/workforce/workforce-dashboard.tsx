@@ -18,6 +18,7 @@ import { useEnrichedGroupDescriptors, useDeleteGroup } from "@/hooks/use-groups"
 import { useAgentDescriptors, groupAgentsByName } from "@/hooks/use-agents";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import { WorkforceCard } from "@/components/workforce/workforce-card";
 import { AgentWorkforceCard } from "@/components/workforce/agent-workforce-card";
 import { KnowledgeHealthCard } from "@/components/workforce/knowledge-health-card";
@@ -260,6 +261,7 @@ function WorkforceDashboard() {
 
   const [viewMode, setViewMode] = useState<"grid" | "list">(getStoredViewMode);
   const [bulkMode, setBulkMode] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const pinnedBoards = useMemo(
@@ -293,6 +295,7 @@ function WorkforceDashboard() {
         failCount++;
       }
     }
+    setBulkDeleteOpen(false);
     setSelectedIds(new Set());
     setBulkMode(false);
     if (failCount === 0) {
@@ -584,13 +587,39 @@ function WorkforceDashboard() {
                 count: selectedIds.size,
               })}
             </span>
-            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+            <Button
+              variant="destructive"
+              size="sm"
+              data-testid="bulk-delete-btn"
+              onClick={() => setBulkDeleteOpen(true)}
+            >
               <Trash2 className="h-4 w-4" />
               {t("Workforce.dashboard.deleteSelected", "Delete")}
             </Button>
           </div>
         </div>
       )}
+
+      {/* Deleting one task force asks first (WorkforceCard's own AlertDialog);
+          deleting several used to not, which had the more destructive action
+          carrying the weaker guard. Same dialog, count in the wording. */}
+      <AlertDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={t(
+          "Workforce.dashboard.bulkDeleteTitle",
+          "Dissolve {{count}} task forces?",
+          { count: selectedIds.size },
+        )}
+        description={t(
+          "Workforce.dashboard.bulkDeleteConfirm",
+          "This dissolves every selected task force and cannot be undone.",
+        )}
+        confirmLabel={t("common.delete", "Delete")}
+        cancelLabel={t("common.cancel", "Cancel")}
+        isPending={deleteGroup.isPending}
+        onConfirm={handleBulkDelete}
+      />
 
       {/* Mobile FAB */}
       <MobileFab />
