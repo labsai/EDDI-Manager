@@ -174,17 +174,20 @@ test.describe("Agent Lifecycle — Full Stack", () => {
   });
 
   test("conversation detail renders steps", async ({ page, request }) => {
-    // Get conversations for our agent
-    const listRes = await request.get(
-      `${API_BASE}/conversationstore/conversations?agentId=${agentId}&limit=1`
+    // This used to read back whichever conversation the previous test happened
+    // to leave behind and `test.skip()` when it found none — so a broken create
+    // path, or a reordering, turned into a green skip. It now creates the
+    // conversation it needs, which is both deterministic and order-independent.
+    const createRes = await request.post(
+      `${API_BASE}/agents/production/${agentId}`
     );
-    const conversations = await listRes.json();
-    if (!conversations.length) {
-      test.skip();
-      return;
-    }
+    expect(
+      createRes.status(),
+      "could not create the conversation this test renders",
+    ).toBe(201);
+    const convId = createRes.headers()["location"]!.split("/").filter(Boolean).pop()!;
+    conversationsToCleanup.push(convId);
 
-    const convId = conversations[0].conversationId || conversations[0].id;
     await navigateTo(page, `/manage/conversationview/${convId}`);
 
     // Should show conversation detail content
