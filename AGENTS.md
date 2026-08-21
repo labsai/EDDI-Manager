@@ -102,7 +102,7 @@ in a Playwright spec fails the build instead of surfacing at run time.
 
 One gate is deliberately **not** in that list: mutation testing. It asks the
 question the others cannot — whether the suite would have *complained* — but a
-full run is ~19 minutes on CI and longer on a busy laptop, so it is not something
+full run is 20-odd minutes on CI and longer on a busy laptop, so it is not
 to run before every push. CI runs it on a PR that touches the guarded scope,
 weekly on a schedule, and on demand via `workflow_dispatch`.
 

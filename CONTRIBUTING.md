@@ -138,12 +138,13 @@ has an empty body and falls through to the same early return. Read a survivor as
 a question rather than a verdict, and check which kind it is before writing a
 test for it. The HTML report lands in `reports/mutation/`.
 
-Budget about **20 minutes**: CI runs the full scope in 18m42s, of which 2m32s
-is a single instrumented replay of the suite before the first mutant runs, so
-Stryker can learn which tests reach which code. Locally it depends entirely on
-what else your machine is doing — the same run has taken 51 minutes here. That
-first step is why the scope is kept small: it grows with how widely the mutated
-files are imported, not with how many of them there are.
+Budget about **25 minutes**: three CI runs of the full scope took 19, 23 and 24
+minutes. Roughly 2m30s of each is a single instrumented replay of the suite
+before the first mutant runs, so Stryker can learn which tests reach which code.
+Locally it depends entirely on what else your machine is doing — the same work
+has taken 51 minutes here. That first step is why the scope is kept small: it
+grows with how widely the mutated files are imported, not with how many of them
+there are.
 
 Two things are deliberately **not** measured, each argued in
 `stryker.config.json` with the measurement that decided it:

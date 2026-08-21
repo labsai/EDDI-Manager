@@ -12,14 +12,16 @@ name: Mutation Testing
 #
 # ## Why this is not a normal PR gate
 #
-# Measured on this runner: 18m42s end to end — 2m32s replaying the instrumented
-# suite once (1,574 tests) so Stryker learns which tests reach which code, then
-# ~16 minutes for ~1,400 mutants. That first step is not a fixed cost: it tracks
-# how widely the mutated files are imported, and keeping api-client.ts in scope
-# pulled 4,349 tests into it instead of 1,574 — half of why that file is out of
-# scope (see stryker.config.json).
+# Measured on this runner across three runs: 19 to 24 minutes end to end, of
+# which about 2m30s replays the instrumented suite once (1,574 tests) so Stryker
+# learns which tests reach which code; the rest is ~1,400 mutants.
 #
-# Nineteen minutes is still too much in front of every PR, and a job like that
+# That first step is not a fixed cost — it tracks how widely the mutated files
+# are imported. Keeping api-client.ts in scope pulled 4,349 tests into it instead
+# of 1,574, which is half of why that file is out of scope (see
+# stryker.config.json).
+#
+# Twenty minutes is still too much in front of every PR, and a job like that
 # gets switched off within a fortnight. So it runs only when a PR touches the
 # guarded scope — see `paths:` below. Most PRs skip it entirely and pay nothing.
 #
@@ -93,7 +95,7 @@ jobs:
   mutation:
     name: Guarded scope
     runs-on: ubuntu-latest
-    # 18m42s observed. Loose by an order of magnitude on purpose: this exists to
+    # 19-24 minutes observed. Loose by an order of magnitude on purpose: this
     # catch a hang, not to police the runtime, and the same work has taken 51
     # minutes on a loaded laptop. (Stryker's default concurrency is cpuCount - 1,
     # except at 4 or fewer, where it uses all of them.)
