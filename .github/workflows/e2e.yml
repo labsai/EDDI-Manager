@@ -48,6 +48,98 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
+  # ── Tier 2 on PRs: API integration, one database, no browser ────────
+  #
+  # `backend-tests` below stays push-only: it runs the browser-driven full-stack
+  # tier across two databases, which is minutes of runner time per PR. But the
+  # integration tier on its own is the cheap half and the half that catches
+  # contract breaks — 22 tests, `{ request }` only, no `page` anywhere, so no
+  # browser download. Leaving it until after the merge meant the contract was
+  # verified *after* the merge that broke it.
+  #
+  # It also refreshes the OpenAPI snapshot while a real backend is up, which is
+  # the only place the *other* direction of drift is visible: the mock check in
+  # `openapi-contract.test.ts` can see a handler inventing an endpoint, but only
+  # a live instance can show the backend having changed underneath it.
+  integration-tests:
+    name: API Integration (mongodb)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Pull EDDI backend image
+        env:
+          EDDI_IMAGE: labsai/eddi:${{ inputs.eddi_image_tag || 'latest' }}
+        run: |
+          echo "Pulling $EDDI_IMAGE"
+          if ! docker pull "$EDDI_IMAGE"; then
+            echo "::error::Could not pull $EDDI_IMAGE from Docker Hub."
+            exit 1
+          fi
+          if [ "$EDDI_IMAGE" != "labsai/eddi:latest" ]; then
+            docker tag "$EDDI_IMAGE" labsai/eddi:latest
+          fi
+
+      - name: Start backend infrastructure
+        run: docker compose -f docker-compose.integration.yml up -d --wait
+        timeout-minutes: 5
+
+      - name: Wait for EDDI health
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:7070/q/health/live | grep -q '"UP"'; then
+              echo "Backend is healthy!"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Backend did not become healthy within 120s"
+          docker compose -f docker-compose.integration.yml logs eddi
+          exit 1
+
+      - name: Install dependencies
+        run: npm ci
+
+      # No `playwright install` — every integration spec takes `{ request }` and
+      # none takes `{ page }`, so no browser is ever launched. Adding the install
+      # back is ~1 minute per run for nothing; if a spec here ever needs a page,
+      # add it in the same commit.
+      - name: Run integration tests
+        run: npm run test:e2e:integration
+
+      - name: Check the OpenAPI snapshot still matches this backend
+        run: |
+          node .github/scripts/refresh-openapi-operations.mjs
+          if ! git diff --exit-code -- src/test/mocks/openapi-operations.json; then
+            echo "::error::EDDI's API surface has changed and src/test/mocks/openapi-operations.json is stale."
+            echo "::error::Run 'node .github/scripts/refresh-openapi-operations.mjs' against a local backend and commit the result."
+            echo "::error::The diff above is exactly what changed — review it for endpoints the Manager relies on."
+            exit 1
+          fi
+          echo "Snapshot matches the running backend."
+
+      - name: Collect backend logs
+        if: ${{ !cancelled() }}
+        run: docker compose -f docker-compose.integration.yml logs > integration-logs.txt 2>&1
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: integration-report
+          path: |
+            playwright-report/
+            integration-logs.txt
+          retention-days: 14
+
+      - name: Tear down infrastructure
+        if: always()
+        run: docker compose -f docker-compose.integration.yml down -v
+
   # ── Tier 2+3: Backend tests (integration + fullstack) ───────────────
   # Runs against both MongoDB and PostgreSQL via matrix strategy.
   # Only runs on push to main or manual dispatch — a PR gets the fast UI tier
