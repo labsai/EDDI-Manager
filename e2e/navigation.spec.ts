@@ -59,6 +59,10 @@ const DESTINATIONS = [
     // that is what this asserts. Anchoring on the list or the refresh control
     // would be asserting a state the page has no business being in yet.
     testId: "empty-state",
+    // `empty-state` alone is loose — it would also match a "nothing found"
+    // state after a failed load, and two of them on one page would trip strict
+    // mode. Pin the copy so this asserts the *right* empty state.
+    testText: /select an agent/i,
   },
   {
     label: "Resources",
@@ -101,11 +105,21 @@ test.describe("Navigation", () => {
 
       await expect(page).toHaveURL(dest.url);
 
-      // The URL is not the page. Assert the destination actually rendered:
-      // its heading, its own container, and no error boundary in its place.
+      // The URL is not the page. Assert the destination actually rendered.
+      //
+      // Error boundary first, deliberately: if it replaced the page, the
+      // visibility assertion below fails too, and whichever runs first is the
+      // one that reports. "the error boundary is showing" is the useful
+      // message; "agent-grid not found" sends you looking in the wrong place.
+      await expect(
+        page.getByTestId("error-boundary-fallback"),
+        "the destination threw into the error boundary",
+      ).toHaveCount(0);
       await expect(page.locator("h1").first()).toContainText(dest.heading);
       await expect(page.getByTestId(dest.testId)).toBeVisible({ timeout: 15_000 });
-      await expect(page.getByTestId("error-boundary-fallback")).toHaveCount(0);
+      if ("testText" in dest) {
+        await expect(page.getByTestId(dest.testId)).toContainText(dest.testText);
+      }
     });
   }
 });

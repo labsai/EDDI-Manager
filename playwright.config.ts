@@ -26,6 +26,9 @@ const BASE_URL = `http://localhost:${PORT}`;
  * `app-layout`. Rewriting the origin here keeps the values declarative in the
  * JSON file while letting `PORT` actually work.
  */
+/** The origin the committed seed is written against. */
+const SEED_ORIGIN = "http://localhost:3000";
+
 const storageState = (() => {
   const seed = JSON.parse(
     readFileSync(new URL("./e2e/storage-state.json", import.meta.url), "utf8"),
@@ -37,7 +40,13 @@ const storageState = (() => {
   };
   return {
     cookies: seed.cookies ?? [],
-    origins: (seed.origins ?? []).map((o) => ({ ...o, origin: BASE_URL })),
+    // Only the entry written against the default port is re-pointed. Mapping
+    // *every* origin onto BASE_URL would silently merge a second one — an auth
+    // provider, a docs host — into the app's, and the symptom would read as
+    // "the seed didn't apply" rather than as this line.
+    origins: (seed.origins ?? []).map((o) =>
+      o.origin === SEED_ORIGIN ? { ...o, origin: BASE_URL } : o,
+    ),
   };
 })();
 
@@ -52,17 +61,21 @@ const storageState = (() => {
  */
 function withForcedMocks(state: typeof storageState) {
   const FLAG = { name: "eddi-force-mocks", value: "true" };
-  const forOrigin = state.origins.find((o) => o.origin === BASE_URL);
+  const hasAppOrigin = state.origins.some((o) => o.origin === BASE_URL);
+
+  // Merge into the app's origin, leave any other origin untouched, and create
+  // the entry if the seed has none — a `map` alone would produce nothing from
+  // an empty list and the "no backend" tier would quietly go back to driving a
+  // real backend.
+  const origins = state.origins.map((o) =>
+    o.origin === BASE_URL ? { ...o, localStorage: [...o.localStorage, FLAG] } : o,
+  );
 
   return {
     ...state,
-    origins: [
-      ...state.origins.filter((o) => o.origin !== BASE_URL),
-      {
-        ...(forOrigin ?? { origin: BASE_URL }),
-        localStorage: [...(forOrigin?.localStorage ?? []), FLAG],
-      },
-    ],
+    origins: hasAppOrigin
+      ? origins
+      : [...origins, { origin: BASE_URL, localStorage: [FLAG] }],
   };
 }
 

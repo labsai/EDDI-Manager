@@ -60,15 +60,23 @@ function mocksForced(): boolean {
 async function startApp() {
   // In development, start MSW browser worker if the backend is unreachable
   if (import.meta.env.DEV) {
+    const forced = mocksForced();
     try {
-      if (mocksForced()) throw new Error("Mocks forced");
+      if (forced) throw new Error("Mocks forced");
       const res = await fetch("/agentstore/agents/descriptors?limit=1", {
         signal: AbortSignal.timeout(1500),
       });
       if (!res.ok) throw new Error("Backend not OK");
       console.log("[EDDI] Backend detected — using real API");
     } catch {
-      console.log("[EDDI] Backend not reachable — starting mock API (MSW)");
+      // Say which of the two reasons it was. Logging "backend not reachable"
+      // when the backend is fine and mocks were merely pinned sends whoever is
+      // debugging a UI failure chasing a phantom connectivity problem.
+      console.log(
+        forced
+          ? "[EDDI] eddi-force-mocks is set — starting mock API (MSW), backend not probed"
+          : "[EDDI] Backend not reachable — starting mock API (MSW)",
+      );
       const { worker, recordUnhandledApiRequest } = await import("@/test/mocks/browser");
       await worker.start({
         // NOT "bypass". An API call with no handler used to fall through to the

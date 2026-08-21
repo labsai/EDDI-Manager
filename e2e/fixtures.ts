@@ -31,24 +31,43 @@ export const test = base.extend<{ failOnUnhandledApiCalls: void }>({
       // that is the test's own failure to report, not this fixture's.
       if (page.isClosed()) return;
 
+      // Precondition, not decoration. If `eddi-force-mocks` fails to land — a
+      // spec overrides `storageState`, the seeding regresses, `main.tsx`
+      // changes — MSW never starts, the recorder never runs, and this fixture
+      // reads an empty list and reports clean while every test drives the real
+      // backend. The guard would be silently absent, which is the failure mode
+      // it exists to prevent. `main.tsx` sets this flag only after
+      // `worker.start()` resolves.
+      const mocksActive = await page.evaluate(
+        () => (window as unknown as Record<string, unknown>).__EDDI_MOCK_ACTIVE__ === true,
+      );
+      expect(
+        mocksActive,
+        "MSW is not running, so the unhandled-request guard checked nothing. " +
+          "The `ui` project seeds `eddi-force-mocks` via storageState — check that it reached localStorage.",
+      ).toBe(true);
+
       // Read `sessionStorage` first — it is where the recorder writes, and it
       // survives the `page.goto()` that every spec's `beforeEach` performs. The
       // `window` array is only ever populated if `sessionStorage` was
       // unavailable, so concatenating is exact rather than double-counting.
-      const unhandled = await page
-        .evaluate((key) => {
-          let stored: string[] = [];
-          try {
-            const raw = sessionStorage.getItem(key);
-            if (raw) stored = JSON.parse(raw) as string[];
-          } catch {
-            // fall through to the in-document fallback below
-          }
-          const fallback =
-            (window as unknown as Record<string, string[] | undefined>)[key] ?? [];
-          return [...stored, ...fallback];
-        }, UNHANDLED_API_REQUESTS_KEY)
-        .catch(() => [] as string[]);
+      // No `.catch` on this evaluate. An earlier version swallowed the failure
+      // and reported zero unhandled calls — the same silent-catch shape this
+      // branch removed from `waitForApp`, in the guard meant to replace it.
+      // `page.isClosed()` above covers the legitimate case; anything else
+      // (a destroyed execution context mid-navigation) is worth surfacing.
+      const unhandled = await page.evaluate((key) => {
+        let stored: string[] = [];
+        try {
+          const raw = sessionStorage.getItem(key);
+          if (raw) stored = JSON.parse(raw) as string[];
+        } catch {
+          // fall through to the in-document fallback below
+        }
+        const fallback =
+          (window as unknown as Record<string, string[] | undefined>)[key] ?? [];
+        return [...stored, ...fallback];
+      }, UNHANDLED_API_REQUESTS_KEY);
 
       expect(
         unhandled,

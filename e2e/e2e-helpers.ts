@@ -32,15 +32,41 @@ import { type Page, expect } from "@playwright/test";
  *
  * ## What it waits for now
  *
- * Real loading placeholders inside the content area: the `Skeleton` primitive
- * (`data-slot="skeleton"`) and the `*-loading` testids pages use for hand-rolled
- * ones. `toHaveCount(0)` rather than `.first()` so a second skeleton outliving
- * the first cannot let the wait through, and no `.catch` — data that never
- * arrives is the failure this exists to surface.
+ * Real loading placeholders inside the content area. The app has **four**
+ * Real loading placeholders inside the content area, matched by **semantics,
+ * never by animation class**. That distinction is the whole lesson above:
+ * `animate-pulse` and `animate-spin` are presentation, and this app uses both
+ * for decoration as well as for loading. `coordinator.tsx:188` is the proof — a
+ * `RefreshCw` that spins permanently as an auto-refresh indicator, its duration
+ * set to the refresh interval. A `.animate-spin` selector hangs on it forever,
+ * exactly as the old one hung on the PlatformStatus dot. I tried it; it broke
+ * three Coordinator tests.
  *
- * A page that renders neither passes immediately, which is the "loaded
- * instantly" case the old comment claimed.
+ * So this matches two things only:
+ *
+ *  1. the `Skeleton` primitive, marked `data-slot="skeleton"`
+ *  2. any testid *containing* "loading" — `agents-loading`, `loading-skeleton`,
+ *     `memory-loading-spinner`. A `$=` suffix match, which is what this had
+ *     first, silently misses the last two.
+ *
+ * `toHaveCount(0)` rather than `.first()` so a second placeholder outliving the
+ * first cannot let the wait through, and no `.catch` — data that never arrives
+ * is the failure this exists to surface.
+ *
+ * **Known gap, stated rather than papered over:** a page whose loading state is
+ * a bare `Loader2` with no testid is not covered, and there are ~18 of them
+ * (`variables.tsx:258`, `logs.tsx:616`, `secrets.tsx`, …). For those this waits
+ * for nothing and returns immediately. Closing it properly means giving those
+ * loaders a testid or a shared marked component — not widening this selector,
+ * which is precisely how it caught the coordinator's decoration. Until then the
+ * per-test assertions and the unhandled-request fixture are what catch a page
+ * that failed to load.
  */
+export const STILL_LOADING = [
+  'main [data-slot="skeleton"]',
+  'main [data-testid*="loading"]',
+].join(", ");
+
 export async function waitForApp(page: Page) {
   // The shell.
   await page.waitForSelector('[data-testid="app-layout"]', { timeout: 15_000 });
@@ -50,7 +76,7 @@ export async function waitForApp(page: Page) {
 
   // The page's own data.
   await expect(
-    page.locator('main [data-slot="skeleton"], main [data-testid$="-loading"]'),
+    page.locator(STILL_LOADING),
     "the page was still showing loading placeholders — its data never arrived",
   ).toHaveCount(0, { timeout: 15_000 });
 }
