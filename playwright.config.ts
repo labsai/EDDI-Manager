@@ -1,6 +1,56 @@
 import { defineConfig, devices } from "@playwright/test";
+import { readFileSync } from "node:fs";
 
 const isCI = !!process.env.CI;
+
+/**
+ * Dev-server port, honouring `PORT` exactly as `vite.config.ts` already does
+ * ("so two worktrees can run dev servers side by side").
+ *
+ * Without this, `baseURL` was pinned to 3000 while `reuseExistingServer` is on
+ * locally — so a run started from one worktree silently drove whatever dev
+ * server another worktree had left on 3000, and every test failed on a missing
+ * `app-layout` for reasons that had nothing to do with the branch under test.
+ * `PORT=3100 npm run test:e2e` now isolates a run completely.
+ */
+const PORT = Number(process.env.PORT) || 3000;
+const BASE_URL = `http://localhost:${PORT}`;
+
+/**
+ * Seeded localStorage (onboarding already dismissed), re-pointed at whatever
+ * port this run uses.
+ *
+ * `storageState` is keyed by origin, and `e2e/storage-state.json` has
+ * `http://localhost:3000` baked in — so on any other port the seed silently did
+ * not apply, the onboarding overlay came up, and every test failed waiting for
+ * `app-layout`. Rewriting the origin here keeps the values declarative in the
+ * JSON file while letting `PORT` actually work.
+ */
+const storageState = (() => {
+  const seed = JSON.parse(
+    readFileSync(new URL("./e2e/storage-state.json", import.meta.url), "utf8"),
+  ) as {
+    // The seed carries no cookies today; typing it as an empty tuple keeps it
+    // assignable to Playwright's cookie shape without restating that shape.
+    cookies?: [];
+    origins?: { origin: string; localStorage: { name: string; value: string }[] }[];
+  };
+  return {
+    cookies: seed.cookies ?? [],
+    origins: (seed.origins ?? []).map((o) => ({ ...o, origin: BASE_URL })),
+  };
+})();
+
+/** The same seed plus the flag that pins the app to MSW (see the `ui` project). */
+function withForcedMocks(state: typeof storageState) {
+  return {
+    ...state,
+    origins: state.origins.map((o) => ({
+      ...o,
+      localStorage: [...o.localStorage, { name: "eddi-force-mocks", value: "true" }],
+    })),
+  };
+}
 
 /**
  * Three-tier Playwright configuration:
@@ -31,10 +81,10 @@ export default defineConfig({
       : []),
   ],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: BASE_URL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
-    storageState: "e2e/storage-state.json",
+    storageState,
   },
   projects: [
     // ── Tier 1: UI smoke tests (MSW mocks, fast, no backend needed) ──
@@ -42,7 +92,15 @@ export default defineConfig({
       name: "ui",
       testDir: "./e2e",
       testIgnore: ["**/integration/**", "**/fullstack/**"],
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        // This tier is "MSW mocks, no backend" — so say so, rather than letting
+        // `main.tsx`'s runtime probe decide. Without the flag, running this tier
+        // on a machine where EDDI happens to be up drove the real API and failed
+        // every assertion written against a fixture value. Only this project
+        // sets it; `integration` and `fullstack` want the real backend.
+        storageState: withForcedMocks(storageState),
+      },
     },
 
     // ── Tier 2: API integration (real backend, no browser rendering) ──
@@ -68,7 +126,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run dev",
-    url: "http://localhost:3000",
+    url: BASE_URL,
     reuseExistingServer: !isCI,
   },
 });
