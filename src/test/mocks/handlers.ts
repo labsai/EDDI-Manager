@@ -694,7 +694,17 @@ export const handlers = [
         )
       : AGENTS_MOCK;
 
-    return HttpResponse.json(matched.slice(index, index + limit));
+    // Most-recent-first, because the backend orders them that way — verified
+    // against a live EDDI 6.3.0. This matters as soon as `limit` is honoured:
+    // the dashboard's "recent agents" asks for exactly 4, so returning them in
+    // array order hands it the four OLDEST and quietly makes the section a lie.
+    // The E2E expectation encoded the correct four all along; it only passed
+    // before because the handler returned all eight and let the page sort.
+    const ordered = [...matched].sort(
+      (a, b) => b.lastModifiedOn - a.lastModifiedOn,
+    );
+
+    return HttpResponse.json(ordered.slice(index, index + limit));
   }),
 
   // Get agent
