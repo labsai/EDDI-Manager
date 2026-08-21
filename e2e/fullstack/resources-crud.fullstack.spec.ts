@@ -136,7 +136,11 @@ test.describe("Resources — Full Stack", () => {
       version,
     });
 
-    await navigateTo(page, `/manage/resources/behavior/${id}`);
+    // `rules`, not `behavior`: the resource is created through
+    // `rulestore/rulesets`, so opening the legacy slug would route to a
+    // different (non-existent) type and render the "unknown type" error state
+    // while the two assertions below still passed.
+    await navigateTo(page, `/manage/resources/rules/${id}`);
 
     // Back link should be visible
     await expect(page.getByTestId("back-to-list")).toBeVisible();

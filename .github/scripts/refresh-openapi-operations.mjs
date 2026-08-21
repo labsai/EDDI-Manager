@@ -76,7 +76,16 @@ operations.sort();
 let previous = [];
 try {
   if (fs.existsSync(OUT)) {
-    previous = JSON.parse(fs.readFileSync(OUT, "utf8")).operations ?? [];
+    const candidate = JSON.parse(fs.readFileSync(OUT, "utf8")).operations;
+    // A valid JSON file whose `operations` is not an array of strings would
+    // otherwise sail past this and throw a TypeError further down, outside
+    // the recovery this block exists to provide.
+    if (candidate !== undefined) {
+      if (!Array.isArray(candidate) || !candidate.every((op) => typeof op === "string")) {
+        throw new TypeError("snapshot `operations` is not an array of strings");
+      }
+      previous = candidate;
+    }
   }
 } catch {
   console.warn("Existing snapshot is unreadable — writing a fresh one, skipping the diff.");

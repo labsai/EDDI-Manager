@@ -5,7 +5,11 @@ services:
   eddi:
     image: labsai/eddi:latest
     ports:
-      - "7070:7070"
+      # Loopback only. The opt-out below runs this backend with NO
+      # authentication, and `7070:7070` binds every interface — which would
+      # put an unauthenticated EDDI on whatever network the machine is on.
+      # Tests and CI both reach it at localhost, so this costs nothing.
+      - "127.0.0.1:7070:7070"
     depends_on:
       postgres:
         condition: service_healthy

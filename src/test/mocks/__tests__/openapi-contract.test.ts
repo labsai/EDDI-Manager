@@ -372,10 +372,14 @@ describe(`MSW handlers against EDDI ${snapshot.eddiVersion}'s API surface`, () =
       "a second handler for this endpoint shadows the first — MSW resolves in registration order, so the later one never runs",
     ).toEqual([]);
 
-    // Ratchet: the frozen set may shrink, never grow.
+    // Exact, not `length <=`. A length comparison lets a *fixed* duplicate
+    // linger in the frozen list, and a stale entry there is a standing licence
+    // for that route to be duplicated again — the ratchet would have quietly
+    // stopped ratcheting. Fixing one now requires deleting its line, which is
+    // the only way the list actually shrinks.
     expect(
-      duplicated.length,
-      "the known-duplicate list is now longer than reality — remove the fixed entries from KNOWN_DUPLICATE_ROUTES",
-    ).toBeLessThanOrEqual(KNOWN_DUPLICATE_ROUTES.length);
+      duplicated,
+      "KNOWN_DUPLICATE_ROUTES no longer matches reality — delete the entries you fixed",
+    ).toEqual([...KNOWN_DUPLICATE_ROUTES].sort());
   });
 });
