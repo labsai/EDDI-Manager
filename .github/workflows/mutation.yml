@@ -1,0 +1,86 @@
+name: Mutation Testing
+
+# Does the suite NOTICE when working code is broken?
+#
+# Coverage says which lines ran; it cannot say whether anything would have
+# complained. An audit measured that gap by hand — 20 semantic mutations, 12
+# initially killed — and this is what stops the answer depending on someone
+# remembering to ask. Its first full run found two operator files scoring 0%.
+#
+# ## Why this is not a normal PR gate
+#
+# A full run is ~50 minutes: Stryker first replays the instrumented suite once
+# to learn which tests reach which code (~11 min), then runs ~1,400 mutants.
+# Putting that in front of every PR would be indefensible, and a job like that
+# gets switched off within a fortnight. So it runs only when a PR touches the
+# guarded scope — see `paths:` below, which mirrors `mutate` in
+# stryker.config.json. Most PRs skip it entirely and pay nothing.
+#
+# ## Why the whole scope, and not just the changed files
+#
+# Two reasons, in order of how much they cost to learn.
+#
+# Stryker has no `--since`. It was removed in favour of `--incremental`, and
+# `stryker run --since=origin/main` exits 1 with "unknown option" — so the
+# obvious shape for this job does not exist.
+#
+# The better reason is that a changed-files score is not comparable to the
+# threshold it would be checked against. `thresholds.break` is a ratchet over
+# the whole scope; a subset score is a different quantity that happens to share
+# a scale. A PR touching a file with pre-existing debt would fail on that
+# file's history rather than on anything the PR did, and the first person to
+# meet that failure would quite reasonably delete the job. Running the whole
+# scope keeps the number meaning one thing.
+#
+# The weekly run is not redundant: it catches drift no PR caused — a dependency
+# bump changing behaviour, or a merge whose parts each passed.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      # Mirrors `mutate` in stryker.config.json — including the exclusion, so a
+      # prose-only edit to the system prompt does not book a 50-minute no-op.
+      - "src/lib/operator/**"
+      - "!src/lib/operator/system-prompt.ts"
+      - "src/lib/api/updates.ts"
+      - "src/lib/hitl-tool-approvals.ts"
+      - "stryker.config.json"
+      - ".github/workflows/mutation.yml"
+  schedule:
+    # Sundays 03:00 UTC — off the critical path.
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+
+concurrency:
+  group: mutation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mutation:
+    name: Guarded scope
+    runs-on: ubuntu-latest
+    # ~50 minutes locally at concurrency 4. CI runners are slower and Stryker
+    # defaults to cpuCount - 1, so this is deliberately loose; it exists to
+    # catch a hang, not to police the runtime.
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run mutation testing
+        run: npx stryker run
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          retention-days: 14

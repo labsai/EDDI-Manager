@@ -103,6 +103,47 @@ npm run test:e2e
 npm run build
 ```
 
+### Mutation testing — does the suite notice when code breaks?
+
+Coverage says which lines *ran*. It cannot say whether anything would have
+*complained*. Those are different questions, and an audit of this repo found
+the gap was real: tests that asserted an element existed rather than that a
+behaviour happened, and eleven that could not fail at all.
+
+```bash
+# The guarded scope — operator security guards, approval logic, version compare
+npm run test:mutation
+```
+
+```bash
+# Just the file you are working on (much faster)
+npm run test:mutation:file -- src/lib/operator/gate-guard.ts
+```
+
+A **survived** mutant means the code was broken and every test still passed —
+that line is unverified, whatever the coverage report says. The HTML report
+lands in `reports/mutation/`.
+
+Budget about **50 minutes** for the full scope. Roughly 11 of those go on a
+single instrumented replay of the suite, before the first mutant runs, so
+Stryker can learn which tests reach which code; the rest covers ~1,400
+mutants. That first step is why the scope is small and why CI runs this only
+when a PR touches the guarded files.
+
+Two things are deliberately **not** measured, both documented at length in
+`stryker.config.json`: static mutants (module-level constants — each one costs
+a full suite restart, and they held 98% of the runtime), and `api-client.ts`
+(75 importers, so every mutant in it replays most of the suite). Neither is
+unimportant; both are guarded by ordinary unit tests instead.
+
+`thresholds.break` is a ratchet: raise it when the score rises, never lower it
+to make a build pass. A drop means a test stopped noticing something it used
+to notice.
+
+It works. Its first run found `blocked-calls.ts` — the single place deciding
+which tool calls the Manager refuses, used by all three approval surfaces —
+scoring **0%**, with two thirds of its mutants never executed by any test.
+
 ### Running E2E on a busy machine
 
 `PORT` isolates a run, exactly as it does for `npm run dev`:

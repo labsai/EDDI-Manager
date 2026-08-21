@@ -1,0 +1,116 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": [
+    "Mutation testing — does the suite NOTICE when working code is broken?",
+    "",
+    "Coverage says which lines ran. It cannot say whether anything would have",
+    "complained. A repo-wide audit measured that gap by hand: 20 semantic",
+    "mutations, 12 initially killed. This automates the same question so it",
+    "stops depending on someone remembering to ask it.",
+    "",
+    "The scope is the operator's security guards, the approval logic behind",
+    "them, and the version comparison the update banner is built on. Widening",
+    "it is not free and not always possible — read the two notes below before",
+    "adding anything, because both exclusions were arrived at by measurement,",
+    "not taste."
+  ],
+  "packageManager": "npm",
+  "testRunner": "vitest",
+  "reporters": [
+    "html",
+    "clear-text",
+    "progress"
+  ],
+  "htmlReporter": {
+    "fileName": "reports/mutation/index.html"
+  },
+  "_mutate_comment": [
+    "TWO DELIBERATE EXCLUSIONS.",
+    "",
+    "system-prompt.ts — 59% of that file is English prose inside template",
+    "literals: the instructions handed to the model. Stryker cheerfully mutates",
+    "that prose, and the only test that could kill such a mutant is one pinning",
+    "the exact wording, which would then fail on every legitimate edit to the",
+    "prompt. Those are mutants you do not want killed. Its actual logic (which",
+    "preamble goes with which scope) is three one-line functions with unit",
+    "tests already on them.",
+    "",
+    "api-client.ts — the cost is quadratic in the wrong variable. 75 modules",
+    "import it, 40 of them in src/lib/api, so virtually every component test",
+    "executes it: each of its ~120 mutants replays a large share of the 4,349",
+    "tests. Measured, it alone projected ~10 of an 11-hour run, for mutants",
+    "that broad incidental coverage would mostly kill by accident rather than",
+    "by design. It keeps its own unit tests (src/pages/__tests__/",
+    "api-client.test.tsx); it does not get this gate.",
+    "",
+    "The rule the two share: mutation testing pays off on code with FOCUSED",
+    "tests. Every file below has 1-5 importers. Check that before widening."
+  ],
+  "mutate": [
+    "src/lib/operator/**/*.ts",
+    "src/lib/api/updates.ts",
+    "src/lib/hitl-tool-approvals.ts",
+    "!src/lib/operator/system-prompt.ts",
+    "!src/**/__tests__/**"
+  ],
+  "coverageAnalysis": "perTest",
+  "timeoutMS": 60000,
+  "_ignoreStatic_comment": [
+    "A 'static' mutant sits in code that runs at module load — a top-level",
+    "const, an array literal built once at import. Stryker cannot swap one in",
+    "without reloading the module, so it restarts the runner and replays the",
+    "ENTIRE suite for each one. Measured on the first attempt: 223 static",
+    "mutants, 14% of the total, holding 98% of the projected runtime.",
+    "",
+    "So they are skipped, and the honest cost is stated plainly: the score",
+    "below covers behaviour, not the values of module-level constants. If you",
+    "add a security-relevant constant (an allow-list, a scope table), a unit",
+    "test asserting its contents is the thing that guards it — this gate will",
+    "not."
+  ],
+  "ignoreStatic": true,
+  "_dryRunTimeout_comment": [
+    "Stryker runs the WHOLE suite once up front, instrumented, to learn which",
+    "tests touch which code. For this scope that is 1,537 tests in ~11 minutes.",
+    "",
+    "The cost is not fixed — it tracks how widely the mutated files are imported.",
+    "With api-client.ts in scope the same step pulled in 4,349 tests and took",
+    "16m54s and 26m08s on two runs of the identical config, which is the other",
+    "half of why that file is excluded above.",
+    "",
+    "Not worked around by pointing Stryker at a subset of TEST files: with",
+    "perTest coverage the per-mutant runs already execute only the handful of",
+    "tests that reach the mutant, so trimming buys nothing after this step — it",
+    "only risks reporting a mutant as survived because the test that would have",
+    "caught it was hidden, and a gate that cries wolf gets deleted.",
+    "",
+    "30, not the 5-minute default it blew through on the first attempt, and not",
+    "11: CI runners are slower, and the spread between two identical local runs",
+    "was already 9 minutes."
+  ],
+  "dryRunTimeoutMinutes": 30,
+  "vitest": {
+    "configFile": "vitest.config.ts"
+  },
+  "tempDirName": ".stryker-tmp",
+  "_thresholds_comment": [
+    "A ratchet, in the shape check-i18n.mjs already uses for its COLLIDING set:",
+    "`break` is the floor CI enforces. Raise it when the real score rises; never",
+    "lower it to make a build pass — a drop means a test stopped noticing",
+    "something that it used to notice.",
+    "",
+    "Measured 84.29% over 1,375 mutants at the time this landed (81.89% before",
+    "the three files the first run caught untested). 82 leaves ~2 points for",
+    "jitter: 8 mutants time out rather than being killed outright, and a timeout",
+    "counts as detected, so a slower or faster runner moves the total slightly.",
+    "A tighter floor would fail builds for the weather; a looser one would let a",
+    "real regression through.",
+    "",
+    "(`thresholds` itself rejects unknown keys, so this note lives beside it.)"
+  ],
+  "thresholds": {
+    "high": 90,
+    "low": 80,
+    "break": 82
+  }
+}

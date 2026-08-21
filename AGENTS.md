@@ -100,6 +100,14 @@ npm run build        # Production build succeeds (includes tsc -b)
 `npm run typecheck` (`tsc -b`) now includes `tsconfig.e2e.json`, so a type error
 in a Playwright spec fails the build instead of surfacing at run time.
 
+One gate is deliberately **not** in that list: mutation testing. It asks the
+question the others cannot — whether the suite would have *complained* — but a
+full run is ~50 minutes, so CI runs it only when a PR touches the guarded scope
+(`src/lib/operator/**`, `src/lib/api/updates.ts`, `src/lib/hitl-tool-approvals.ts`).
+If you change those files, expect the job and read its survivors: a survivor is
+a line that was broken while every test still passed. See CONTRIBUTING.md, and
+`stryker.config.json` for what is in scope and why.
+
 ### i18n — MANDATORY
 
 > **⚠️ Every time you add or modify keys in `en.json`, you MUST propagate those changes to ALL 10 other locale files before committing.**
