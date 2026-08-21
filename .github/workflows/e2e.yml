@@ -64,6 +64,9 @@ jobs:
   integration-tests:
     name: API Integration (mongodb)
     runs-on: ubuntu-latest
+    # PRs only. On push, `backend-tests` already runs this tier across BOTH
+    # databases — running it here too would just repeat the mongodb half.
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v7
 
@@ -223,6 +226,20 @@ jobs:
 
       - name: Run full-stack tests (${{ matrix.database }})
         run: npm run test:e2e:fullstack
+
+      # Repeated from `integration-tests` on purpose: that job is PR-only, and
+      # the snapshot can go stale without any PR touching it — the EDDI image is
+      # tracked as `latest`, so the backend moves underneath us between merges.
+      # Pushes to main are where that first becomes visible.
+      - name: Check the OpenAPI snapshot still matches this backend
+        run: |
+          node .github/scripts/refresh-openapi-operations.mjs
+          if ! git diff --exit-code -- src/test/mocks/openapi-operations.json; then
+            echo "::error::EDDI's API surface has changed and src/test/mocks/openapi-operations.json is stale."
+            echo "::error::Run 'npm run openapi:refresh' against a local backend and commit the result."
+            exit 1
+          fi
+          echo "Snapshot matches the running backend."
 
       - name: Collect backend logs
         if: ${{ !cancelled() }}

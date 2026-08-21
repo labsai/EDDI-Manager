@@ -120,9 +120,10 @@ interface MockRoute {
   tail: string;
   /**
    * A pattern whose store segment is itself a parameter — a leading wildcard
-   * followed by `:store/:plural/…` —
-   * is a catch-all standing in for many concrete stores. Comparing it to one
-   * concrete spec path is meaningless — it is checked for shape only.
+   * followed by `:store/:plural/…` — is a catch-all standing in for many
+   * concrete stores, so comparing it to one concrete spec path is meaningless.
+   * It is matched segment-wise instead (see `matchesShape`), which still fails
+   * if the shape is wrong.
    */
   genericStore: boolean;
 }
@@ -156,11 +157,47 @@ const SPEC_OPERATIONS = snapshot.operations.map((op) => {
   return { method: method!, path: normalisePath(rest.join(" ")) };
 });
 
+/**
+ * Segment-wise match, with the mock's `{}` standing for any single segment.
+ *
+ * This is what makes a catch-all — a leading wildcard, then `{store}/{plural}/descriptors` —
+ * checkable instead of skippable: it still has to line up with a real operation
+ * of the same shape and the same trailing segments, so a typo in
+ * `descriptors` — or a method the backend does not offer there — fails.
+ */
+function matchesShape(route: MockRoute, specPath: string): boolean {
+  const routeSegs = route.tail.split("/").filter(Boolean);
+  const specSegs = specPath.split("/").filter(Boolean);
+
+  // A leading `*` spans segments, so the mock describes the tail of the path.
+  if (route.wildcard) {
+    if (specSegs.length < routeSegs.length) return false;
+  } else if (specSegs.length !== routeSegs.length) {
+    return false;
+  }
+
+  const offset = specSegs.length - routeSegs.length;
+  return routeSegs.every((seg, i) => seg === "{}" || seg === specSegs[offset + i]);
+}
+
+/**
+ * Exact match: every segment equal, and a `{}` on one side only satisfied by a
+ * `{}` on the other. Stricter than `matchesShape` — a mock that puts a
+ * parameter where the backend has a literal segment is a mismatch worth
+ * knowing about, so ordinary routes are held to this.
+ */
+function matchesExactly(route: MockRoute, specPath: string): boolean {
+  return route.wildcard
+    ? specPath === route.tail || specPath.endsWith(route.tail)
+    : specPath === route.tail;
+}
+
 function isInSpec(route: MockRoute): boolean {
+  // Catch-alls cannot be compared exactly — their store segment is a parameter
+  // standing in for any store — so only those fall back to the shape match.
+  const matches = route.genericStore ? matchesShape : matchesExactly;
   return SPEC_OPERATIONS.some(
-    (op) =>
-      op.method === route.method &&
-      (route.wildcard ? op.path === route.tail || op.path.endsWith(route.tail) : op.path === route.tail),
+    (op) => op.method === route.method && matches(route, op.path),
   );
 }
 
@@ -176,7 +213,6 @@ describe(`MSW handlers against EDDI ${snapshot.eddiVersion}'s API surface`, () =
 
   it("mocks no endpoint the backend does not expose", () => {
     const unexplained = routes
-      .filter((r) => !r.genericStore)
       .filter((r) => !isInSpec(r))
       .filter((r) => !(`${r.method} ${r.raw}` in EXEMPT))
       .map((r) => `${r.method} ${r.raw}`);
