@@ -41,14 +41,28 @@ const storageState = (() => {
   };
 })();
 
-/** The same seed plus the flag that pins the app to MSW (see the `ui` project). */
+/**
+ * The same seed plus the flag that pins the app to MSW (see the `ui` project).
+ *
+ * Builds the origin entry rather than mapping over whatever is there: a `map`
+ * over an empty `origins` list produces an empty list, so emptying
+ * `storage-state.json` would silently stop forcing mocks and the "no backend"
+ * tier would go back to driving a real backend without a word. This is a guard
+ * that has to hold, so it does not depend on the seed's contents.
+ */
 function withForcedMocks(state: typeof storageState) {
+  const FLAG = { name: "eddi-force-mocks", value: "true" };
+  const forOrigin = state.origins.find((o) => o.origin === BASE_URL);
+
   return {
     ...state,
-    origins: state.origins.map((o) => ({
-      ...o,
-      localStorage: [...o.localStorage, { name: "eddi-force-mocks", value: "true" }],
-    })),
+    origins: [
+      ...state.origins.filter((o) => o.origin !== BASE_URL),
+      {
+        ...(forOrigin ?? { origin: BASE_URL }),
+        localStorage: [...(forOrigin?.localStorage ?? []), FLAG],
+      },
+    ],
   };
 }
 
