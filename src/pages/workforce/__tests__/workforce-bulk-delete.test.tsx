@@ -96,7 +96,9 @@ describe("WorkforceDashboard bulk delete", () => {
     await waitFor(() => expect(deleted).toHaveLength(1));
   });
 
-  it("names the number at risk, so 'Delete' is not a guess", async () => {
+  it("reads as English for a single selection", async () => {
+    // `/1/` would have passed here while the heading said "Dissolve 1 task
+    // forces?" — the singular is the common case, so it gets the exact string.
     const user = userEvent.setup();
     renderWithProviders(<WorkforceDashboard />);
 
@@ -104,7 +106,9 @@ describe("WorkforceDashboard bulk delete", () => {
     await user.click(screen.getByTestId("bulk-delete-btn"));
 
     const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByText(/1/)).toBeInTheDocument();
+    expect(within(dialog).getByRole("heading")).toHaveTextContent(
+      "Dissolve this task force?",
+    );
     expect(within(dialog).getByText(/cannot be undone/i)).toBeInTheDocument();
   });
 });

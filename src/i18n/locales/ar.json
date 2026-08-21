@@ -3841,7 +3841,12 @@
     "dashboard": {
       "assembleTaskForce": "تشكيل فريق مهام",
       "bulkDeleteConfirm": "يؤدي هذا إلى حلّ كل فريق مهام محدد ولا يمكن التراجع عنه.",
-      "bulkDeleteTitle": "حلّ {{count}} من فرق المهام؟",
+      "bulkDeleteTitle_few": "حلّ {{count}} فرق مهام؟",
+      "bulkDeleteTitle_many": "حلّ {{count}} فريق مهام؟",
+      "bulkDeleteTitle_one": "حلّ فريق المهام هذا؟",
+      "bulkDeleteTitle_other": "حلّ {{count}} من فرق المهام؟",
+      "bulkDeleteTitle_two": "حلّ فريقَي المهام؟",
+      "bulkDeleteTitle_zero": "لا توجد فرق مهام محددة",
       "cancel": "إلغاء",
       "deleteConfirm": "هل تريد بالتأكيد حلّ فريق المهام هذا؟ لا يمكن التراجع عن هذا الإجراء.",
       "deleteError": "فشل حذف فريق المهام",
@@ -3951,7 +3956,6 @@
     "tabInsights": "الرؤى",
     "tabThreads": "المحادثات",
     "templates": {
-      "deleteConfirm": "حذف هذا القالب؟",
       "deleteNamedConfirm": "سيتم إزالة “{{name}}” من القوالب المحفوظة لديك.",
       "deleteTitle": "حذف القالب؟",
       "deleted": "تم حذف القالب"

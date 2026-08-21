@@ -22,7 +22,6 @@ export function TemplatesPanel({ onUseTemplate }: TemplatesPanelProps) {
   // a test cannot see, which is why nothing covered this button.
   const [pendingDelete, setPendingDelete] = useState<DiscussionTemplate | null>(null);
 
-
   return (
     <section className="space-y-3">
       {/* Header */}
@@ -114,15 +113,11 @@ export function TemplatesPanel({ onUseTemplate }: TemplatesPanelProps) {
           if (!open) setPendingDelete(null);
         }}
         title={t("Workforce.templates.deleteTitle", "Delete template?")}
-        description={
-          pendingDelete
-            ? t(
-                "Workforce.templates.deleteNamedConfirm",
-                "“{{name}}” will be removed from your saved templates.",
-                { name: pendingDelete.name },
-              )
-            : t("Workforce.templates.deleteConfirm", "Delete this template?")
-        }
+        description={t(
+          "Workforce.templates.deleteNamedConfirm",
+          "“{{name}}” will be removed from your saved templates.",
+          { name: pendingDelete?.name ?? "" },
+        )}
         confirmLabel={t("common.delete", "Delete")}
         cancelLabel={t("common.cancel", "Cancel")}
         onConfirm={() => {

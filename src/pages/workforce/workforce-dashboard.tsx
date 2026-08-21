@@ -283,6 +283,10 @@ function WorkforceDashboard() {
   }, []);
 
   const handleBulkDelete = useCallback(async () => {
+    // `isPending` drops to false between the sequential deletes below, so it
+    // disables the button for a human double-click but not for a run already
+    // in flight.
+    if (deleteGroup.isPending) return;
     let successCount = 0;
     let failCount = 0;
     for (const id of selectedIds) {
@@ -606,11 +610,11 @@ function WorkforceDashboard() {
       <AlertDialog
         open={bulkDeleteOpen}
         onOpenChange={setBulkDeleteOpen}
-        title={t(
-          "Workforce.dashboard.bulkDeleteTitle",
-          "Dissolve {{count}} task forces?",
-          { count: selectedIds.size },
-        )}
+        title={t("Workforce.dashboard.bulkDeleteTitle", {
+          defaultValue: "Dissolve this task force?",
+          defaultValue_other: "Dissolve {{count}} task forces?",
+          count: selectedIds.size,
+        })}
         description={t(
           "Workforce.dashboard.bulkDeleteConfirm",
           "This dissolves every selected task force and cannot be undone.",

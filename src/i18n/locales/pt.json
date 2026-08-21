@@ -3751,7 +3751,9 @@
     "dashboard": {
       "assembleTaskForce": "Montar força-tarefa",
       "bulkDeleteConfirm": "Isto dissolve todas as forças-tarefa selecionadas e não pode ser desfeito.",
-      "bulkDeleteTitle": "Dissolver {{count}} forças-tarefa?",
+      "bulkDeleteTitle_many": "Dissolver {{count}} forças-tarefa?",
+      "bulkDeleteTitle_one": "Dissolver esta força-tarefa?",
+      "bulkDeleteTitle_other": "Dissolver {{count}} forças-tarefa?",
       "cancel": "Cancelar",
       "deleteConfirm": "Tem certeza de que deseja dissolver esta força-tarefa? Esta ação não pode ser desfeita.",
       "deleteError": "Falha ao excluir a força-tarefa",
@@ -3861,7 +3863,6 @@
     "tabInsights": "Insights",
     "tabThreads": "Tópicos",
     "templates": {
-      "deleteConfirm": "Excluir este modelo?",
       "deleteNamedConfirm": "“{{name}}” será removido dos seus modelos salvos.",
       "deleteTitle": "Excluir modelo?",
       "deleted": "Modelo excluído"

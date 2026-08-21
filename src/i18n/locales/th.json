@@ -3721,7 +3721,8 @@
     "dashboard": {
       "assembleTaskForce": "จัดตั้งคณะทำงาน",
       "bulkDeleteConfirm": "การดำเนินการนี้จะยุบคณะทำงานที่เลือกไว้ทั้งหมดและไม่สามารถย้อนกลับได้",
-      "bulkDeleteTitle": "ยุบคณะทำงาน {{count}} รายการหรือไม่?",
+      "bulkDeleteTitle_one": "ยุบคณะทำงานนี้หรือไม่?",
+      "bulkDeleteTitle_other": "ยุบคณะทำงาน {{count}} รายการหรือไม่?",
       "cancel": "ยกเลิก",
       "deleteConfirm": "แน่ใจหรือไม่ว่าต้องการยุบคณะทำงานนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
       "deleteError": "ลบคณะทำงานไม่สำเร็จ",
@@ -3831,7 +3832,6 @@
     "tabInsights": "ข้อมูลเชิงลึก",
     "tabThreads": "เธรด",
     "templates": {
-      "deleteConfirm": "ลบเทมเพลตนี้?",
       "deleteNamedConfirm": "“{{name}}” จะถูกนำออกจากเทมเพลตที่บันทึกไว้ของคุณ",
       "deleteTitle": "ลบเทมเพลตหรือไม่?",
       "deleted": "ลบเทมเพลตแล้ว"

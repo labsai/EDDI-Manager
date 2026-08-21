@@ -3721,7 +3721,8 @@
     "dashboard": {
       "assembleTaskForce": "タスクフォースを編成",
       "bulkDeleteConfirm": "選択したタスクフォースをすべて解散します。この操作は取り消せません。",
-      "bulkDeleteTitle": "{{count}} 件のタスクフォースを解散しますか？",
+      "bulkDeleteTitle_one": "このタスクフォースを解散しますか？",
+      "bulkDeleteTitle_other": "{{count}} 件のタスクフォースを解散しますか？",
       "cancel": "キャンセル",
       "deleteConfirm": "このタスクフォースを解散してもよろしいですか？この操作は取り消せません。",
       "deleteError": "タスクフォースの削除に失敗しました",
@@ -3831,7 +3832,6 @@
     "tabInsights": "インサイト",
     "tabThreads": "スレッド",
     "templates": {
-      "deleteConfirm": "このテンプレートを削除しますか？",
       "deleteNamedConfirm": "“{{name}}” を保存済みテンプレートから削除します。",
       "deleteTitle": "テンプレートを削除しますか？",
       "deleted": "テンプレートを削除しました"

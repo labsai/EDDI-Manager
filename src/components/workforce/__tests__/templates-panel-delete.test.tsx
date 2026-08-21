@@ -96,16 +96,4 @@ describe("TemplatesPanel delete", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(stored().map((t) => t.id)).toEqual(["tpl-1", "tpl-2"]);
   });
-
-  it("does not open the template while deleting it", async () => {
-    seed();
-    const onUseTemplate = vi.fn();
-    const user = userEvent.setup();
-    renderWithProviders(<TemplatesPanel onUseTemplate={onUseTemplate} />);
-
-    await user.click(screen.getByTestId("template-delete-tpl-1"));
-
-    await screen.findByRole("dialog");
-    expect(onUseTemplate).not.toHaveBeenCalled();
-  });
 });

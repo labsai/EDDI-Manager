@@ -3721,7 +3721,8 @@
     "dashboard": {
       "assembleTaskForce": "태스크포스 구성",
       "bulkDeleteConfirm": "선택한 태스크포스를 모두 해체하며 이 작업은 되돌릴 수 없습니다.",
-      "bulkDeleteTitle": "태스크포스 {{count}}개를 해체하시겠습니까?",
+      "bulkDeleteTitle_one": "이 태스크포스를 해체하시겠습니까?",
+      "bulkDeleteTitle_other": "태스크포스 {{count}}개를 해체하시겠습니까?",
       "cancel": "취소",
       "deleteConfirm": "이 태스크포스를 해체하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
       "deleteError": "태스크포스를 삭제하지 못했습니다",
@@ -3831,7 +3832,6 @@
     "tabInsights": "인사이트",
     "tabThreads": "스레드",
     "templates": {
-      "deleteConfirm": "이 템플릿을 삭제하시겠습니까?",
       "deleteNamedConfirm": "“{{name}}”이(가) 저장된 템플릿에서 제거됩니다.",
       "deleteTitle": "템플릿을 삭제할까요?",
       "deleted": "템플릿을 삭제했습니다"

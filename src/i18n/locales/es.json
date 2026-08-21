@@ -3751,7 +3751,9 @@
     "dashboard": {
       "assembleTaskForce": "Formar grupo de trabajo",
       "bulkDeleteConfirm": "Esto disuelve todos los grupos de trabajo seleccionados y no se puede deshacer.",
-      "bulkDeleteTitle": "¿Disolver {{count}} grupos de trabajo?",
+      "bulkDeleteTitle_many": "¿Disolver {{count}} grupos de trabajo?",
+      "bulkDeleteTitle_one": "¿Disolver este grupo de trabajo?",
+      "bulkDeleteTitle_other": "¿Disolver {{count}} grupos de trabajo?",
       "cancel": "Cancelar",
       "deleteConfirm": "¿Seguro que quieres disolver este grupo de trabajo? Esta acción no se puede deshacer.",
       "deleteError": "No se pudo eliminar el grupo de trabajo",
@@ -3861,7 +3863,6 @@
     "tabInsights": "Información",
     "tabThreads": "Hilos",
     "templates": {
-      "deleteConfirm": "¿Eliminar esta plantilla?",
       "deleteNamedConfirm": "“{{name}}” se eliminará de tus plantillas guardadas.",
       "deleteTitle": "¿Eliminar plantilla?",
       "deleted": "Plantilla eliminada"

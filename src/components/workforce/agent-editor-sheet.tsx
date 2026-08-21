@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -120,9 +121,16 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
     }
   }, [promptData, promptSynced]);
 
-  // Reset prompt sync when agent changes
+  // Reset per-agent state when the agent changes.
+  //
+  // `if (!agentId) return null` below renders nothing but does not unmount —
+  // both call sites keep this component mounted and only flip `agentId` — so
+  // anything left set here survives into the next agent's sheet. That is how
+  // a confirmed discard used to leave its own dialog open on top of the next
+  // agent you edited.
   useEffect(() => {
     setPromptSynced(false);
+    setDiscardOpen(false);
   }, [agentId]);
 
   // ── Dirty tracking ──────────────────────────────────────────
@@ -153,6 +161,10 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
 
   const [discardOpen, setDiscardOpen] = useState(false);
 
+  // The dialog covers the four in-app exits. Reloading or closing the tab is
+  // a fifth, and the browser is the only thing that can ask about that one.
+  useUnsavedChangesGuard(isDirty);
+
   /**
    * Every exit runs through here.
    *
@@ -175,9 +187,15 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
 
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape") requestClose();
+      if (e.key !== "Escape") return;
+      // UnsavedChangesDialog has its own Escape handler, on `window` where
+      // this one is on `document`. Both fire for a single keypress, and it
+      // only works out because document bubbles first — reopening what the
+      // dialog just closed otherwise. Do not rely on the ordering.
+      if (discardOpen) return;
+      requestClose();
     },
-    [requestClose],
+    [requestClose, discardOpen],
   );
 
   useEffect(() => {
@@ -667,7 +685,10 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
 
       <UnsavedChangesDialog
         open={discardOpen}
-        onConfirm={onClose}
+        onConfirm={() => {
+          setDiscardOpen(false);
+          onClose();
+        }}
         onCancel={() => setDiscardOpen(false)}
         message={t(
           "Workforce.agentEditor.discardChanges",

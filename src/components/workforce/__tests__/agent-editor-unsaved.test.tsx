@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { describe, it, expect, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import { renderWithProviders, userEvent } from "@/test/test-utils";
@@ -90,5 +91,44 @@ describe("AgentEditorSheet unsaved changes", () => {
     await user.click(screen.getByTestId("unsaved-confirm"));
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  /**
+   * Both call sites — workforce-analytics.tsx and workforce-thread.tsx — keep
+   * this component permanently mounted and only flip `agentId`:
+   *
+   *   <AgentEditorSheet agentId={editingAgentId} onClose={() => setEditingAgentId(null)} />
+   *
+   * `if (!agentId) return null` renders nothing but does NOT unmount, so any
+   * state left set survives into the next agent's sheet. This harness mirrors
+   * that rather than remounting, which is what the tests above do.
+   */
+  it("does not carry the discard dialog into the next agent's sheet", async () => {
+    function Parent() {
+      const [editingAgentId, setEditingAgentId] = useState<string | null>("agent1");
+      return (
+        <>
+          <button onClick={() => setEditingAgentId("agent2")}>edit the next one</button>
+          <AgentEditorSheet
+            agentId={editingAgentId}
+            onClose={() => setEditingAgentId(null)}
+          />
+        </>
+      );
+    }
+
+    const user = userEvent.setup();
+    renderWithProviders(<Parent />);
+
+    await user.type(await screen.findByLabelText("Description"), " edited");
+    await user.keyboard("{Escape}");
+    await user.click(await screen.findByTestId("unsaved-confirm"));
+
+    // The sheet is closed. Now open a different agent.
+    await waitFor(() => expect(screen.queryByLabelText("Description")).not.toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "edit the next one" }));
+
+    await screen.findByLabelText("Description");
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 });

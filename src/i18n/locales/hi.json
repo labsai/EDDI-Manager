@@ -3721,7 +3721,8 @@
     "dashboard": {
       "assembleTaskForce": "टास्क फोर्स बनाएं",
       "bulkDeleteConfirm": "इससे चुनी गई सभी टास्क फोर्स भंग हो जाएंगी और यह कार्रवाई पूर्ववत नहीं की जा सकती।",
-      "bulkDeleteTitle": "{{count}} टास्क फोर्स भंग करें?",
+      "bulkDeleteTitle_one": "क्या यह टास्क फोर्स भंग करें?",
+      "bulkDeleteTitle_other": "{{count}} टास्क फोर्स भंग करें?",
       "cancel": "रद्द करें",
       "deleteConfirm": "क्या आप वाकई इस टास्क फोर्स को भंग करना चाहते हैं? यह कार्रवाई पूर्ववत नहीं की जा सकती।",
       "deleteError": "टास्क फोर्स हटाने में विफल",
@@ -3831,7 +3832,6 @@
     "tabInsights": "अंतर्दृष्टि",
     "tabThreads": "थ्रेड",
     "templates": {
-      "deleteConfirm": "यह टेम्पलेट हटाएं?",
       "deleteNamedConfirm": "“{{name}}” आपके सहेजे गए टेम्पलेट से हटा दिया जाएगा।",
       "deleteTitle": "टेम्पलेट हटाएं?",
       "deleted": "टेम्पलेट हटाया गया"

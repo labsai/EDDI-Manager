@@ -3751,7 +3751,9 @@
     "dashboard": {
       "assembleTaskForce": "Constituer une task force",
       "bulkDeleteConfirm": "Cette action dissout chaque task force sélectionnée et est irréversible.",
-      "bulkDeleteTitle": "Dissoudre {{count}} task forces ?",
+      "bulkDeleteTitle_many": "Dissoudre {{count}} task forces ?",
+      "bulkDeleteTitle_one": "Dissoudre cette task force ?",
+      "bulkDeleteTitle_other": "Dissoudre {{count}} task forces ?",
       "cancel": "Annuler",
       "deleteConfirm": "Voulez-vous vraiment dissoudre cette task force ? Cette action est irréversible.",
       "deleteError": "Échec de la suppression de la task force",
@@ -3861,7 +3863,6 @@
     "tabInsights": "Analyses",
     "tabThreads": "Fils",
     "templates": {
-      "deleteConfirm": "Supprimer ce modèle ?",
       "deleteNamedConfirm": "“{{name}}” sera retiré de vos modèles enregistrés.",
       "deleteTitle": "Supprimer le modèle ?",
       "deleted": "Modèle supprimé"
