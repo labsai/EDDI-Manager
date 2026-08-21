@@ -13,9 +13,15 @@
  * keeps passing while guarding nothing. A gate whose failure mode is silent
  * success is the exact thing this whole job exists to argue against.
  *
+ * Counts VALID mutants — everything except `Ignored` — because that is what the
+ * score is computed over. `ignoreStatic` marks module-level mutants `Ignored`
+ * and they never run; 70 of the 1,492 in a normal run are in that state. A
+ * count that included them would report a healthy number for a run in which
+ * every single mutant was skipped and the score was still NaN.
+ *
  * Deliberately a floor of one rather than a fixed expected count: narrowing the
  * scope on purpose is legitimate and should not need this file edited in the
- * same commit. The count is printed so a large unintended drop is visible in
+ * same commit. The counts are printed so a large unintended drop is visible in
  * the log even though it does not fail here.
  */
 
@@ -33,16 +39,23 @@ try {
 }
 
 const files = Object.entries(report.files ?? {});
-const total = files.reduce((sum, [, file]) => sum + (file.mutants?.length ?? 0), 0);
+const mutants = files.flatMap(([path, file]) => (file.mutants ?? []).map((m) => ({ ...m, path })));
+const valid = mutants.filter((m) => m.status !== "Ignored");
 
-if (total === 0) {
-  console.error("Stryker tested 0 mutants, and scored that NaN rather than failing.");
-  console.error("Nothing was verified. Check the `mutate` globs in stryker.config.json");
-  console.error("still match real files — a moved or renamed file looks exactly like this.");
+if (valid.length === 0) {
+  console.error(`Stryker tested 0 mutants, and scored that NaN rather than failing.`);
+  console.error(`Nothing was verified. ${mutants.length} mutant(s) were generated and all`);
+  console.error("were ignored, or none were generated at all — check the `mutate` globs in");
+  console.error("stryker.config.json still match real files. A moved or renamed file, or a");
+  console.error("scope in which every mutant is static, both look exactly like this.");
   process.exit(1);
 }
 
-console.log(`Mutants tested: ${total} across ${files.length} file(s).`);
-for (const [path, file] of files.sort((a, b) => b[1].mutants.length - a[1].mutants.length)) {
-  console.log(`  ${String(file.mutants.length).padStart(5)}  ${path}`);
+const ignored = mutants.length - valid.length;
+console.log(`Mutants tested: ${valid.length} across ${files.length} file(s) (${ignored} ignored).`);
+
+const perFile = new Map();
+for (const m of valid) perFile.set(m.path, (perFile.get(m.path) ?? 0) + 1);
+for (const [path, n] of [...perFile].sort((a, b) => b[1] - a[1])) {
+  console.log(`  ${String(n).padStart(5)}  ${path}`);
 }

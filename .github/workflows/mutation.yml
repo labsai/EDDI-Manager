@@ -12,9 +12,14 @@ name: Mutation Testing
 #
 # ## Why this is not a normal PR gate
 #
-# A full run is ~50 minutes: Stryker first replays the instrumented suite once
-# to learn which tests reach which code (~11 min), then runs ~1,400 mutants.
-# Putting that in front of every PR would be indefensible, and a job like that
+# Measured on this runner: 18m42s end to end — 2m32s replaying the instrumented
+# suite once (1,574 tests) so Stryker learns which tests reach which code, then
+# ~16 minutes for ~1,400 mutants. That first step is not a fixed cost: it tracks
+# how widely the mutated files are imported, and keeping api-client.ts in scope
+# pulled 4,349 tests into it instead of 1,574 — half of why that file is out of
+# scope (see stryker.config.json).
+#
+# Nineteen minutes is still too much in front of every PR, and a job like that
 # gets switched off within a fortnight. So it runs only when a PR touches the
 # guarded scope — see `paths:` below. Most PRs skip it entirely and pay nothing.
 #
@@ -63,7 +68,7 @@ on:
       # package.json and package-lock.json are deliberately NOT here, and the
       # reason is the same for both: renovate.json pins devDependencies
       # (`rangeStrategy: pin`), so every bump edits package.json too, and minor
-      # and patch bumps automerge. Listing either would put ~50 minutes in
+      # and patch bumps automerge. Listing either would put ~20 minutes in
       # front of nearly every Renovate PR — which is both the "drift no PR
       # caused" case the weekly run below exists for, and the surest way to
       # get this job switched off. A deliberate change to what the gate does
@@ -88,10 +93,10 @@ jobs:
   mutation:
     name: Guarded scope
     runs-on: ubuntu-latest
-    # ~50 minutes locally at concurrency 4, which a 4-vCPU ubuntu-latest runner
-    # matches (Stryker's default is cpuCount - 1, except at 4 or fewer, where
-    # it uses all of them). Deliberately loose all the same: this exists to
-    # catch a hang, not to police the runtime.
+    # 18m42s observed. Loose by an order of magnitude on purpose: this exists to
+    # catch a hang, not to police the runtime, and the same work has taken 51
+    # minutes on a loaded laptop. (Stryker's default concurrency is cpuCount - 1,
+    # except at 4 or fewer, where it uses all of them.)
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v7

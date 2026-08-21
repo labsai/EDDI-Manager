@@ -100,12 +100,13 @@
   "ignoreStatic": true,
   "_dryRunTimeout_comment": [
     "Stryker runs the WHOLE suite once up front, instrumented, to learn which",
-    "tests touch which code. For this scope that is 1,537 tests in ~11 minutes.",
+    "tests touch which code. On CI that is 1,574 tests in 2m32s. On a loaded",
+    "developer machine the same step has taken 11 and 26 minutes on two runs of",
+    "an identical config, which is the spread this timeout has to survive.",
     "",
     "The cost is not fixed — it tracks how widely the mutated files are imported.",
-    "With api-client.ts in scope the same step pulled in 4,349 tests and took",
-    "16m54s and 26m08s on two runs of the identical config, which is the other",
-    "half of why that file is excluded above.",
+    "With api-client.ts in scope the same step pulled in 4,349 tests instead of",
+    "1,574, which is the other half of why that file is excluded above.",
     "",
     "Not worked around by pointing Stryker at a subset of TEST files: with",
     "perTest coverage the per-mutant runs already execute only the handful of",
@@ -113,9 +114,9 @@
     "only risks reporting a mutant as survived because the test that would have",
     "caught it was hidden, and a gate that cries wolf gets deleted.",
     "",
-    "30, not the 5-minute default it blew through on the first attempt, and not",
-    "11: CI runners are slower, and the spread between two identical local runs",
-    "was already 9 minutes."
+    "30, against a 5-minute default it blew through on the first attempt. That is",
+    "twelve times what CI needs; it is sized for the slow local case, and it is a",
+    "hang-catcher rather than a budget."
   ],
   "dryRunTimeoutMinutes": 30,
   "vitest": {

@@ -138,10 +138,12 @@ has an empty body and falls through to the same early return. Read a survivor as
 a question rather than a verdict, and check which kind it is before writing a
 test for it. The HTML report lands in `reports/mutation/`.
 
-Budget about **50 minutes** for the full scope. Roughly 11 of those go on a
-single instrumented replay of the suite, before the first mutant runs, so
-Stryker can learn which tests reach which code; the rest covers ~1,400
-mutants. That first step is why the scope is kept small.
+Budget about **20 minutes**: CI runs the full scope in 18m42s, of which 2m32s
+is a single instrumented replay of the suite before the first mutant runs, so
+Stryker can learn which tests reach which code. Locally it depends entirely on
+what else your machine is doing — the same run has taken 51 minutes here. That
+first step is why the scope is kept small: it grows with how widely the mutated
+files are imported, not with how many of them there are.
 
 Two things are deliberately **not** measured, each argued in
 `stryker.config.json` with the measurement that decided it:
@@ -173,7 +175,7 @@ and on demand via `workflow_dispatch`.
 
 `package.json` and `package-lock.json` are deliberately **not** triggers.
 `renovate.json` pins devDependencies, so every bump edits both, and minor and
-patch bumps automerge — listing either would put ~50 minutes in front of nearly
+patch bumps automerge — listing either would put ~20 minutes in front of nearly
 every Renovate PR. A dependency bump changing behaviour is exactly the drift the
 weekly run exists to catch, and an hour on every dependency PR is how a job like
 this gets switched off instead.
