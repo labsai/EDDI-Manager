@@ -188,10 +188,27 @@ test.describe("Agent Lifecycle — Full Stack", () => {
     const convId = createRes.headers()["location"]!.split("/").filter(Boolean).pop()!;
     conversationsToCleanup.push(convId);
 
+    // A conversation with no steps renders an empty transcript, so creating one
+    // and asserting only the page shell would leave this test unable to fail on
+    // its own name. Drive one real turn through the deployed agent first —
+    // plain text, which is what `sendMessage` posts.
+    const turn = `detail-view probe ${convId}`;
+    const sendRes = await request.post(
+      `${API_BASE}/agents/${convId}?returnDetailed=false&returnCurrentStepOnly=true`,
+      { headers: { "Content-Type": "text/plain" }, data: turn }
+    );
+    expect(
+      sendRes.ok(),
+      `could not send a turn to ${convId} (HTTP ${sendRes.status()})`,
+    ).toBe(true);
+
     await navigateTo(page, `/manage/conversationview/${convId}`);
 
-    // Should show conversation detail content
-    await expect(page.locator("main")).toBeVisible();
+    // The step this test is named for: the turn we just sent has to be on screen.
+    await expect(page.getByTestId("conversation-chat")).toContainText(turn, {
+      timeout: 15_000,
+    });
+
     // Back link should be present
     await expect(
       page.getByText(/back to conversations/i)
