@@ -45,6 +45,11 @@ describe("extractVaultKeyName", () => {
     ["whitespace only", "   "],
     ["a lookalike prefix", "myvault:MY_KEY"],
     ["the scheme with no name", "${vault:}"],
+    // The regex is module-level, so its mutants are static and this file's
+    // 100% does not speak for them. Dropping the closing end-of-string anchor
+    // makes this case return "MY_KEY" — a pasted secret coming back as a key
+    // name, which is the one thing the module exists to prevent.
+    ["a reference with trailing content", "${vault:MY_KEY} plus a pasted secret"],
   ])("returns null for %s", (_label, value) => {
     expect(extractVaultKeyName(value)).toBeNull();
   });

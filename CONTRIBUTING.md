@@ -120,6 +120,14 @@ npm run test:mutation
 npm run test:mutation:file -- src/lib/operator/gate-guard.ts
 ```
 
+Three things about that second command, all of which will bite otherwise:
+it inherits `thresholds.break`, so pointing it at a file that is *already*
+below the floor exits 1 without you having broken anything (`write-canary.ts`
+is at 75%); `--mutate` **replaces** the config's list rather than narrowing it,
+so the `system-prompt.ts` and `__tests__` exclusions do not apply; and multiple
+files must be comma-separated, because a second space-separated path is parsed
+as the config-file argument instead.
+
 A **survived** mutant means the code was broken and every test still passed —
 that line is unverified, whatever the coverage report says. The HTML report
 lands in `reports/mutation/`.
@@ -145,11 +153,21 @@ Three things are deliberately **not** measured, each argued at length in
 reason.) None of these are unimportant; they are guarded by ordinary unit
 tests instead.
 
-CI runs this three ways: on a PR that touches the guarded scope or the files
-that decide what it measures, weekly on a schedule, and on demand via
-`workflow_dispatch`. `package-lock.json` is not a trigger — a dependency bump
-is exactly the drift the weekly run exists to catch, and an extra hour on every
-Dependabot PR is how a job like this gets switched off.
+CI runs this three ways: on a PR that touches the guarded scope, the tests that
+cover it, or the config that decides what it measures; weekly on a schedule;
+and on demand via `workflow_dispatch`.
+
+`package.json` and `package-lock.json` are deliberately **not** triggers.
+`renovate.json` pins devDependencies, so every bump edits both, and minor and
+patch bumps automerge — listing either would put ~50 minutes in front of nearly
+every Renovate PR. A dependency bump changing behaviour is exactly the drift the
+weekly run exists to catch, and an hour on every dependency PR is how a job like
+this gets switched off instead.
+
+Do **not** make this job a required status check. A path-filtered workflow that
+does not run reports neither success nor failure, so every PR that leaves the
+guarded scope alone — which is most of them — would sit blocked on a check that
+is never going to arrive.
 
 `thresholds.break` is a ratchet: raise it when the score rises, never lower it
 to make a build pass. A drop means a test stopped noticing something it used

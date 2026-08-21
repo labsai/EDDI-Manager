@@ -10,19 +10,25 @@
     "",
     "The scope is the operator's security guards, the approval logic behind",
     "them, and the version comparison the update banner is built on. Widening",
-    "it is not free and not always possible — read the two notes below before",
-    "adding anything, because both exclusions were arrived at by measurement,",
-    "not taste."
+    "it is not free and not always possible — read the notes below before",
+    "adding anything. Three things are excluded from the scope on purpose:",
+    "system-prompt.ts and api-client.ts (both argued under `mutate`), and",
+    "static mutants (argued under `ignoreStatic`). Two of the three were",
+    "decided by measurement; the system-prompt one is a judgement about prose."
   ],
   "packageManager": "npm",
   "testRunner": "vitest",
   "reporters": [
     "html",
+    "json",
     "clear-text",
     "progress"
   ],
   "htmlReporter": {
     "fileName": "reports/mutation/index.html"
+  },
+  "jsonReporter": {
+    "fileName": "reports/mutation/mutation.json"
   },
   "_mutate_comment": [
     "TWO DELIBERATE EXCLUSIONS.",
@@ -52,6 +58,31 @@
     "src/lib/hitl-tool-approvals.ts",
     "!src/lib/operator/system-prompt.ts",
     "!src/**/__tests__/**"
+  ],
+  "_ignorePatterns_comment": [
+    "Stryker does NOT read .gitignore. It walks the working directory and copies",
+    "what it finds into a sandbox PER TEST RUNNER — four of them by default — so",
+    "anything large and irrelevant is copied four times before a single mutant",
+    "runs. `dist` alone is 39 MB here.",
+    "",
+    "`.claude` matters most for anyone running this from the main checkout",
+    "rather than a worktree: `.claude/worktrees/` holds full checkouts of other",
+    "branches. Vitest already excludes it from test collection for the same",
+    "reason.",
+    "",
+    "NOT excluded, and it looks like it should be: `.design-sync`. It is 145 KB",
+    "of config that appears to have nothing to do with the tests, but",
+    "src/__tests__/design-sync-tsconfig.test.ts reads",
+    "`.design-sync/config.json` off disk — drop it from the sandbox and that",
+    "test fails inside the dry run, which reads as 'your suite is broken'",
+    "rather than 'your sandbox is missing a file'."
+  ],
+  "ignorePatterns": [
+    "dist",
+    "coverage",
+    "playwright-report",
+    "test-results",
+    ".claude"
   ],
   "coverageAnalysis": "perTest",
   "timeoutMS": 60000,

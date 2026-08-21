@@ -41,27 +41,36 @@ on:
   pull_request:
     branches: [main]
     paths:
-      # The guarded sources, mirroring `mutate` in stryker.config.json —
-      # including its exclusion, so a prose-only edit to the system prompt does
-      # not book a 50-minute no-op.
+      # The guarded sources. Mirrors `mutate` in stryker.config.json, including
+      # its system-prompt exclusion, so a prose-only edit there does not book a
+      # 50-minute no-op. (It does not mirror the `!src/**/__tests__/**` entry:
+      # not mutating tests is not a reason to skip the job when they change —
+      # quite the opposite, see below.)
       - "src/lib/operator/**"
       - "!src/lib/operator/system-prompt.ts"
       - "src/lib/api/updates.ts"
       - "src/lib/hitl-tool-approvals.ts"
-      # And the files that decide what the gate measures at all: the config
-      # itself, the scripts that invoke it, and the Vitest/Vite setup Stryker
-      # runs the suite through. A change to any of these can move the score
-      # without touching a guarded source file.
+      # The tests that kill those mutants. `src/lib/operator/**` already covers
+      # its own `__tests__`, but the other two scope roots keep their tests
+      # elsewhere, and weakening one drops the score without touching a guarded
+      # source file.
+      - "src/lib/api/__tests__/updates.test.ts"
+      - "src/lib/__tests__/hitl-tool-approvals.test.ts"
+      # And the files that decide what is measured at all.
       - "stryker.config.json"
       - ".github/workflows/mutation.yml"
-      - "package.json"
+      - ".github/scripts/assert-mutants-tested.mjs"
       - "vitest.config.ts"
       - "vite.config.ts"
       #
-      # package-lock.json is deliberately NOT here. It changes on every
-      # dependency bump, and a Dependabot PR is exactly the "drift no PR
-      # caused" case the weekly run below exists to catch. Adding an hour to
-      # every dependency PR is the surest way to get this job switched off.
+      # package.json and package-lock.json are deliberately NOT here, and the
+      # reason is the same for both: renovate.json pins devDependencies
+      # (`rangeStrategy: pin`), so every bump edits package.json too, and minor
+      # and patch bumps automerge. Listing either would put ~50 minutes in
+      # front of nearly every Renovate PR — which is both the "drift no PR
+      # caused" case the weekly run below exists for, and the surest way to
+      # get this job switched off. A deliberate change to what the gate does
+      # goes through stryker.config.json, which IS listed.
   schedule:
     # Sundays 03:00 UTC — off the critical path.
     - cron: "0 3 * * 0"
@@ -82,8 +91,9 @@ jobs:
   mutation:
     name: Guarded scope
     runs-on: ubuntu-latest
-    # ~50 minutes locally at concurrency 4. CI runners are slower and Stryker
-    # defaults to cpuCount - 1, so this is deliberately loose; it exists to
+    # ~50 minutes locally at concurrency 4, which a 4-vCPU ubuntu-latest runner
+    # matches (Stryker's default is cpuCount - 1, except at 4 or fewer, where
+    # it uses all of them). Deliberately loose all the same: this exists to
     # catch a hang, not to police the runtime.
     timeout-minutes: 150
     steps:
@@ -100,7 +110,15 @@ jobs:
         run: npm ci
 
       - name: Run mutation testing
-        run: npx stryker run
+        # The same command CONTRIBUTING tells you to run, so the two cannot
+        # drift apart.
+        run: npm run test:mutation
+
+      - name: Fail if the run tested nothing
+        # Stryker scores an empty run NaN, and `NaN < break` is false — so a
+        # `mutate` glob that stops matching passes green having verified
+        # nothing. See the script for why that is one rename away.
+        run: node .github/scripts/assert-mutants-tested.mjs
 
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}

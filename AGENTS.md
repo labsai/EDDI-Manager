@@ -107,13 +107,13 @@ runs it on a PR that touches the guarded scope, weekly on a schedule, and on
 demand via `workflow_dispatch`.
 
 The scope is `src/lib/operator/**` (**except `system-prompt.ts`**),
-`src/lib/api/updates.ts` and `src/lib/hitl-tool-approvals.ts`. Four things are
-excluded on purpose and each is argued in `stryker.config.json`: tests
-themselves (`src/**/__tests__/**`), `system-prompt.ts` (59% English prose in
-template literals), `api-client.ts` (75 importers, so every mutant replays most
-of the suite), and static mutants — module-level constants, which cost a full
-runner restart each. A constant you need guarded needs a unit test asserting its
-contents; this gate will not do it.
+`src/lib/api/updates.ts` and `src/lib/hitl-tool-approvals.ts`. Three exclusions
+are argued at length in `stryker.config.json`: `system-prompt.ts` (59% English
+prose in template literals), `api-client.ts` (75 importers, so each of its
+mutants replays most of the suite), and static mutants — module-level
+constants, which cost a full runner restart each. A constant you need guarded
+needs a unit test asserting its contents; this gate will not do it. (Tests
+themselves are excluded too, for the obvious reason.)
 
 If you change a file in scope, expect the job and read its survivors: a survivor
 is a line that was broken while every test still passed. See CONTRIBUTING.md.

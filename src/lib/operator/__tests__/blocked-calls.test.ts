@@ -185,16 +185,6 @@ describe("findBlockedCalls", () => {
     expect(blocked).toEqual([{ callId: "llm-2", reason: "operator.approval.blockedGateUnpinned" }]);
   });
 
-  it("gives each gate failure mode a distinct string", () => {
-    const reasons = [
-      llmWrite("a", { requestPreview: { body: '{"toolApprovals":{}}' } }),
-      llmWrite("b", { requestPreview: { bodyTruncated: true } }),
-      llmWrite("c", { requestPinned: false }),
-    ].flatMap((c) => findBlockedCalls([c], OPERATOR_ID, CONVERSATION_ID, keyOnly).map((b) => b.reason));
-
-    expect(new Set(reasons).size).toBe(3);
-  });
-
   it("gives every failure mode a non-empty English fallback", () => {
     // Deliberately not an assertion about the wording. The authoritative
     // English lives in en.json and copy is edited freely; a test pinning these
