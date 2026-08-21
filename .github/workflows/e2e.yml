@@ -53,7 +53,7 @@ jobs:
   # `backend-tests` below stays push-only: it runs the browser-driven full-stack
   # tier across two databases, which is minutes of runner time per PR. But the
   # integration tier on its own is the cheap half and the half that catches
-  # contract breaks — 22 tests, `{ request }` only, no `page` anywhere, so no
+  # contract breaks — 44 tests, `{ request }` only, no `page` anywhere, so no
   # browser download. Leaving it until after the merge meant the contract was
   # verified *after* the merge that broke it.
   #
@@ -75,17 +75,14 @@ jobs:
           node-version: 20
           cache: npm
 
+      # No `eddi_image_tag` plumbing here: that input only exists on
+      # workflow_dispatch, and this job is pull_request-only, so it would always
+      # resolve to `latest` anyway. The pinning path lives in `backend-tests`.
       - name: Pull EDDI backend image
-        env:
-          EDDI_IMAGE: labsai/eddi:${{ inputs.eddi_image_tag || 'latest' }}
         run: |
-          echo "Pulling $EDDI_IMAGE"
-          if ! docker pull "$EDDI_IMAGE"; then
-            echo "::error::Could not pull $EDDI_IMAGE from Docker Hub."
+          if ! docker pull labsai/eddi:latest; then
+            echo "::error::Could not pull labsai/eddi:latest from Docker Hub."
             exit 1
-          fi
-          if [ "$EDDI_IMAGE" != "labsai/eddi:latest" ]; then
-            docker tag "$EDDI_IMAGE" labsai/eddi:latest
           fi
 
       - name: Start backend infrastructure
@@ -108,6 +105,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Advisory here, blocking on push. The EDDI image tracks `latest`, so the
+      # backend can gain an operation with no PR touching it — a hard failure
+      # would then redden every open PR on a step none of them changed, fixable
+      # only by someone booting a backend locally. The push-side job below
+      # fails properly, which is where a red build blocks nobody review cycle.
+      - name: Check the OpenAPI snapshot still matches this backend (advisory)
+        continue-on-error: true
+        run: |
+          node .github/scripts/refresh-openapi-operations.mjs
+          if ! git diff --exit-code -- src/test/mocks/openapi-operations.json; then
+            echo "::warning::The EDDI API surface has changed and src/test/mocks/openapi-operations.json is stale."
+            echo "::warning::Run: npm run openapi:refresh against a local backend, then commit the result."
+            exit 1
+          fi
+          echo "Snapshot matches the running backend."
       # No `playwright install` — every integration spec takes `{ request }` and
       # none takes `{ page }`, so no browser is ever launched. Adding the install
       # back is ~1 minute per run for nothing; if a spec here ever needs a page,
@@ -115,16 +127,6 @@ jobs:
       - name: Run integration tests
         run: npm run test:e2e:integration
 
-      - name: Check the OpenAPI snapshot still matches this backend
-        run: |
-          node .github/scripts/refresh-openapi-operations.mjs
-          if ! git diff --exit-code -- src/test/mocks/openapi-operations.json; then
-            echo "::error::EDDI's API surface has changed and src/test/mocks/openapi-operations.json is stale."
-            echo "::error::Run 'node .github/scripts/refresh-openapi-operations.mjs' against a local backend and commit the result."
-            echo "::error::The diff above is exactly what changed — review it for endpoints the Manager relies on."
-            exit 1
-          fi
-          echo "Snapshot matches the running backend."
 
       - name: Collect backend logs
         if: ${{ !cancelled() }}
@@ -221,25 +223,29 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      # Runs BEFORE the test steps, deliberately. Steps stop at the first
+      # failure, so parked after the fullstack tier this never executed on any
+      # run where that tier was red — which was every run for five days. It
+      # needs a live backend, nothing more, so it belongs here.
+      #
+      # Blocking on push, unlike the advisory copy in `integration-tests`: the
+      # EDDI image tracks `latest` and moves between merges, and main is where
+      # that first has to be noticed.
+      - name: Check the OpenAPI snapshot still matches this backend
+        run: |
+          node .github/scripts/refresh-openapi-operations.mjs
+          if ! git diff --exit-code -- src/test/mocks/openapi-operations.json; then
+            echo "::error::The EDDI API surface has changed and src/test/mocks/openapi-operations.json is stale."
+            echo "::error::Run: npm run openapi:refresh against a local backend, then commit the result."
+            exit 1
+          fi
+          echo "Snapshot matches the running backend."
       - name: Run integration tests (${{ matrix.database }})
         run: npm run test:e2e:integration
 
       - name: Run full-stack tests (${{ matrix.database }})
         run: npm run test:e2e:fullstack
 
-      # Repeated from `integration-tests` on purpose: that job is PR-only, and
-      # the snapshot can go stale without any PR touching it — the EDDI image is
-      # tracked as `latest`, so the backend moves underneath us between merges.
-      # Pushes to main are where that first becomes visible.
-      - name: Check the OpenAPI snapshot still matches this backend
-        run: |
-          node .github/scripts/refresh-openapi-operations.mjs
-          if ! git diff --exit-code -- src/test/mocks/openapi-operations.json; then
-            echo "::error::EDDI's API surface has changed and src/test/mocks/openapi-operations.json is stale."
-            echo "::error::Run 'npm run openapi:refresh' against a local backend and commit the result."
-            exit 1
-          fi
-          echo "Snapshot matches the running backend."
 
       - name: Collect backend logs
         if: ${{ !cancelled() }}

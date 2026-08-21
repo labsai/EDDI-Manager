@@ -17,14 +17,14 @@ import {
 const RESOURCE_TYPES = [
   {
     name: "Rules",
-    urlType: "behavior",
+    urlType: "rules",
     store: "rulestore",
     plural: "rulesets",
     createPayload: { behaviorGroups: [] },
   },
   {
     name: "API Calls",
-    urlType: "httpcalls",
+    urlType: "apicalls",
     store: "apicallstore",
     plural: "apicalls",
     createPayload: { targetServerUrl: "", httpCalls: [] },
@@ -38,14 +38,14 @@ const RESOURCE_TYPES = [
   },
   {
     name: "Dictionaries",
-    urlType: "dictionaries",
+    urlType: "dictionary",
     store: "dictionarystore",
     plural: "dictionaries",
     createPayload: { words: [], phrases: [], regExs: [] },
   },
   {
     name: "LLM",
-    urlType: "langchain",
+    urlType: "llm",
     store: "llmstore",
     plural: "llms",
     createPayload: { tasks: [] },

@@ -70,9 +70,17 @@ if (operations.length === 0) {
 
 operations.sort();
 
-const previous = fs.existsSync(OUT)
-  ? JSON.parse(fs.readFileSync(OUT, "utf8")).operations ?? []
-  : [];
+// Read only to compute the added/removed diff, so a corrupt existing snapshot
+// must not throw a raw SyntaxError out of the one command that would replace
+// it. The fetch path above is careful; this was not.
+let previous = [];
+try {
+  if (fs.existsSync(OUT)) {
+    previous = JSON.parse(fs.readFileSync(OUT, "utf8")).operations ?? [];
+  }
+} catch {
+  console.warn("Existing snapshot is unreadable — writing a fresh one, skipping the diff.");
+}
 
 fs.writeFileSync(
   OUT,
