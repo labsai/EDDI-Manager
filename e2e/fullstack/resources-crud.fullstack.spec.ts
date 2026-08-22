@@ -20,21 +20,12 @@ interface ResourceTypeCase {
   store: string;
   plural: string;
   createPayload: Record<string, unknown>;
-  /** Set when the BACKEND cannot list this type — see the Rules entry. */
-  backendDoesNotList?: boolean;
 }
 
 const RESOURCE_TYPES: ResourceTypeCase[] = [
   {
     name: "Rules",
     urlType: "rules",
-    // EDDI accepts POST /rulestore/rulesets with 201 and never registers a
-    // descriptor for it, so the resource exists and is not listed. Verified
-    // against a live backend twice: polling the descriptors endpoint for 30s
-    // after a successful create returns [] on both MongoDB and Postgres, and
-    // the same POST/GET pair by hand against a local EDDI behaves identically.
-    // Nothing on the Manager side can make an unlisted resource appear.
-    backendDoesNotList: true,
     store: "rulestore",
     plural: "rulesets",
     createPayload: { behaviorGroups: [] },
@@ -86,6 +77,24 @@ test.describe("Resources — Full Stack", () => {
 
   test.beforeAll(async ({ request }) => {
     await waitForBackend(request);
+
+    // Absorb the first-write penalty before any assertion depends on it.
+    //
+    // On a freshly started EDDI the FIRST resource created never gets a
+    // descriptor: the store answers 201 and `…/descriptors` stays [] for at
+    // least 30 seconds. It is positional, not type-specific — established by
+    // marking the first entry expected-to-fail and watching the failure move to
+    // whichever type became first. So this creates and deletes one throwaway
+    // resource, and the cases below all run against a warmed store.
+    const warmup = await request.post(`${API_BASE}/apicallstore/apicalls`, {
+      data: { targetServerUrl: "", httpCalls: [] },
+    });
+    if (warmup.status() === 201) {
+      const { id, version } = extractIdFromLocation(
+        warmup.headers()["location"]!
+      );
+      await cleanupResource(request, "apicallstore/apicalls", id, version);
+    }
   });
 
   test.afterAll(async ({ request }) => {
@@ -115,13 +124,6 @@ test.describe("Resources — Full Stack", () => {
       page,
       request,
     }) => {
-      // Marked expected-to-fail, not skipped. A skip would go quiet; this stays
-      // red the moment EDDI starts listing rulesets, which is the signal to
-      // delete both this line and the flag above. The lint rule that bans these
-      // says a genuine case may disable it with a reason on the line — this is
-      // that case, and the reason is on the flag.
-      // eslint-disable-next-line no-restricted-syntax -- upstream EDDI gap, see backendDoesNotList
-      test.fail(rt.backendDoesNotList === true, `EDDI does not list ${rt.store} descriptors`);
 
       // Create resource via API
       const basePath = `${rt.store}/${rt.plural}`;
