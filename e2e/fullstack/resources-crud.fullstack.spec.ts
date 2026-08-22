@@ -22,14 +22,10 @@ interface ResourceTypeCase {
   createPayload: Record<string, unknown>;
 }
 
+// Rules is absent on purpose — see the characterisation test at the end of this
+// file. Its store never lists a ruleset, warm or cold, so unlike the five below
+// the warm-up cannot rescue it.
 const RESOURCE_TYPES: ResourceTypeCase[] = [
-  {
-    name: "Rules",
-    urlType: "rules",
-    store: "rulestore",
-    plural: "rulesets",
-    createPayload: { behaviorGroups: [] },
-  },
   {
     name: "API Calls",
     urlType: "apicalls",
@@ -220,6 +216,69 @@ test.describe("Resources — Full Stack", () => {
 
     await page.getByTestId("resource-type-behavior").click();
     await expect(page).toHaveURL(/\/manage\/resources\/behavior/);
+  });
+});
+
+/**
+ * A characterisation test: it asserts what EDDI currently DOES, so the gap
+ * cannot be quietly forgotten, and it goes red when the gap closes.
+ *
+ * Two separate effects turned up while isolating this, and only one of them is
+ * the tests' to fix:
+ *
+ *  1. The first write to ANY store is not listed. Fixed above by warming each
+ *     store, which is why the other five types pass.
+ *  2. `rulestore` never lists a ruleset at all — not the first, not the second.
+ *     A warm-up run created and deleted a ruleset, created another, polled the
+ *     descriptors endpoint for thirty seconds, and got nothing, on both MongoDB
+ *     and Postgres. Reproduced by hand against a local EDDI.
+ *
+ * The document itself is fine: 201 on create, retrievable by id. It is the
+ * descriptor that never appears, and nothing in this repo can conjure one.
+ */
+test.describe("Rules — known backend gap", () => {
+  test.describe.configure({ timeout: 120_000 });
+
+  test("EDDI still does not list a created ruleset", async ({ request }) => {
+    await waitForBackend(request);
+
+    // Warm the store first, so this cannot be mistaken for effect (1).
+    const warmup = await request.post(`${API_BASE}/rulestore/rulesets`, {
+      data: { behaviorGroups: [] },
+    });
+    if (warmup.status() === 201) {
+      const warm = extractIdFromLocation(warmup.headers()["location"]!);
+      await cleanupResource(request, "rulestore/rulesets", warm.id, warm.version);
+    }
+
+    const created = await request.post(`${API_BASE}/rulestore/rulesets`, {
+      data: { behaviorGroups: [] },
+    });
+    expect(created.status()).toBe(201);
+    const { id, version } = extractIdFromLocation(created.headers()["location"]!);
+
+    try {
+      // It exists...
+      const fetched = await request.get(
+        `${API_BASE}/rulestore/rulesets/${id}?version=${version}`
+      );
+      expect(fetched.ok()).toBe(true);
+
+      // ...and it is still not listed. A generous window, so a slow runner
+      // cannot be mistaken for the fix.
+      await new Promise((resolve) => setTimeout(resolve, 15_000));
+      const listed = await request.get(
+        `${API_BASE}/rulestore/rulesets/descriptors?limit=100&index=0`
+      );
+      const descriptors = (await listed.json()) as Array<{ resource?: string }>;
+
+      expect(
+        descriptors.some((d) => (d.resource ?? "").includes(id)),
+        "the backend gap is fixed — EDDI now lists created rulesets. Delete this test and put the Rules entry back in RESOURCE_TYPES.",
+      ).toBe(false);
+    } finally {
+      await cleanupResource(request, "rulestore/rulesets", id, version);
+    }
   });
 });
 
