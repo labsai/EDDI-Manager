@@ -18,15 +18,6 @@ import { waitForBackend, API_BASE } from "../integration/integration-helpers";
  */
 
 /**
- * Wait for loading placeholders to disappear, indicating real data has loaded.
- *
- * This carried the same defect the ui tier's `waitForApp` did — waiting on
- * `[class*="animate-pulse"]`, which the never-hiding PlatformStatus dot always
- * matches first, then swallowing the inevitable timeout. It burned the full 15s
- * on every call while waiting for nothing. It now shares the ui tier's
- * placeholder list so the two cannot drift apart, and does not swallow.
- */
-/**
  * Fail the test if the app is running on mocks.
  *
  * `main.tsx` probes `/agentstore/agents/descriptors?limit=1` with a 1500 ms
@@ -48,6 +39,15 @@ async function assertRealBackend(page: Page) {
   ).toBe(false);
 }
 
+/**
+ * Wait for loading placeholders to disappear, indicating real data has loaded.
+ *
+ * This carried the same defect the ui tier's `waitForApp` did — waiting on
+ * `[class*="animate-pulse"]`, which the never-hiding PlatformStatus dot always
+ * matches first, then swallowing the inevitable timeout. It burned the full 15s
+ * on every call while waiting for nothing. It now shares the ui tier's
+ * placeholder list so the two cannot drift apart, and does not swallow.
+ */
 async function waitForDataLoad(page: Page) {
   await expect(
     page.locator(STILL_LOADING),

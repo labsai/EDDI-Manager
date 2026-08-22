@@ -114,8 +114,13 @@ jobs:
         continue-on-error: true
         run: |
           node .github/scripts/refresh-openapi-operations.mjs
-          if ! git diff --exit-code -- src/test/mocks/openapi-operations.json; then
-            echo "::warning::The EDDI API surface has changed and src/test/mocks/openapi-operations.json is stale."
+          # Operations only, same as the push-side copy below: `eddiVersion`
+          # moves on any patch release of an image that tracks `latest`, and a
+          # whole-file diff would warn about an API change that did not happen.
+          if ! git diff --exit-code \
+               -I '"eddiVersion"' \
+               -- src/test/mocks/openapi-operations.json; then
+            echo "::warning::EDDI's API surface has changed and src/test/mocks/openapi-operations.json is stale."
             echo "::warning::Run: npm run openapi:refresh against a local backend, then commit the result."
             exit 1
           fi
