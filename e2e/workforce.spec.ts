@@ -16,18 +16,27 @@ import { waitForApp } from "./e2e-helpers";
  * real query client and a real browser, where a dialog that never mounts or a
  * portal that swallows a click would show up.
  *
- * ## Why these watch the toast and not the network
+ * ## What "nothing was deleted" is asserted through, and two wrong answers
  *
- * The obvious version of this file used `page.route` to count DELETEs. It does
- * not work in this tier and fails in the dangerous direction: MSW answers from a
- * service worker, so a mocked request never reaches the browser's network stack
- * and the route handler never fires. Every "nothing was deleted" assertion then
- * passes because the counter is empty for the wrong reason — vacuously green,
- * which is the exact defect this whole audit exists to remove. Caught because
- * the one POSITIVE assertion in the set failed.
+ * The first version counted DELETEs with `page.route`. That does not work in
+ * this tier and fails in the dangerous direction: MSW answers from a service
+ * worker, so a mocked request never reaches the browser's network stack and the
+ * handler never fires. Every negative assertion passed because the counter was
+ * empty for the wrong reason.
  *
- * The success toast is a real consequence of the mutation resolving, and it is
- * absent when nothing was deleted. So the toast is what these assert on.
+ * The second version asserted the success toast was absent. Also inert, for two
+ * separate reasons: `toHaveCount(0)` returns at its FIRST satisfied poll, and
+ * the toast only mounts after the mutation resolves — so the count is 0 at the
+ * instant the click returns whether or not a delete fired. Even on a slow path
+ * sonner's 4s lifetime expires inside Playwright's 5s retry window. A reviewer
+ * regressed Cancel to call onConfirm and it still passed 13 runs of 14.
+ *
+ * What these assert on now is the bulk toolbar. `handleBulkDelete` ends with
+ * `setSelectedIds(new Set())` and `setBulkMode(false)` on every path, success or
+ * failure, and the toolbar is mounted only while `bulkMode && selectedIds.size
+ * > 0` — so it survives if and only if no delete was attempted. It is a state
+ * assertion rather than an event one, so it retries instead of racing, and it
+ * fails deterministically the moment Cancel starts deleting.
  */
 
 /** The success toast the bulk delete raises, in the singular. */
@@ -57,9 +66,9 @@ test.describe("Workforce dashboard — bulk delete", () => {
 
     // The dialog is up...
     await expect(page.getByRole("dialog")).toBeVisible();
-    // ...and nothing has happened behind it. This used to be false: the click
-    // deleted, and the toast below appeared with no dialog at all.
-    await expect(page.getByText(DELETED_TOAST)).toHaveCount(0);
+    // ...and the selection behind it is intact, which it would not be if the
+    // click had deleted: handleBulkDelete clears bulkMode and unmounts this bar.
+    await expect(page.getByTestId("bulk-delete-btn")).toBeVisible();
   });
 
   test("dismissing the dialog deletes nothing", async ({ page }) => {
@@ -70,7 +79,9 @@ test.describe("Workforce dashboard — bulk delete", () => {
     await dialog.getByRole("button", { name: "Cancel" }).click();
     await expect(dialog).toBeHidden();
 
-    await expect(page.getByText(DELETED_TOAST)).toHaveCount(0);
+    // Still selectable, so nothing was deleted. This is the assertion that goes
+    // red if Cancel is ever wired to the confirm handler.
+    await expect(page.getByTestId("bulk-delete-btn")).toBeVisible();
   });
 
   test("confirming deletes the selected task force", async ({ page }) => {
@@ -80,6 +91,8 @@ test.describe("Workforce dashboard — bulk delete", () => {
     await page.getByRole("dialog").getByRole("button", { name: "Delete" }).click();
 
     await expect(page.getByText(DELETED_TOAST)).toBeVisible({ timeout: 10_000 });
+    // The mirror of the two negatives above: the bar is gone once a delete ran.
+    await expect(page.getByTestId("bulk-delete-btn")).toBeHidden();
   });
 
   test("the dialog says how many are at risk, in the singular", async ({ page }) => {
