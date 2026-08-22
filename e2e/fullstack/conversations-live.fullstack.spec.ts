@@ -87,11 +87,17 @@ test.describe("Conversations — Full Stack", () => {
       skipHealthCheck: true,
     });
 
-    const table = page.locator("table");
-    await expect(table).toBeVisible({ timeout: 15_000 });
+    // The default view is CARDS, not a table: getStoredViewMode falls back to
+    // "card" and this browser profile has no localStorage, so `page.locator("table")`
+    // matched nothing and this test has been red on every push to main. Assert
+    // what the page actually renders by default.
+    const grid = page.getByTestId("conversation-grid");
+    await expect(grid).toBeVisible({ timeout: 15_000 });
 
     // At least our 2 created conversations should appear (auto-retries)
-    await expect(table.locator("tbody tr")).not.toHaveCount(0);
+    await expect(grid.getByTestId(/^conversation-card-/).first()).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test("conversations table shows correct state badges", async ({ page }) => {
