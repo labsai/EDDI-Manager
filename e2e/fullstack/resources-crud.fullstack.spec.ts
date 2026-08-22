@@ -22,6 +22,31 @@ interface ResourceTypeCase {
   createPayload: Record<string, unknown>;
 }
 
+/**
+ * KNOWN FAILURE, unresolved: whichever type runs FIRST does not appear in its
+ * store's descriptor list, and the case for it fails.
+ *
+ * What five dispatches against a live backend established:
+ *
+ *  - It follows POSITION, not type. Rules failed while first; removing Rules
+ *    moved the failure to API Calls; restoring it moved it back.
+ *  - The resource IS created — 201, and retrievable by id. Only the descriptor
+ *    is missing, on both MongoDB and Postgres.
+ *  - It is not a UI or caching problem. Polling the descriptors API directly,
+ *    before any page is opened, fails the same way.
+ *  - No warm-up fixes it: not one create/delete before the suite, not one per
+ *    store inside each case.
+ *  - And a readiness probe in `beforeAll` that waited for a created resource to
+ *    be listed timed out after NINETY seconds — while a case running about a
+ *    minute into the same run passes. Those two facts do not fit together, so
+ *    the mechanism is still unknown and anything written here would be a guess.
+ *    Three guesses have already been wrong.
+ *
+ * It is left failing on purpose. The tier reports one true thing rather than
+ * hiding it behind a skip, and the message now names the store and the id
+ * instead of timing out against a UI locator. Worth raising upstream with the
+ * run ids above rather than absorbing here.
+ */
 const RESOURCE_TYPES: ResourceTypeCase[] = [
   {
     name: "Rules",
@@ -77,45 +102,6 @@ test.describe("Resources — Full Stack", () => {
 
   test.beforeAll(async ({ request }) => {
     await waitForBackend(request);
-
-    // Wait for the DESCRIPTOR mechanism, not just for health.
-    //
-    // Whichever test ran first used to fail — Rules while it was first, API
-    // Calls the moment Rules was removed — with the resource created (201,
-    // retrievable by id) and its store's `…/descriptors` empty for a full
-    // thirty seconds. Neither a per-store warm-up nor a global create/delete
-    // fixed it, because the thing that is not ready is the descriptor
-    // projection itself, and `waitForBackend` only asks whether EDDI is up.
-    //
-    // So this creates a throwaway resource and waits until it is actually
-    // LISTED before any test asserts anything, then removes it.
-    const probe = await request.post(`${API_BASE}/apicallstore/apicalls`, {
-      data: { targetServerUrl: "", httpCalls: [] },
-    });
-    expect(probe.status()).toBe(201);
-    const { id, version } = extractIdFromLocation(probe.headers()["location"]!);
-
-    try {
-      await expect
-        .poll(
-          async () => {
-            const res = await request.get(
-              `${API_BASE}/apicallstore/apicalls/descriptors?limit=100&index=0`
-            );
-            if (!res.ok()) return false;
-            const descriptors = (await res.json()) as Array<{ resource?: string }>;
-            return descriptors.some((d) => (d.resource ?? "").includes(id));
-          },
-          {
-            timeout: 90_000,
-            message:
-              "EDDI never listed a freshly created resource — the descriptor projection is not coming up, and every case below would fail on it",
-          }
-        )
-        .toBe(true);
-    } finally {
-      await cleanupResource(request, "apicallstore/apicalls", id, version);
-    }
   });
 
   test.afterAll(async ({ request }) => {
