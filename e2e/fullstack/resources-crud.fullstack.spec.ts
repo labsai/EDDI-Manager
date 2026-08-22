@@ -109,14 +109,44 @@ test.describe("Resources — Full Stack", () => {
       );
       cleanup.push({ storePath: basePath, id, version });
 
+      // Wait for the BACKEND to list it before opening the page.
+      //
+      // `navigateTo` loads the list, React Query caches whatever the descriptors
+      // endpoint returned, and the page does not refetch on its own — so a
+      // `toBeVisible` poll afterwards re-reads a DOM that will never change. If
+      // the descriptor lands a moment after the POST returns 201, the test waits
+      // ten seconds for a list that was already decided. The first type through
+      // wears it: EDDI creates the collection and its indexes on that first
+      // write, which is visible in the backend log, and `Rules` — first in this
+      // array — is the one that has been failing on every push to main.
+      //
+      // Polling the API first removes the race for every type. It also turns a
+      // genuine 'never listed' into a failure that says so, instead of a UI
+      // assertion timing out with no clue why.
+      await expect
+        .poll(
+          async () => {
+            const res = await request.get(
+              `${API_BASE}/${basePath}/descriptors?limit=100&index=0`
+            );
+            if (!res.ok()) return [];
+            const descriptors = (await res.json()) as Array<{ resource?: string }>;
+            return descriptors.map((d) => d.resource ?? "");
+          },
+          {
+            timeout: 30_000,
+            message: `${rt.name} was created but never appeared in ${basePath}/descriptors`,
+          }
+        )
+        .toEqual(expect.arrayContaining([expect.stringContaining(id)]));
+
       // Navigate to the resource type list page
       await navigateTo(page, `/manage/resources/${rt.urlType}`);
 
-      // The list should contain at least one resource link
-      const resourceLinks = page.locator(
-        `main a[href*="/manage/resources/${rt.urlType}/"]`
-      );
-      await expect(resourceLinks.first()).toBeVisible({ timeout: 10_000 });
+      // The resource THIS test created, by id — not merely 'a link exists'.
+      await expect(
+        page.locator(`main a[href*="/manage/resources/${rt.urlType}/${id}"]`)
+      ).toBeVisible({ timeout: 10_000 });
     });
   }
 
