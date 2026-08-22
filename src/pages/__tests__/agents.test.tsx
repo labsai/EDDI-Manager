@@ -314,11 +314,11 @@ describe("AgentsPage", () => {
       expect(screen.getByTestId("agent-list")).toBeInTheDocument();
     });
 
-    // Asserted through the NAME column, not the date one. The date cell renders
-    // `toLocaleString()`, so it reads "22.8.2026, 01:05:32" here and
-    // "8/22/2026, 1:05:32 AM" on a CI runner — `Date.parse` returns NaN for one
-    // and, worse, a confidently wrong value for the other. Row identity is
-    // locale-independent; the ordering is what is under test either way.
+    // Nothing here parses the date cell. It renders `toLocaleString()`, so it
+    // reads "22.8.2026, 01:05:32" here and "8/22/2026, 1:05:32 AM" on a CI
+    // runner, and `Date.parse` returns NaN for one and a confidently wrong
+    // value for the other. The assertions below compare the column against
+    // itself and against row identity, both of which are locale-independent.
     const modifiedButton = screen.getByLabelText("Sort by last modified");
     await user.click(modifiedButton);
 
@@ -329,6 +329,15 @@ describe("AgentsPage", () => {
     const ascending = column(3);
     const namesNow = column(0);
     expect(ascending.length).toBeGreaterThan(1);
+
+    // Which END is which, not just that the two clicks mirror each other.
+    // `toEqual(reverse)` alone holds under ANY total order, so flipping the
+    // comparator to `b - a` — turning the default newest-first list into
+    // oldest-first, which a user would notice — sailed through it. The fixture's
+    // oldest agent is Appointment Scheduler (2 days) and its newest is IT
+    // Helpdesk Bot (30 minutes).
+    expect(namesNow[0]).toBe("Appointment Scheduler");
+    expect(namesNow[namesNow.length - 1]).toBe("IT Helpdesk Bot");
 
     // A comparator that does nothing leaves the order untouched, so the second
     // click would return the same column rather than its reverse.
@@ -341,9 +350,9 @@ describe("AgentsPage", () => {
     // BOTH alphabetical directions rules out a name comparator.
     //
     // Both directions, because one is not enough: swapping this branch to
-    // `localeCompare` and checking only ascending still passed, since by this
-    // point the second click has put the sort in descending order and the names
-    // came back reverse-alphabetical. Checked, then fixed.
+    // `localeCompare` and checking only the ascending form still passed, since a
+    // name comparator can land either way round depending on sort direction.
+    // Checked, then fixed.
     const alphabetical = [...namesNow].sort((a, b) => a.localeCompare(b));
     expect(namesNow).not.toEqual(alphabetical);
     expect(namesNow).not.toEqual([...alphabetical].reverse());
