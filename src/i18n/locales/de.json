@@ -3834,6 +3834,7 @@
     "tabThreads": "Threads",
     "templates": {
       "deleteNamedConfirm": "“{{name}}” wird aus Ihren gespeicherten Vorlagen entfernt.",
+      "deleteTemplate": "Vorlage löschen",
       "deleteTitle": "Vorlage löschen?",
       "deleted": "Vorlage gelöscht"
     },

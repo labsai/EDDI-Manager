@@ -3866,6 +3866,7 @@
     "tabThreads": "Fils",
     "templates": {
       "deleteNamedConfirm": "“{{name}}” sera retiré de vos modèles enregistrés.",
+      "deleteTemplate": "Supprimer le modèle",
       "deleteTitle": "Supprimer le modèle ?",
       "deleted": "Modèle supprimé"
     },

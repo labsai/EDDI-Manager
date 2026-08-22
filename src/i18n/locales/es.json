@@ -3866,6 +3866,7 @@
     "tabThreads": "Hilos",
     "templates": {
       "deleteNamedConfirm": "“{{name}}” se eliminará de tus plantillas guardadas.",
+      "deleteTemplate": "Eliminar plantilla",
       "deleteTitle": "¿Eliminar plantilla?",
       "deleted": "Plantilla eliminada"
     },

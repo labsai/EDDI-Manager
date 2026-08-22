@@ -67,6 +67,7 @@ export function TemplatesPanel({ onUseTemplate }: TemplatesPanelProps) {
                   "group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity",
                   "text-muted-foreground hover:text-destructive"
                 )}
+                aria-label={t("Workforce.templates.deleteTemplate", "Delete template")}
                 data-testid={`template-delete-${template.id}`}
                 onClick={(e) => {
                   e.stopPropagation();

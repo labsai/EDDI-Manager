@@ -3834,6 +3834,7 @@
     "tabThreads": "थ्रेड",
     "templates": {
       "deleteNamedConfirm": "“{{name}}” आपके सहेजे गए टेम्पलेट से हटा दिया जाएगा।",
+      "deleteTemplate": "टेम्पलेट हटाएं",
       "deleteTitle": "टेम्पलेट हटाएं?",
       "deleted": "टेम्पलेट हटाया गया"
     },

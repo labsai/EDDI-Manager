@@ -3866,6 +3866,7 @@
     "tabThreads": "Tópicos",
     "templates": {
       "deleteNamedConfirm": "“{{name}}” será removido dos seus modelos salvos.",
+      "deleteTemplate": "Excluir modelo",
       "deleteTitle": "Excluir modelo?",
       "deleted": "Modelo excluído"
     },

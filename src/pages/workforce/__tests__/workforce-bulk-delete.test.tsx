@@ -42,6 +42,40 @@ function watchDeletes() {
   return deleted;
 }
 
+/**
+ * Put three task forces on the page.
+ *
+ * The default fixture cannot: the generic wildcard descriptors handler
+ * (handlers.ts:1340) is registered ~700 lines ahead of the eight-group fixture at
+ * handlers.ts:2034 and exempts only `channelstore`, so `groupstore` gets a one-row
+ * echo stub. Every other test in this file therefore runs a one-item "bulk"
+ * delete, and without this override the plural title and plural toast are
+ * rendered by no test at all.
+ */
+function serveThreeTaskForces() {
+  const groups = ["alpha", "beta", "gamma"].map((id, i) => ({
+    resource: `eddi://ai.labs.group/groupstore/groups/${id}?version=1`,
+    name: `Task Force ${id}`,
+    description: `the ${id} one`,
+    createdOn: Date.now() - 86400000,
+    lastModifiedOn: Date.now() - i * 1000,
+  }));
+  server.use(
+    http.get("*/groupstore/groups/descriptors", () => HttpResponse.json(groups)),
+  );
+  return groups;
+}
+
+/** Enter bulk mode and select every task force on the page. */
+async function selectAllTaskForces(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole("button", { name: "Select" }));
+  const cards = (await screen.findAllByRole("button", { name: "Select" })).filter(
+    (b) => b.getAttribute("aria-pressed") === "false",
+  );
+  for (const card of cards) await user.click(card);
+  return cards.length;
+}
+
 /** Enter bulk mode and select the first task force offered. */
 async function selectFirstTaskForce(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole("button", { name: "Select" }));
@@ -163,5 +197,48 @@ describe("WorkforceDashboard bulk delete", () => {
 
     await waitFor(() => expect(toast.success).toHaveBeenCalled());
     expect(toast.success).toHaveBeenCalledWith("Deleted 1 task force");
+  });
+
+  describe("with more than one selected", () => {
+    it("asks in the plural and deletes each one", async () => {
+      serveThreeTaskForces();
+      const deleted = watchDeletes();
+      const user = userEvent.setup();
+      renderWithProviders(<WorkforceDashboard />);
+
+      const selected = await selectAllTaskForces(user);
+      expect(selected).toBe(3);
+      await user.click(screen.getByTestId("bulk-delete-btn"));
+
+      const dialog = await screen.findByRole("dialog");
+      expect(within(dialog).getByRole("heading")).toHaveTextContent(
+        "Dissolve 3 task forces?",
+      );
+
+      await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+      await waitFor(() => expect(deleted).toHaveLength(3));
+      expect([...deleted].sort()).toEqual(["alpha", "beta", "gamma"]);
+      await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Deleted 3 task forces"));
+    });
+
+    it("reports how many failed rather than claiming success", async () => {
+      serveThreeTaskForces();
+      server.use(
+        http.delete("*/groupstore/groups/beta", () => new HttpResponse(null, { status: 500 })),
+        http.delete("*/groupstore/groups/:id", () => new HttpResponse(null, { status: 204 })),
+      );
+      const user = userEvent.setup();
+      renderWithProviders(<WorkforceDashboard />);
+
+      await selectAllTaskForces(user);
+      await user.click(screen.getByTestId("bulk-delete-btn"));
+      const dialog = await screen.findByRole("dialog");
+      await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+      await waitFor(() => expect(toast.error).toHaveBeenCalled());
+      expect(toast.error).toHaveBeenCalledWith("2 deleted, 1 failed");
+      expect(toast.success).not.toHaveBeenCalled();
+    });
   });
 });

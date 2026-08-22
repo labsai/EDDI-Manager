@@ -3834,6 +3834,7 @@
     "tabThreads": "Threads",
     "templates": {
       "deleteNamedConfirm": "“{{name}}” will be removed from your saved templates.",
+      "deleteTemplate": "Delete template",
       "deleteTitle": "Delete template?",
       "deleted": "Template deleted"
     },

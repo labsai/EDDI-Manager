@@ -3834,6 +3834,7 @@
     "tabThreads": "스레드",
     "templates": {
       "deleteNamedConfirm": "“{{name}}”이(가) 저장된 템플릿에서 제거됩니다.",
+      "deleteTemplate": "템플릿 삭제",
       "deleteTitle": "템플릿을 삭제할까요?",
       "deleted": "템플릿을 삭제했습니다"
     },

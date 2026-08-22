@@ -3834,6 +3834,7 @@
     "tabThreads": "เธรด",
     "templates": {
       "deleteNamedConfirm": "“{{name}}” จะถูกนำออกจากเทมเพลตที่บันทึกไว้ของคุณ",
+      "deleteTemplate": "ลบเทมเพลต",
       "deleteTitle": "ลบเทมเพลตหรือไม่?",
       "deleted": "ลบเทมเพลตแล้ว"
     },
