@@ -30,19 +30,10 @@ async function openSheet(onClose: () => void, { dirty }: { dirty: boolean }) {
 
 /** The four exits. Each runs while no dialog is open, so the queries are unambiguous. */
 const EXITS: Array<[string, (user: ReturnType<typeof userEvent.setup>) => Promise<void>]> = [
-  ["the X", (user) => user.click(screen.getByRole("button", { name: /close/i }))],
-  ["Cancel", (user) => user.click(screen.getByRole("button", { name: "Cancel" }))],
+  ["the X", (user) => user.click(screen.getByTestId("agent-editor-close"))],
+  ["Cancel", (user) => user.click(screen.getByTestId("agent-editor-cancel"))],
   ["Escape", (user) => user.keyboard("{Escape}")],
-  [
-    "the backdrop",
-    async (user) => {
-      // `.z-40` is the sheet's own overlay; the dialog's is z-50 and is not
-      // present yet at this point anyway.
-      const backdrop = document.querySelector('[aria-hidden="true"].fixed.inset-0.z-40');
-      expect(backdrop, "the sheet's backdrop overlay was not rendered").toBeTruthy();
-      await user.click(backdrop as Element);
-    },
-  ],
+  ["the backdrop", (user) => user.click(screen.getByTestId("agent-editor-backdrop"))],
 ];
 
 describe("AgentEditorSheet unsaved changes", () => {

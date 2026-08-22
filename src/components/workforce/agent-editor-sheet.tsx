@@ -303,6 +303,7 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
       <div
         className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
         onClick={requestClose}
+        data-testid="agent-editor-backdrop"
         aria-hidden="true"
       />
 
@@ -342,6 +343,7 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
             variant="ghost"
             size="icon"
             onClick={requestClose}
+            data-testid="agent-editor-close"
             className="shrink-0"
             aria-label={t("Workforce.agentEditor.close", "Close")}
           >
@@ -675,7 +677,11 @@ function AgentEditorSheet({ agentId, onClose }: AgentEditorSheetProps) {
         {/* ── Footer (sticky) ─────────────────────────────── */}
         {!isLoading && !isError && agent && (
           <div className="shrink-0 border-t border-border ps-6 pe-6 py-4 flex items-center justify-end gap-3">
-            <Button variant="ghost" onClick={requestClose}>
+            <Button
+              variant="ghost"
+              data-testid="agent-editor-cancel"
+              onClick={requestClose}
+            >
               {t("Workforce.agentEditor.cancel", "Cancel")}
             </Button>
             <Button
