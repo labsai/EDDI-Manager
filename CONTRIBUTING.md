@@ -323,15 +323,30 @@ chore(deps): bump React to 19.1
 
 Every PR runs through these automated gates:
 
-| Check          | What It Does                                          | Must Pass? |
-| -------------- | ----------------------------------------------------- | ---------- |
-| **Audit**      | `npm run audit:prod` — production advisories only      | ✅ Yes     |
-| **Lint**       | ESLint over `src/` and `e2e/`, `--max-warnings 0`      | ✅ Yes     |
-| **i18n**       | `npm run i18n:check` — locale ↔ code drift             | ✅ Yes     |
-| **Type Check** | `tsc -b` — the app, the node configs, AND `e2e/`       | ✅ Yes     |
-| **Unit Tests** | Vitest, with coverage thresholds enforced              | ✅ Yes     |
-| **Build**      | Production build via `tsc -b && vite build`            | ✅ Yes     |
-| **E2E Tests**  | Playwright UI tests with MSW mocks                     | ✅ Yes     |
+| Check              | What It Does                                            | Must Pass? |
+| ------------------ | ------------------------------------------------------- | ---------- |
+| **Audit**          | `npm run audit:prod` — production advisories only        | ✅ Yes     |
+| **Lint**           | ESLint over `src/` and `e2e/`, `--max-warnings 0`        | ✅ Yes     |
+| **i18n**           | `npm run i18n:check` — locale ↔ code drift               | ✅ Yes     |
+| **Type Check**     | `tsc -b` — the app, the node configs, AND `e2e/`         | ✅ Yes     |
+| **Unit Tests**     | Vitest, with coverage thresholds enforced                | ✅ Yes     |
+| **Build**          | Production build via `tsc -b && vite build`              | ✅ Yes     |
+| **UI E2E**         | Playwright against MSW mocks, no backend                 | ✅ Yes     |
+| **API Integration**| Playwright against a live EDDI in Docker, API-only       | ✅ Yes     |
+| **Mutation**       | Stryker — **only** if the PR touches the guarded scope   | ✅ Yes     |
+
+Two more run on **push to main**, not on PRs: the full-stack tier (a browser
+against a live EDDI, on both MongoDB and Postgres) and the OpenAPI snapshot
+check. The snapshot check is advisory on PRs and blocking on push, because the
+EDDI image tracks `latest` and can gain an operation with no PR touching it —
+a hard failure there would redden every open PR over something none of them did.
+
+The API-integration tier is the one most likely to surprise you, since it needs
+Docker. To reproduce it locally:
+
+```bash
+npm run infra:up:mongo && npm run test:e2e:integration
+```
 
 ## Security
 
