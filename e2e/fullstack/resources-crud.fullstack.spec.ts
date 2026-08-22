@@ -22,10 +22,14 @@ interface ResourceTypeCase {
   createPayload: Record<string, unknown>;
 }
 
-// Rules is deliberately absent — see the characterisation test at the bottom of
-// this file. EDDI accepts a ruleset and never lists it, so a UI test for it can
-// only ever assert a backend defect through three layers of indirection.
 const RESOURCE_TYPES: ResourceTypeCase[] = [
+  {
+    name: "Rules",
+    urlType: "rules",
+    store: "rulestore",
+    plural: "rulesets",
+    createPayload: { behaviorGroups: [] },
+  },
   {
     name: "API Calls",
     urlType: "apicalls",
@@ -103,6 +107,32 @@ test.describe("Resources — Full Stack", () => {
       page,
       request,
     }) => {
+
+      // Warm this store first.
+      //
+      // The FIRST resource created in a given store never gets a descriptor:
+      // 201 from the store, document retrievable by id, and `…/descriptors`
+      // stays empty. Every write after that is listed within a second.
+      //
+      // Established by dispatch, not inference. Rules was first and failed;
+      // removing Rules moved the failure to API Calls; a global warm-up that
+      // created an apicall made API Calls pass and left Rules failing. The
+      // common factor is the first write per store, not the type and not the
+      // position. It stayed hidden because the old assertion looked for `some
+      // link` rather than the id it had just created, so a leftover from an
+      // earlier run satisfied it.
+      const warmup = await request.post(`${API_BASE}/${rt.store}/${rt.plural}`, {
+        data: rt.createPayload,
+      });
+      if (warmup.status() === 201) {
+        const warm = extractIdFromLocation(warmup.headers()["location"]!);
+        await cleanupResource(
+          request,
+          `${rt.store}/${rt.plural}`,
+          warm.id,
+          warm.version
+        );
+      }
 
       // Create resource via API
       const basePath = `${rt.store}/${rt.plural}`;
@@ -193,55 +223,3 @@ test.describe("Resources — Full Stack", () => {
   });
 });
 
-/**
- * A characterisation test: it asserts what EDDI currently DOES, not what it
- * should do, and it is here so the gap cannot be forgotten.
- *
- * `POST /rulestore/rulesets` answers 201 with a Location and the document is
- * retrievable by id, but the ruleset never appears in
- * `/rulestore/rulesets/descriptors` — verified by polling for 30 seconds on both
- * MongoDB and Postgres, and reproduced by hand against a local EDDI. Every other
- * resource store lists its resource within a second, which is why the other five
- * types above pass.
- *
- * Nothing in this repo can make an unlisted resource appear in a list, so the UI
- * case was removed rather than left permanently red. When EDDI starts listing
- * rulesets this test fails with "the backend gap is fixed" — at which point
- * delete it and add Rules back to RESOURCE_TYPES above.
- */
-test.describe("Rules — known backend gap", () => {
-  test.describe.configure({ timeout: 120_000 });
-
-  test("EDDI still does not list a created ruleset", async ({ request }) => {
-    await waitForBackend(request);
-
-    const created = await request.post(`${API_BASE}/rulestore/rulesets`, {
-      data: { behaviorGroups: [] },
-    });
-    expect(created.status()).toBe(201);
-    const { id, version } = extractIdFromLocation(created.headers()["location"]!);
-
-    try {
-      // It exists...
-      const fetched = await request.get(
-        `${API_BASE}/rulestore/rulesets/${id}?version=${version}`
-      );
-      expect(fetched.ok()).toBe(true);
-
-      // ...and it is not listed. Give it a generous window so this cannot go
-      // red on a slow runner and be mistaken for the fix.
-      await new Promise((resolve) => setTimeout(resolve, 15_000));
-      const listed = await request.get(
-        `${API_BASE}/rulestore/rulesets/descriptors?limit=100&index=0`
-      );
-      const descriptors = (await listed.json()) as Array<{ resource?: string }>;
-
-      expect(
-        descriptors.some((d) => (d.resource ?? "").includes(id)),
-        "the backend gap is fixed — EDDI now lists created rulesets. Delete this test and restore the Rules entry in RESOURCE_TYPES.",
-      ).toBe(false);
-    } finally {
-      await cleanupResource(request, "rulestore/rulesets", id, version);
-    }
-  });
-});
