@@ -335,11 +335,15 @@ Every PR runs through these automated gates:
 | **API Integration**| Playwright against a live EDDI in Docker, API-only       | ✅ Yes     |
 | **Mutation**       | Stryker — **only** if the PR touches the guarded scope   | ✅ Yes     |
 
-Two more run on **push to main**, not on PRs: the full-stack tier (a browser
-against a live EDDI, on both MongoDB and Postgres) and the OpenAPI snapshot
-check. The snapshot check is advisory on PRs and blocking on push, because the
-EDDI image tracks `latest` and can gain an operation with no PR touching it —
-a hard failure there would redden every open PR over something none of them did.
+The **full-stack tier** — a browser against a live EDDI, on both MongoDB and
+Postgres — runs on push to main and on `workflow_dispatch`, not on PRs. If you
+change anything it exercises, dispatch it against your branch rather than
+trusting the PR tick: a PR reports "Backend E2E — skipping" either way.
+
+The **OpenAPI snapshot check** runs in both places, with different teeth:
+advisory on a PR, blocking on push. The EDDI image tracks `latest` and can gain
+an operation with no PR touching it, so a hard failure on PRs would redden every
+open one over something none of them did.
 
 The API-integration tier is the one most likely to surprise you, since it needs
 Docker. To reproduce it locally:

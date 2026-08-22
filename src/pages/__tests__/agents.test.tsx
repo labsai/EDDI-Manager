@@ -222,7 +222,14 @@ describe("AgentsPage", () => {
     within(screen.getByTestId("agent-list"))
       .getAllByRole("row")
       .slice(1) // row 0 is the header
-      .map((r) => r.querySelectorAll("td")[index]?.textContent?.trim() ?? "");
+      .map((r) => {
+        // Not `?? ""`. A wrong index would otherwise yield a column of empty
+        // strings, which sorts and reverses exactly like a real one — the
+        // assertions below would pass while reading nothing.
+        const cell = r.querySelectorAll("td")[index];
+        if (!cell) throw new Error(`row has no cell at index ${index}`);
+        return cell.textContent?.trim() ?? "";
+      });
 
   it("sorts by name when clicking Name header and verifies order", async () => {
     renderAgents();
@@ -320,6 +327,7 @@ describe("AgentsPage", () => {
     // so the row identities are not an exact reverse of each other. The rendered
     // values are — equal strings are interchangeable.
     const ascending = column(3);
+    const namesNow = column(0);
     expect(ascending.length).toBeGreaterThan(1);
 
     // A comparator that does nothing leaves the order untouched, so the second
@@ -327,11 +335,18 @@ describe("AgentsPage", () => {
     await user.click(modifiedButton);
     expect(column(3)).toEqual([...ascending].reverse());
 
-    // What this does NOT pin: that the comparator is reading `lastModifiedOn`
-    // rather than the name. The fixture's modified order happens to coincide
-    // with its alphabetical order, so no assertion here can tell the two apart.
-    // Distinguishing them needs a fixture where they disagree — worth doing when
-    // handlers.ts stops being a one-row echo stub for most stores.
+    // And it is reading `lastModifiedOn` rather than falling back to the name.
+    // The fixture's two orders genuinely differ — modified puts Invoice Analyst
+    // second where alphabetical puts Contract Review Assistant — so ruling out
+    // BOTH alphabetical directions rules out a name comparator.
+    //
+    // Both directions, because one is not enough: swapping this branch to
+    // `localeCompare` and checking only ascending still passed, since by this
+    // point the second click has put the sort in descending order and the names
+    // came back reverse-alphabetical. Checked, then fixed.
+    const alphabetical = [...namesNow].sort((a, b) => a.localeCompare(b));
+    expect(namesNow).not.toEqual(alphabetical);
+    expect(namesNow).not.toEqual([...alphabetical].reverse());
   });
 
   // --- Delete flow ---

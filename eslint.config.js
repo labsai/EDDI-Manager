@@ -135,14 +135,15 @@ export default tseslint.config(
         // UI tier only — the tiers that run against a real backend have no MSW
         // and so nothing for the fixture to check.
         //
-        // Matched recursively, and excluded by the same two directories
-        // playwright.config.ts names, so the two cannot drift. `e2e/*.spec.ts`
-        // was the top level only, while the ui project is `testDir: "./e2e"`
-        // with `testIgnore` — so a spec in ANY new subdirectory would have run
-        // in the ui tier without the fixture, and silently lost the
-        // unhandled-API-call assertion that is the whole point of it.
+        // Matched recursively, and excluded at ANY depth — playwright.config.ts
+        // uses `**/integration/**`, so anchoring these at the root would have
+        // flagged a nested `e2e/foo/integration/bar.spec.ts` that Playwright
+        // excludes. The original `e2e/*.spec.ts` was the top level only, while
+        // the ui project is `testDir: "./e2e"` with `testIgnore` — so a spec in
+        // any new subdirectory ran in the ui tier without the fixture, silently
+        // losing the unhandled-API-call assertion that is the point of it.
         files: ["e2e/**/*.spec.{ts,tsx}"],
-        ignores: ["e2e/integration/**", "e2e/fullstack/**"],
+        ignores: ["e2e/**/integration/**", "e2e/**/fullstack/**"],
         rules: {
           "no-restricted-imports": ["error", { paths: [IMPORT_THE_FIXTURE] }],
         },
