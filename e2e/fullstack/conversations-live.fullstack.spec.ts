@@ -94,10 +94,14 @@ test.describe("Conversations — Full Stack", () => {
     const grid = page.getByTestId("conversation-grid");
     await expect(grid).toBeVisible({ timeout: 15_000 });
 
-    // At least our 2 created conversations should appear (auto-retries)
-    await expect(grid.getByTestId(/^conversation-card-/).first()).toBeVisible({
-      timeout: 15_000,
-    });
+    // The conversations THIS test created, by id — not merely "a card exists",
+    // which any leftover from any previous run against this backend satisfies.
+    // The card carries the id in its testid (src/pages/conversations.tsx).
+    for (const convId of conversationsToCleanup) {
+      await expect(grid.getByTestId(`conversation-card-${convId}`)).toBeVisible({
+        timeout: 15_000,
+      });
+    }
   });
 
   test("conversations table shows correct state badges", async ({ page }) => {
