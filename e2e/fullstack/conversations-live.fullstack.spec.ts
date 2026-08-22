@@ -129,7 +129,9 @@ test.describe("Conversations — Full Stack", () => {
   test("clicking conversation navigates to detail", async ({ page }) => {
     await navigateTo(page, "/manage/conversations");
 
-    const firstConvLink = page.locator("table tbody tr a").first();
+    // Cards, not rows — the default view has no table. Each card IS the link.
+    const firstConvLink = page.getByTestId(/^conversation-card-/).first();
+    await expect(firstConvLink).toBeVisible({ timeout: 15_000 });
     await firstConvLink.click();
     await expect(page).toHaveURL(/\/manage\/conversationview\//);
   });
