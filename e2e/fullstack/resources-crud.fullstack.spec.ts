@@ -145,25 +145,35 @@ test.describe("Resources — Full Stack", () => {
 
       // Wait for the BACKEND to list it before opening the page.
       //
-      // `navigateTo` loads the list, React Query caches whatever the descriptors
-      // endpoint returned, and the page does not refetch on its own — so a
-      // `toBeVisible` poll afterwards re-reads a DOM that will never change. If
-      // the descriptor lands a moment after the POST returns 201, the test waits
-      // ten seconds for a list that was already decided. The first type through
-      // wears it: EDDI creates the collection and its indexes on that first
-      // write, which is visible in the backend log, and `Rules` — first in this
-      // array — is the one that has been failing on every push to main.
-      //
-      // Polling the API first removes the race for every type. It also turns a
-      // genuine 'never listed' into a failure that says so, instead of a UI
-      // assertion timing out with no clue why.
+      // Not because of any theory about when the page fetches — I had one and
+      // it was wrong. Because asking the API directly is what turns a UI locator
+      // timing out into a sentence naming the store, the id and what the
+      // backend actually returned. See the note above RESOURCE_TYPES for what
+      // that message went on to establish.
+      const descriptorsUrl = `${API_BASE}/${basePath}/descriptors?limit=100&index=0`;
+
+      // A hard error is not 'not listed yet'. Polling a 401/404/500 for thirty
+      // seconds and then reporting that the resource never appeared would be
+      // the same species of false message this file exists to remove, so the
+      // endpoint is checked once up front and the status is in the failure.
+      const firstLook = await request.get(descriptorsUrl);
+      expect(
+        firstLook.ok(),
+        `${basePath}/descriptors responded HTTP ${firstLook.status()}`
+      ).toBe(true);
+
       await expect
         .poll(
           async () => {
-            const res = await request.get(
-              `${API_BASE}/${basePath}/descriptors?limit=100&index=0`
-            );
-            if (!res.ok()) return [];
+            const res = await request.get(descriptorsUrl);
+            if (!res.ok()) {
+              // `expect.poll` swallows this and keeps polling, but it reports
+              // the last error's message on timeout — so the status still
+              // reaches the log rather than being flattened into an empty list.
+              throw new Error(
+                `${basePath}/descriptors responded HTTP ${res.status()}`
+              );
+            }
             const descriptors = (await res.json()) as Array<{ resource?: string }>;
             return descriptors.map((d) => d.resource ?? "");
           },
