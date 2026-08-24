@@ -14,6 +14,13 @@ import {
 import { useSecrets, useStoreSecret, useVaultHealth } from "@/hooks/use-secrets";
 import { toast } from "sonner";
 import { createPortal } from "react-dom";
+import {
+  canonicalizeReference,
+  hasReferencePrefix,
+  isSecretReference,
+  isVaultScheme,
+  referenceLabel,
+} from "@/lib/secret-reference";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -41,6 +48,11 @@ interface SecretKeyPickerProps {
   /** Id(s) of the element(s) describing this field — typically its error text. */
   "aria-describedby"?: string;
   /**
+   * Names the control directly, for a caller whose visible label belongs to a
+   * composite group rather than to this one input (see `HeaderValueField`).
+   */
+  ariaLabel?: string;
+  /**
    * Refuse a literal: the field may hold only a `${vault:…}` / `${vars:…}`
    * reference.
    *
@@ -67,59 +79,16 @@ interface SecretKeyPickerProps {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Canonical prefix (v6+) */
-const VAULT_PREFIX = "vault:";
-const VAULT_EXPR_PREFIX = "${vault:";
-
-/** Legacy prefix — still accepted for backward compat when reading */
-const LEGACY_VAULT_PREFIX = "eddivault:";
-const LEGACY_VAULT_EXPR_PREFIX = "${eddivault:";
-
 /**
- * Check if a value is a vault reference (canonical or legacy prefix).
+ * Whether a value is heading towards a reference — braced or not, finished or
+ * not.
  *
- * Trimmed first: a reference copied out of this list, a config file or a chat
- * message arrives with whitespace around it, and without the trim it fell
- * through to the plaintext branch — the field stayed a masked password instead
- * of showing the amber chip, so the user could not tell that the paste had
- * landed as a reference at all.
+ * Delegates to the shared grammar so the scheme list has exactly one owner;
+ * before that, this component's copy was missing `vars` and refused a
+ * reference the backend accepts.
  */
 function isVaultRef(value: string): boolean {
-  const v = value.trim();
-  return (
-    v.startsWith(VAULT_PREFIX) ||
-    v.startsWith(VAULT_EXPR_PREFIX) ||
-    v.startsWith(LEGACY_VAULT_PREFIX) ||
-    v.startsWith(LEGACY_VAULT_EXPR_PREFIX)
-  );
-}
-
-/**
- * Extract the inner content from a vault reference (handles both canonical and legacy).
- * For `${vault:keyName}` → returns `"keyName"`.
- * For `${vault:tenantId/keyName}` → returns `"tenantId/keyName"`.
- */
-function extractVaultKey(input: string): string {
-  const value = input.trim();
-  if (value.startsWith(VAULT_EXPR_PREFIX)) {
-    return value.slice(
-      VAULT_EXPR_PREFIX.length,
-      value.endsWith("}") ? -1 : undefined,
-    );
-  }
-  if (value.startsWith(LEGACY_VAULT_EXPR_PREFIX)) {
-    return value.slice(
-      LEGACY_VAULT_EXPR_PREFIX.length,
-      value.endsWith("}") ? -1 : undefined,
-    );
-  }
-  if (value.startsWith(VAULT_PREFIX)) {
-    return value.slice(VAULT_PREFIX.length);
-  }
-  if (value.startsWith(LEGACY_VAULT_PREFIX)) {
-    return value.slice(LEGACY_VAULT_PREFIX.length);
-  }
-  return value;
+  return hasReferencePrefix(value);
 }
 
 /**
@@ -144,29 +113,6 @@ function extractTenantFromKey(vaultKey: string): string | undefined {
 /** Create a vault reference string in the canonical `${vault:...}` format */
 function toVaultRef(keyName: string): string {
   return `\${vault:${keyName}}`;
-}
-
-/** Any braced reference the backend accepts, split into scheme and body. */
-const CANONICAL_REFERENCE = /^\$\{(vault|eddivault|vars):([^}]{1,256})\}$/;
-
-/**
- * What the chip shows for a reference.
- *
- * A vault key renders bare, as it always has. A `${vars:…}` reference keeps its
- * scheme, because "which global variable" is the whole content of the value and
- * dropping the prefix would make it indistinguishable from a vault key that
- * does not exist.
- */
-function referenceLabel(value: string): string {
-  const match = CANONICAL_REFERENCE.exec(value.trim());
-  if (!match) return extractVaultKey(value);
-  return match[1] === "vars" ? `vars:${match[2]}` : (match[2] ?? "");
-}
-
-/** Whether a reference points into the vault (as opposed to `${vars:…}`). */
-function isVaultScheme(value: string): boolean {
-  const match = CANONICAL_REFERENCE.exec(value.trim());
-  return match ? match[1] !== "vars" : true;
 }
 
 // ─── CreateSecretModal ───────────────────────────────────────────────────────
@@ -518,6 +464,7 @@ export function SecretKeyPicker({
   id,
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
+  ariaLabel,
   referenceOnly = false,
 }: SecretKeyPickerProps) {
   const { t } = useTranslation();
@@ -558,11 +505,23 @@ export function SecretKeyPicker({
   // may only appear for the braced form the backend's anchored pattern accepts.
   // Showing it for `vault:key` would tell the user the field is fine and then
   // fail the save.
-  const isCanonicalRef = CANONICAL_REFERENCE.test(value.trim());
+  const isCanonicalRef = isSecretReference(value);
   const hasVaultRef = referenceOnly ? isCanonicalRef : isVaultRef(value);
   const currentVaultKey = hasVaultRef ? referenceLabel(value) : "";
   /** A non-empty value that is not (yet) an admissible reference. */
   const literalRejected = referenceOnly && value.trim() !== "" && !isCanonicalRef;
+  /**
+   * The warning's own id, appended to `aria-describedby` when it is showing.
+   *
+   * Without it the input announces "invalid" and nothing else: the sentence
+   * explaining that only a reference is admissible was a sibling paragraph
+   * unreachable from the field it describes.
+   */
+  const literalWarningId = `${testId}-literal-warning`;
+  const describedBy =
+    [ariaDescribedBy, literalRejected ? literalWarningId : null]
+      .filter(Boolean)
+      .join(" ") || undefined;
   // Only strip the tenant prefix when it matches this picker's tenantId;
   // otherwise a reference like ${vault:tenantA/key} would incorrectly
   // resolve against the current tenant's key list.
@@ -633,7 +592,12 @@ export function SecretKeyPicker({
       // accepts ("vault:key", legacy "eddivault:key") fell through untrimmed: the
       // chip rendered from the trimmed value while the parent kept — and
       // submitted — the raw paste.
-      if (isVaultRef(newValue)) {
+      // Trimmed for every reference spelling, braced or not. Keyed off the
+      // shared prefix test rather than a local list, so `${vars:…}` pasted with
+      // a trailing newline is normalised like every other scheme instead of
+      // being stored with the whitespace and refused by the backend's anchored
+      // pattern.
+      if (isVaultRef(newValue) || isSecretReference(newValue)) {
         onChange(newValue.trim());
         closePopup();
         return;
@@ -657,12 +621,13 @@ export function SecretKeyPicker({
    * closing brace. Nothing is normalised until they are done.
    */
   const handleBlur = useCallback(() => {
-    if (!referenceOnly) return;
-    const trimmed = value.trim();
-    if (!trimmed || CANONICAL_REFERENCE.test(trimmed)) return;
-    if (!isVaultRef(trimmed) || trimmed.startsWith("${")) return;
-    onChange(toVaultRef(extractVaultKey(trimmed)));
-  }, [referenceOnly, value, onChange]);
+    // `readOnly` guarded like every other mutating handler here. A read-only
+    // input is still focusable, so without this a viewer could rewrite the
+    // value — and dirty the parent's form — just by tabbing through it.
+    if (!referenceOnly || readOnly) return;
+    const canonical = canonicalizeReference(value);
+    if (canonical) onChange(canonical);
+  }, [referenceOnly, readOnly, value, onChange]);
 
   const handleInputKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -733,8 +698,9 @@ export function SecretKeyPicker({
         <div
           id={id}
           role="group"
+          aria-label={ariaLabel}
           aria-invalid={ariaInvalid}
-          aria-describedby={ariaDescribedBy}
+          aria-describedby={describedBy}
           className={`flex h-7 items-center gap-1.5 rounded-md border px-2 ${
             readOnly
               ? "border-amber-500/30 bg-amber-500/5"
@@ -786,7 +752,6 @@ export function SecretKeyPicker({
         <div className="relative flex-1">
           <input
             id={id}
-            aria-describedby={ariaDescribedBy}
             // Nothing to mask: in reference-only mode the only admissible value
             // is a pointer, and masking it hides the one thing worth reading.
             type={referenceOnly || showPassword ? "text" : "password"}
@@ -802,7 +767,13 @@ export function SecretKeyPicker({
                 : t("secretPicker.placeholder", "API key or ${vault:key-name}"))
             }
             dir="ltr"
-            aria-invalid={ariaInvalid ?? (literalRejected || undefined)}
+            aria-label={ariaLabel}
+            aria-describedby={describedBy}
+            // `||`, not `??`: a caller passing an explicit `false` (the common
+            // `aria-invalid={Boolean(error)}` shape) must not suppress the
+            // invalid state this component derived for itself, or the one field
+            // that is actually wrong is the one "jump to first invalid" skips.
+            aria-invalid={ariaInvalid || literalRejected || undefined}
             className={`h-7 w-full border bg-background ps-2 font-mono text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring ${
               referenceOnly ? "pe-2" : "pe-14"
             } ${literalRejected ? "border-destructive" : "border-input"} ${
@@ -835,6 +806,11 @@ export function SecretKeyPicker({
         {vaultAvailable && !readOnly && (
           <button
             type="button"
+            // Keeps focus in the input, so `handleBlur` does not fire, so the
+            // value is not canonicalised into a chip mid-click — which used to
+            // unmount this very button between mousedown and mouseup, and the
+            // click never landed.
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => (popupOpen ? closePopup() : openPopup())}
             title={t("secretPicker.pickFromVault", "Pick from vault")}
             className={`flex h-7 items-center gap-0.5 border border-s-0 border-input px-1.5 text-xs transition-colors ${
@@ -857,8 +833,9 @@ export function SecretKeyPicker({
           arriving as a 400 after Save has thrown the focus away. */}
       {literalRejected && (
         <p
+          id={literalWarningId}
           className="mt-1 flex items-start gap-1 text-[11px] text-destructive"
-          data-testid={`${testId}-literal-warning`}
+          data-testid={literalWarningId}
         >
           <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
           <span>

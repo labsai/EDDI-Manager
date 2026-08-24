@@ -212,7 +212,9 @@
     "history": "履歴",
     "copyId": "エージェント ID をコピー",
     "off": "オフ",
-    "on": "オン"
+    "on": "オン",
+    "removeItem": "{{item}} を削除",
+    "stepOf": "ステップ {{current}} / {{total}}"
   },
   "agents": {
     "confirmDeleteDescription": "この操作は元に戻せません。エージェントとそのすべてのデータが完全に削除されます。",
@@ -4494,6 +4496,12 @@
       "endpointUserInfo": "URL から資格情報を取り除いてください。リクエストの実際の送信先が変わってしまいます。",
       "endpointNotAbsolute": "ホストを含む完全な URL を入力してください。例：https://auth.example.com/oauth/token。",
       "paramCredentialShaped": "これらのパラメーターの 1 つが資格情報のような名前です。ここに置けるのは秘密でないプロトコルパラメーター（prompt、audience など）だけです。"
-    }
+    },
+    "backToList": "接続一覧に戻る",
+    "headerSecret": "保存済みシークレット",
+    "discardNewTitle": "この接続を破棄しますか？",
+    "discardNewBody": "ここまで入力した内容は失われます。まだ何も作成されていません。",
+    "confirmReconnect": "このアカウントを連携し直しますか？",
+    "confirmReconnectDesc": "このアカウントは正常に動作しているため、直すものはありません。続けると EDDI を離れてプロバイダーのサインイン画面に移動し、以前許可したアクセスが置き換わります。"
   }
 }

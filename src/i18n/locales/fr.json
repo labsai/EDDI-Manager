@@ -212,7 +212,9 @@
     "history": "Historique",
     "copyId": "Copier l'ID de l'agent",
     "off": "Désactivé",
-    "on": "Activé"
+    "on": "Activé",
+    "removeItem": "Retirer {{item}}",
+    "stepOf": "Étape {{current}} sur {{total}}"
   },
   "agents": {
     "confirmDeleteDescription": "Cette action est irréversible. L'agent et toutes ses données seront définitivement supprimés.",
@@ -4529,6 +4531,12 @@
       "endpointUserInfo": "Retirez les identifiants de l'URL ; ils changent la destination réelle de la requête.",
       "endpointNotAbsolute": "Saisissez une URL complète avec l'hôte, par ex. https://auth.example.com/oauth/token.",
       "paramCredentialShaped": "L'un de ces paramètres porte un nom d'identifiant. Seuls des paramètres de protocole non secrets (prompt, audience, …) ont leur place ici."
-    }
+    },
+    "backToList": "Retour aux connexions",
+    "headerSecret": "Secret enregistré",
+    "discardNewTitle": "Abandonner cette connexion ?",
+    "discardNewBody": "Ce que vous avez saisi jusqu'ici sera perdu. Rien n'a encore été créé.",
+    "confirmReconnect": "Reconnecter ce compte ?",
+    "confirmReconnectDesc": "Ce compte fonctionne, il n'y a donc rien à réparer. Continuer vous fait quitter EDDI vers la page de connexion du fournisseur et remplace l'accès que vous aviez accordé."
   }
 }

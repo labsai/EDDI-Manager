@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   ChevronDown,
   ChevronUp,
   Globe,
@@ -15,15 +14,16 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { BackLink } from "@/components/shared/back-link";
+import { ChipInput } from "@/components/shared/chip-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog } from "@/components/ui/alert-dialog";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { ErrorState } from "@/components/shared/error-state";
 import { RefetchErrorNotice } from "@/components/shared/refetch-error-notice";
-import { SecretKeyPicker } from "@/components/shared/secret-key-picker";
-import { HeaderValueField } from "@/components/connections/header-value-field";
+import { ConnectionCredentialFields } from "@/components/connections/connection-credential-fields";
 import { OriginAllowlistField } from "@/components/connections/origin-allowlist-field";
 import { ValidationMessage } from "@/components/connections/validation-message";
 import { AuthTypeBadge } from "@/components/connections/connection-badges";
@@ -32,14 +32,20 @@ import {
   useUpdateConnection,
   useDeleteConnection,
 } from "@/hooks/use-connections";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 import { getErrorMessage } from "@/lib/api-client";
+import { commitPending } from "@/lib/chip-values";
+import { authTypeLabel } from "@/lib/connection-labels";
 import {
   AUTH_TYPES,
   CLIENT_AUTH_METHODS,
   emptyConnection,
   parseConnectionResourceUri,
+  toStoredConnection,
   type AuthType,
   type ConnectionConfiguration,
+  type OAuthConfig,
+  type StaticAuth,
 } from "@/lib/api/connections";
 import {
   bindingFor,
@@ -89,14 +95,104 @@ export function ConnectionDetailPage() {
   const [unverifiedConfirmOpen, setUnverifiedConfirmOpen] = useState(false);
   const [rawOpen, setRawOpen] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
+  /** Chip text typed but not committed — held here so a save can fold it in. */
+  const [pendingScope, setPendingScope] = useState("");
+  const [pendingOrigin, setPendingOrigin] = useState("");
+  /** Set when an in-app navigation was blocked by unsaved edits. */
+  const [pendingExit, setPendingExit] = useState<string | null>(null);
 
+  /**
+   * The document the draft was seeded from, serialised.
+   *
+   * A ref, not state: it is only ever read to answer "has the user changed
+   * anything", which is recomputed whenever the draft renders anyway. As state
+   * it would feed its own seeding effect and loop.
+   */
+  const baselineRef = useRef<string | null>(null);
+  const draftRef = useRef<ConnectionConfiguration | null>(null);
+  draftRef.current = draft;
+
+  /**
+   * Seed the draft — and re-seed only when it is safe to.
+   *
+   * This effect used to run on every new `config` identity, which meant a
+   * *successful* background refetch (window focus past the staleTime, or any
+   * `["connections"]` invalidation) replaced an in-progress form with the server
+   * copy: no warning, no undo, ten minutes of transcribed OAuth settings gone.
+   *
+   * Now a refetch only lands when the user has nothing to lose. If they are
+   * mid-edit their draft stands, and the server's newer copy is picked up by
+   * the next load — or refused by the version check on save, which is the
+   * conflict signal that actually belongs to the user.
+   */
   useEffect(() => {
-    if (config) setDraft({ ...config });
+    if (!config) return;
+    const current = draftRef.current;
+    const dirty =
+      current !== null &&
+      baselineRef.current !== null &&
+      JSON.stringify(current) !== baselineRef.current;
+    if (dirty) return;
+    baselineRef.current = JSON.stringify(config);
+    setDraft({ ...config });
   }, [config]);
 
+  /** Reset the form wholesale when the route points at a different document. */
+  useEffect(() => {
+    baselineRef.current = null;
+    setDraft(null);
+    setShowErrors(false);
+    setPendingScope("");
+    setPendingOrigin("");
+  }, [id, version]);
+
+  /**
+   * What a save would actually send: the draft with any uncommitted chip text
+   * folded in, and only the fields this auth type uses.
+   */
+  const outgoing = useMemo(() => {
+    if (!draft) return null;
+    return toStoredConnection({
+      ...draft,
+      baseUrlAllowlist: commitPending(draft.baseUrlAllowlist, pendingOrigin),
+      oauth: draft.oauth
+        ? {
+            ...draft.oauth,
+            scopes: commitPending(draft.oauth.scopes ?? [], pendingScope, /[\s,]+/),
+          }
+        : draft.oauth,
+    });
+  }, [draft, pendingOrigin, pendingScope]);
+
+  // Validated against what will be SENT, not against what is on screen — the
+  // two differ by exactly the text a user typed and did not commit.
   const errors = useMemo(
-    () => (draft ? validateConnection(draft) : {}),
-    [draft],
+    () => (outgoing ? validateConnection(outgoing) : {}),
+    [outgoing],
+  );
+
+  const isDirty =
+    (draft !== null &&
+      baselineRef.current !== null &&
+      JSON.stringify(draft) !== baselineRef.current) ||
+    pendingScope.trim() !== "" ||
+    pendingOrigin.trim() !== "";
+
+  // Covers tab close and reload. In-app navigation is guarded explicitly below,
+  // because this app uses <BrowserRouter> and React Router's blocker needs the
+  // data router.
+  useUnsavedChangesGuard(isDirty);
+
+  /** Leave for `to`, asking first when there are unsaved edits. */
+  const leaveFor = useCallback(
+    (to: string) => {
+      if (isDirty) {
+        setPendingExit(to);
+        return;
+      }
+      navigate(to);
+    },
+    [isDirty, navigate],
   );
 
   /**
@@ -128,7 +224,7 @@ export function ConnectionDetailPage() {
   }, []);
 
   const handleSave = async () => {
-    if (!draft || !id) return;
+    if (!outgoing || !id) return;
     setShowErrors(true);
     if (Object.keys(errors).length > 0) {
       toast.error(
@@ -136,16 +232,16 @@ export function ConnectionDetailPage() {
       );
       return;
     }
-    // Send only the block this type uses. Leaving the other one populated would
-    // store a client secret reference on a connection that has no OAuth flow.
-    const payload: ConnectionConfiguration = {
-      ...draft,
-      staticAuth: isOAuthType(draft.authType) ? null : draft.staticAuth,
-      oauth: isOAuthType(draft.authType) ? draft.oauth : null,
-      binding: bindingFor(draft.authType),
-    };
+    // `outgoing` already folds in any uncommitted chip text and drops the
+    // fields this auth type does not use — see `toStoredConnection`.
     try {
-      const result = await updateMutation.mutateAsync({ id, version, config: payload });
+      // The draft becomes the new baseline the moment it is accepted, so the
+      // form stops reporting itself dirty and a later refetch may re-seed it.
+      setDraft(outgoing);
+      setPendingScope("");
+      setPendingOrigin("");
+      baselineRef.current = JSON.stringify(outgoing);
+      const result = await updateMutation.mutateAsync({ id, version, config: outgoing });
       const location = (result as { location?: string })?.location;
       if (location) {
         // Follow the new version, or the next save conflicts with itself.
@@ -166,34 +262,39 @@ export function ConnectionDetailPage() {
     if (!id) return;
     try {
       await deleteMutation.mutateAsync({ id, version });
+      // Deliberately `navigate`, not `leaveFor`: the document is gone, so there
+      // is nothing left for an "unsaved changes" prompt to protect.
       navigate("/manage/connections");
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
   };
 
-  const patchStatic = (
-    patch: Partial<NonNullable<ConnectionConfiguration["staticAuth"]>>,
-  ) =>
-    setDraft((prev) =>
-      prev
-        ? {
-            ...prev,
-            staticAuth: {
-              headerName: "Authorization",
-              ...prev.staticAuth,
-              ...patch,
-            },
-          }
-        : prev,
-    );
+  const patchStatic = useCallback(
+    (patch: Partial<StaticAuth>) =>
+      setDraft((prev) =>
+        prev
+          ? {
+              ...prev,
+              // No `headerName: "Authorization"` default here. Injecting one
+              // would silently write a header nobody chose onto a document that
+              // was stored without one, the moment an unrelated field is edited
+              // — and it would do so *before* validation, so the empty-field
+              // rule that exists to catch it could never fire.
+              staticAuth: { headerName: "", ...prev.staticAuth, ...patch },
+            }
+          : prev,
+      ),
+    [],
+  );
 
-  const patchOAuth = (
-    patch: Partial<NonNullable<ConnectionConfiguration["oauth"]>>,
-  ) =>
-    setDraft((prev) =>
-      prev ? { ...prev, oauth: { ...prev.oauth, ...patch } } : prev,
-    );
+  const patchOAuth = useCallback(
+    (patch: Partial<OAuthConfig>) =>
+      setDraft((prev) =>
+        prev ? { ...prev, oauth: { ...prev.oauth, ...patch } } : prev,
+      ),
+    [],
+  );
 
   // Only a failed INITIAL load replaces the page. A background refetch failure
   // must not throw away a form the user is part way through editing.
@@ -231,15 +332,11 @@ export function ConnectionDetailPage() {
       )}
 
       {/* Header */}
+      <BackLink
+        to="/manage/connections"
+        label={t("connections.backToList", "Back to Connections")}
+      />
       <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/manage/connections")}
-          aria-label={t("common.back", "Back")}
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        </Button>
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-xl font-bold tracking-tight">
             {draft.name || t("connections.unnamed", "Unnamed connection")}
@@ -360,12 +457,14 @@ export function ConnectionDetailPage() {
                   "connections.bindingPerUserWhere",
                   "People connect their own accounts from",
                 )}{" "}
-                <Link
-                  to="/manage/linked-accounts"
+                <button
+                  type="button"
+                  onClick={() => leaveFor("/manage/linked-accounts")}
                   className="text-primary hover:underline"
+                  data-testid="connection-linked-accounts-link"
                 >
                   {t("pages.linkedAccounts.title", "Linked accounts")}
-                </Link>
+                </button>
                 .
               </p>
             )}
@@ -409,80 +508,22 @@ export function ConnectionDetailPage() {
           </div>
         )}
 
-        {isOAuthType(draft.authType) ? (
+        <ConnectionCredentialFields
+          draft={draft}
+          onPatchStatic={patchStatic}
+          onPatchOAuth={patchOAuth}
+          errors={showErrors ? errors : {}}
+          idPrefix="connection"
+          dense
+        />
+
+        {isOAuthType(draft.authType) && (
           <div className="space-y-4">
-            {perUser && (
-              <div className="space-y-1">
-                <label className="text-xs font-medium" htmlFor="connection-authorization-url">
-                  {t("connections.authorizationUrl", "Authorization URL")}
-                </label>
-                <Input
-                  id="connection-authorization-url"
-                  data-testid="connection-authorization-url"
-                  className="font-mono text-xs"
-                  dir="ltr"
-                  value={draft.oauth?.authorizationUrl ?? ""}
-                  onChange={(e) => patchOAuth({ authorizationUrl: e.target.value })}
-                  placeholder="https://auth.example.com/authorize"
-                />
-                <ValidationMessage code={fieldError("oauth.authorizationUrl")} />
-              </div>
-            )}
-
-            <div className="space-y-1">
-              <label className="text-xs font-medium" htmlFor="connection-token-url">
-                {t("connections.tokenUrl", "Token URL")}
-              </label>
-              <Input
-                id="connection-token-url"
-                data-testid="connection-token-url"
-                className="font-mono text-xs"
-                dir="ltr"
-                value={draft.oauth?.tokenUrl ?? ""}
-                onChange={(e) => patchOAuth({ tokenUrl: e.target.value })}
-                placeholder="https://auth.example.com/oauth/token"
-              />
-              <p className="text-[11px] text-muted-foreground">
-                {t(
-                  "connections.credentialEndpointHint",
-                  "The client secret is sent here, so it must be https and its origin must be one the operator has allowlisted for credential endpoints.",
-                )}
-              </p>
-              <ValidationMessage code={fieldError("oauth.tokenUrl")} />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1">
-                <label className="text-xs font-medium" htmlFor="connection-client-id">
-                  {t("connections.clientId", "Client ID")}
-                </label>
-                <Input
-                  id="connection-client-id"
-                  data-testid="connection-client-id"
-                  className="font-mono text-xs"
-                  dir="ltr"
-                  value={draft.oauth?.clientId ?? ""}
-                  onChange={(e) => patchOAuth({ clientId: e.target.value })}
-                />
-                <ValidationMessage code={fieldError("oauth.clientId")} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium">
-                  {t("connections.clientSecret", "Client secret")}
-                </label>
-                <SecretKeyPicker
-                  value={draft.oauth?.clientSecret ?? ""}
-                  onChange={(clientSecret) => patchOAuth({ clientSecret })}
-                  referenceOnly
-                  testId="connection-client-secret"
-                />
-                <ValidationMessage code={fieldError("oauth.clientSecret")} />
-              </div>
-            </div>
-
             <ScopesField
               value={draft.oauth?.scopes ?? []}
               onChange={(scopes) => patchOAuth({ scopes })}
+              pending={pendingScope}
+              onPendingChange={setPendingScope}
             />
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -524,6 +565,7 @@ export function ConnectionDetailPage() {
                     patchOAuth({ discoveryUrl: e.target.value || null })
                   }
                   placeholder="https://auth.example.com/.well-known/openid-configuration"
+                  aria-invalid={fieldError("oauth.discoveryUrl") !== undefined || undefined}
                 />
                 <ValidationMessage code={fieldError("oauth.discoveryUrl")} />
               </div>
@@ -545,65 +587,6 @@ export function ConnectionDetailPage() {
               </p>
             )}
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-xs font-medium" htmlFor="connection-header-name">
-                {t("connections.headerName", "Header name")}
-              </label>
-              <Input
-                id="connection-header-name"
-                data-testid="connection-header-name"
-                className="font-mono text-xs"
-                dir="ltr"
-                value={draft.staticAuth?.headerName ?? ""}
-                onChange={(e) => patchStatic({ headerName: e.target.value })}
-                placeholder="Authorization"
-              />
-              <ValidationMessage code={fieldError("staticAuth.headerName")} />
-            </div>
-
-            {draft.authType === "STATIC" ? (
-              <div className="space-y-1">
-                <label className="text-xs font-medium" htmlFor="connection-header-value">
-                  {t("connections.headerValue", "Header value")}
-                </label>
-                <HeaderValueField
-                  id="connection-header-value"
-                  value={draft.staticAuth?.valueTemplate ?? ""}
-                  onChange={(valueTemplate) => patchStatic({ valueTemplate })}
-                  error={fieldError("staticAuth.valueTemplate")}
-                />
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium" htmlFor="connection-username">
-                    {t("connections.username", "Username")}
-                  </label>
-                  <Input
-                    id="connection-username"
-                    data-testid="connection-username"
-                    value={draft.staticAuth?.username ?? ""}
-                    onChange={(e) => patchStatic({ username: e.target.value })}
-                  />
-                  <ValidationMessage code={fieldError("staticAuth.username")} />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium">
-                    {t("connections.password", "Password")}
-                  </label>
-                  <SecretKeyPicker
-                    value={draft.staticAuth?.passwordRef ?? ""}
-                    onChange={(passwordRef) => patchStatic({ passwordRef })}
-                    referenceOnly
-                    testId="connection-password"
-                  />
-                  <ValidationMessage code={fieldError("staticAuth.passwordRef")} />
-                </div>
-              </div>
-            )}
-          </div>
         )}
       </section>
 
@@ -622,6 +605,8 @@ export function ConnectionDetailPage() {
         <OriginAllowlistField
           value={draft.baseUrlAllowlist}
           onChange={(baseUrlAllowlist) => setDraft({ ...draft, baseUrlAllowlist })}
+          pending={pendingOrigin}
+          onPendingChange={setPendingOrigin}
           error={fieldError("baseUrlAllowlist")}
           testId="connection-origins"
         />
@@ -696,6 +681,16 @@ export function ConnectionDetailPage() {
         isPending={deleteMutation.isPending}
       />
 
+      <UnsavedChangesDialog
+        open={pendingExit !== null}
+        onConfirm={() => {
+          const to = pendingExit;
+          setPendingExit(null);
+          if (to) navigate(to);
+        }}
+        onCancel={() => setPendingExit(null)}
+      />
+
       <AlertDialog
         open={unverifiedConfirmOpen}
         onOpenChange={setUnverifiedConfirmOpen}
@@ -721,100 +716,39 @@ export function ConnectionDetailPage() {
   );
 }
 
-/**
- * The auth type in words, matching the badge exactly.
- *
- * The same keys and the same English as `connection-badges.tsx`, deliberately:
- * `check-i18n.mjs` fails a key called with two different defaults, and one term
- * used two ways would be worse for the reader than for the checker anyway.
- */
-function authTypeLabel(
-  t: ReturnType<typeof useTranslation>["t"],
-  authType: AuthType,
-): string {
-  switch (authType) {
-    case "STATIC":
-      return t("connections.authType.static", "API key");
-    case "BASIC":
-      return t("connections.authType.basic", "Username & password");
-    case "OAUTH2_CLIENT_CREDENTIALS":
-      return t("connections.authType.clientCredentials", "OAuth service account");
-    case "OAUTH2_AUTHORIZATION_CODE":
-      return t("connections.authType.authorizationCode", "OAuth user login");
-  }
-}
-
 /* ─── Scopes ───────────────────────────────────────────────────── */
 
 function ScopesField({
   value,
   onChange,
+  pending,
+  onPendingChange,
 }: {
   value: string[];
   onChange: (scopes: string[]) => void;
+  pending: string;
+  onPendingChange: (pending: string) => void;
 }) {
   const { t } = useTranslation();
-  const [draft, setDraft] = useState("");
-
-  const add = () => {
-    // Providers document scopes space-delimited, and that is how people paste
-    // them. Splitting here saves a row-at-a-time transcription that is easy to
-    // get subtly wrong.
-    const parts = draft
-      .split(/[\s,]+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (parts.length === 0) return;
-    onChange([...value, ...parts.filter((p) => !value.includes(p))]);
-    setDraft("");
-  };
-
   return (
     <div className="space-y-2">
-      <label className="text-xs font-medium" htmlFor="connection-scopes">
+      <label className="text-xs font-medium" htmlFor="connection-scopes-input">
         {t("connections.scopes", "Scopes")}
       </label>
-      {value.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {value.map((scope) => (
-            <Badge key={scope} variant="secondary" className="gap-1 font-mono text-[11px]">
-              <span dir="ltr">{scope}</span>
-              <button
-                type="button"
-                onClick={() => onChange(value.filter((s) => s !== scope))}
-                className="rounded hover:text-destructive"
-                aria-label={t("connections.removeScope", {
-                  scope,
-                  defaultValue: "Remove {{scope}}",
-                })}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      )}
-      <div className="flex gap-2">
-        <Input
-          id="connection-scopes"
-          data-testid="connection-scopes-input"
-          className="h-8 font-mono text-xs"
-          dir="ltr"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              add();
-            }
-          }}
-          placeholder="read:jira-work offline_access"
-        />
-        <Button type="button" size="sm" variant="outline" onClick={add}>
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-          {t("common.add", "Add")}
-        </Button>
-      </div>
+      <ChipInput
+        values={value}
+        onChange={onChange}
+        pending={pending}
+        onPendingChange={onPendingChange}
+        // Providers document scopes space-delimited and that is how people
+        // paste them; splitting here saves a row-at-a-time transcription that
+        // is easy to get subtly wrong.
+        splitOn={/[\s,]+/}
+        placeholder="read:jira-work offline_access"
+        inputLabel={t("connections.scopes", "Scopes")}
+        testId="connection-scopes"
+        ltr
+      />
     </div>
   );
 }

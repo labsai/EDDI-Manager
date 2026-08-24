@@ -193,6 +193,17 @@ describe("isCredentialParamName — extraAuthParams is not a place for keys", ()
     expect(isCredentialParamName("refreshToken")).toBe(true);
   });
 
+  it("catches an entry that only exists in underscored form", () => {
+    // The backend strips `_` before its own lookup, so `code_verifier` — whose
+    // only set entry keeps the underscore — normalises to `codeverifier` and
+    // matches nothing. Filed upstream; this mirror checks the raw key too, so it
+    // stays at least as strict as the backend rather than promising a save the
+    // backend would (once fixed) refuse.
+    expect(isCredentialParamName("code_verifier")).toBe(true);
+    expect(isCredentialParamName("Code-Verifier")).toBe(true);
+    expect(isCredentialParamName("CODE_VERIFIER")).toBe(true);
+  });
+
   it("leaves real protocol parameters alone", () => {
     expect(isCredentialParamName("prompt")).toBe(false);
     expect(isCredentialParamName("audience")).toBe(false);

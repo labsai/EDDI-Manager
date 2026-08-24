@@ -212,7 +212,9 @@
     "history": "Verlauf",
     "copyId": "Agent-ID kopieren",
     "off": "Aus",
-    "on": "Ein"
+    "on": "Ein",
+    "removeItem": "{{item}} entfernen",
+    "stepOf": "Schritt {{current}} von {{total}}"
   },
   "agents": {
     "confirmDeleteDescription": "Diese Aktion kann nicht rückgängig gemacht werden. Der Agent und alle seine Daten werden dauerhaft entfernt.",
@@ -4494,6 +4496,12 @@
       "endpointUserInfo": "Entfernen Sie die Zugangsdaten aus der URL; sie verändern, wohin die Anfrage tatsächlich geht.",
       "endpointNotAbsolute": "Geben Sie eine vollständige URL samt Host an, z. B. https://auth.example.com/oauth/token.",
       "paramCredentialShaped": "Einer dieser Parameter trägt den Namen eines Zugangsdatums. Hierher gehören nur nicht geheime Protokollparameter (prompt, audience, …)."
-    }
+    },
+    "backToList": "Zurück zu den Verbindungen",
+    "headerSecret": "Gespeichertes Geheimnis",
+    "discardNewTitle": "Diese Verbindung verwerfen?",
+    "discardNewBody": "Was Sie bisher eingetragen haben, geht verloren. Es wurde noch nichts angelegt.",
+    "confirmReconnect": "Dieses Konto erneut verknüpfen?",
+    "confirmReconnectDesc": "Dieses Konto funktioniert, es gibt also nichts zu reparieren. Wenn Sie fortfahren, verlassen Sie EDDI und gelangen zur Anmeldeseite des Anbieters; der zuvor erteilte Zugriff wird ersetzt."
   }
 }

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { isApiError } from "@/lib/api-client";
 import {
   getEnrichedConnectionDescriptors,
   getConnection,
@@ -37,21 +38,44 @@ export function useConnectionDescriptors(
   filter = "",
   enabled = true,
 ) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: [...CONNECTIONS_KEY, "enriched", { limit, index, filter }],
-    queryFn: () => getEnrichedConnectionDescriptors(limit, index, filter),
+    queryFn: async () => {
+      const rows = await getEnrichedConnectionDescriptors(limit, index, filter);
+      // The enrichment already GET the full document for every row. Seeding the
+      // detail page's cache with it turns opening a connection into zero
+      // requests instead of re-downloading, a moment later, a document that was
+      // in memory the whole time.
+      for (const row of rows) {
+        if (row.config) {
+          queryClient.setQueryData(
+            [...CONNECTIONS_KEY, row.id, row.version],
+            row.config,
+          );
+        }
+      }
+      return rows;
+    },
     enabled,
+    /**
+     * Connection documents are versioned and change only through this UI, and
+     * every mutation here invalidates `["connections"]`. Without a staleTime the
+     * default 30s window expires between a list → detail → back trip and replays
+     * the whole 1 + N fan-out on return.
+     */
+    staleTime: 5 * 60_000,
     /**
      * A 403 is an answer, not a failure to retry. Retrying it three times
      * delays the "you are not an eddi-admin" screen by several seconds and
      * puts three refusals in the server's audit log for one page view.
+     *
+     * Uses the shared `isApiError` guard rather than an inline shape check, so
+     * a change to how api-client surfaces status cannot leave this silently
+     * evaluating false while the page beside it keeps working.
      */
     retry: (failureCount, error) =>
-      failureCount < 2 &&
-      !(typeof error === "object" &&
-        error !== null &&
-        "status" in error &&
-        [401, 403, 404].includes((error as { status: number }).status)),
+      failureCount < 2 && !(isApiError(error) && [401, 403, 404].includes(error.status)),
   });
 }
 

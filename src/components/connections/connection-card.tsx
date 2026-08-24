@@ -20,7 +20,7 @@ export function ConnectionCard({
   onDelete,
   onDuplicate,
 }: ConnectionCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const to = `/manage/connections/${connection.id}?version=${connection.version}`;
 
@@ -117,7 +117,11 @@ export function ConnectionCard({
 
       <div className="flex items-center justify-between border-t border-border/30 pt-1 text-xs text-muted-foreground">
         <span>v{connection.version}</span>
-        <span>{new Date(connection.lastModifiedOn).toLocaleDateString()}</span>
+        {/* The viewer's chosen language, not the browser's: the two differ
+            whenever somebody picks a locale in the top bar. */}
+        <span>
+          {new Date(connection.lastModifiedOn).toLocaleDateString(i18n.language)}
+        </span>
       </div>
     </div>
   );

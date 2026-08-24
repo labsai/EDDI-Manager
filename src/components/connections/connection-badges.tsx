@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { KeyRound, Lock, Server, UserCheck, HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { authTypeLabel, grantStatusLabel } from "@/lib/connection-labels";
 import type { AuthType, Binding, GrantStatus } from "@/lib/api/connections";
 
 /**
@@ -50,22 +51,6 @@ export function AuthTypeBadge({ authType, className }: AuthTypeBadgeProps) {
       {authTypeLabel(t, authType)}
     </Badge>
   );
-}
-
-function authTypeLabel(
-  t: ReturnType<typeof useTranslation>["t"],
-  authType: AuthType,
-): string {
-  switch (authType) {
-    case "STATIC":
-      return t("connections.authType.static", "API key");
-    case "BASIC":
-      return t("connections.authType.basic", "Username & password");
-    case "OAUTH2_CLIENT_CREDENTIALS":
-      return t("connections.authType.clientCredentials", "OAuth service account");
-    case "OAUTH2_AUTHORIZATION_CODE":
-      return t("connections.authType.authorizationCode", "OAuth user login");
-  }
 }
 
 interface BindingBadgeProps {
@@ -124,20 +109,4 @@ export function GrantStatusBadge({ status, className }: GrantStatusBadgeProps) {
       {grantStatusLabel(t, status)}
     </Badge>
   );
-}
-
-function grantStatusLabel(
-  t: ReturnType<typeof useTranslation>["t"],
-  status: GrantStatus,
-): string {
-  switch (status) {
-    case "ACTIVE":
-      return t("connections.status.active", "Connected");
-    case "EXPIRED":
-      return t("connections.status.expired", "Renewing");
-    case "REVOKED":
-      return t("connections.status.revoked", "Revoked");
-    case "REFRESH_FAILED":
-      return t("connections.status.refreshFailed", "Reconnect needed");
-  }
 }

@@ -17,6 +17,11 @@
  * the backend would accept, or promises one it will refuse.
  */
 
+import {
+  interpolatedSegments,
+  isSecretReference as isReference,
+} from "./secret-reference";
+
 /** Fields a validation result can be keyed by. */
 export type ConnectionField =
   | "name"
@@ -62,19 +67,11 @@ export type ValidationCode =
 export type ConnectionErrors = Partial<Record<ConnectionField, ValidationCode>>;
 
 /**
- * A value that is exactly one reference and nothing else.
- *
- * Anchored, like the backend's `REFERENCE_ONLY.matcher(...).matches()`: a value
- * that merely *contains* a reference is not one, or `sk-live-x${vault:unused}`
- * would pass as a reference while carrying a literal key.
- *
- * `eddivault` and `vars` are accepted because the backend accepts them —
- * narrowing this to `vault` alone would refuse documents EDDI stores happily.
+ * Re-exported so a caller validating a document does not need to know that the
+ * grammar lives elsewhere. `secret-reference.ts` owns what a reference *is*;
+ * this module owns which fields have to be one.
  */
-const REFERENCE_ONLY = /^\$\{(vault|eddivault|vars):[^}]{1,256}\}$/;
-
-/** Interpolated segments inside a header value template. */
-const INTERPOLATION = /\$\{[^}]{0,256}\}/g;
+export { isSecretReference } from "./secret-reference";
 
 /**
  * Names that mark a value as credential-shaped, kept out of `extraAuthParams`.
@@ -110,18 +107,31 @@ const CREDENTIAL_PARAM_NAMES = new Set([
   "code_verifier",
 ]);
 
-/** Whether `value` is a `${vault:…}` / `${vars:…}` reference and nothing else. */
-export function isSecretReference(value: string | null | undefined): boolean {
-  return typeof value === "string" && REFERENCE_ONLY.test(value.trim());
-}
+/** Separators are noise: `Client-Secret`, `client.secret` and `clientSecret` are one name. */
+const stripSeparators = (name: string) => name.toLowerCase().replace(/[-._]/g, "");
+
+/**
+ * The denylist with the same normalisation applied to it as to the input.
+ *
+ * The backend strips `-`, `.` and `_` from the *key* and then looks it up in a
+ * set that still contains underscored entries — so every entry existing only in
+ * underscored form can never match its own normalised key. `code_verifier` is
+ * exactly that: it normalises to `codeverifier`, which is in neither of the two
+ * sets the backend consults, so its check misses it (filed upstream).
+ *
+ * Normalising both sides closes that on this side. It makes the mirror slightly
+ * *stricter* than the backend currently is, and only for `code_verifier` — a
+ * name the backend plainly means to refuse. Stricter is the safe direction to
+ * differ in: the cost is refusing a parameter nobody should be sending, where
+ * looser would promise a save that then fails.
+ */
+const NORMALIZED_CREDENTIAL_PARAM_NAMES = new Set(
+  [...CREDENTIAL_PARAM_NAMES].map(stripSeparators),
+);
 
 /** Whether `name` would be refused as credential-shaped in `extraAuthParams`. */
 export function isCredentialParamName(name: string): boolean {
-  const normalized = name.toLowerCase().replace(/[-._]/g, "");
-  return (
-    CREDENTIAL_PARAM_NAMES.has(normalized) ||
-    CREDENTIAL_PARAM_NAMES.has(normalized.replace(/_/g, ""))
-  );
+  return NORMALIZED_CREDENTIAL_PARAM_NAMES.has(stripSeparators(name));
 }
 
 /**
@@ -194,8 +204,8 @@ export function validateHeaderTemplate(
   if (!value) return "templateRequired";
 
   let sawReference = false;
-  for (const match of value.matchAll(INTERPOLATION)) {
-    if (!REFERENCE_ONLY.test(match[0])) return "templateBadSegment";
+  for (const segment of interpolatedSegments(value)) {
+    if (!isReference(segment)) return "templateBadSegment";
     sawReference = true;
   }
   return sawReference ? null : "templateNoReference";
@@ -216,7 +226,7 @@ export function bindingFor(authType: string): "SERVICE" | "PER_USER" {
 
 /** Whether this auth type completes an OAuth flow (mirrors `AuthType.isOAuth`). */
 export function isOAuthType(authType: string): boolean {
-    return (
+  return (
     authType === "OAUTH2_AUTHORIZATION_CODE" ||
     authType === "OAUTH2_CLIENT_CREDENTIALS"
   );
@@ -285,7 +295,7 @@ export function validateConnection(config: ValidatableConnection): ConnectionErr
       if (!(staticAuth.username ?? "").trim()) {
         errors["staticAuth.username"] = "usernameRequired";
       }
-      if (!isSecretReference(staticAuth.passwordRef)) {
+      if (!isReference(staticAuth.passwordRef)) {
         errors["staticAuth.passwordRef"] = "secretMustBeReference";
       }
     } else {
@@ -301,7 +311,7 @@ export function validateConnection(config: ValidatableConnection): ConnectionErr
     if (discoveryUrl) errors["oauth.discoveryUrl"] = discoveryUrl;
 
     if (!(oauth.clientId ?? "").trim()) errors["oauth.clientId"] = "clientIdRequired";
-    if (!isSecretReference(oauth.clientSecret)) {
+    if (!isReference(oauth.clientSecret)) {
       errors["oauth.clientSecret"] = "secretMustBeReference";
     }
     if (authType === "OAUTH2_AUTHORIZATION_CODE") {

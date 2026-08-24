@@ -212,7 +212,9 @@
     "history": "History",
     "copyId": "Copy Agent ID",
     "off": "Off",
-    "on": "On"
+    "on": "On",
+    "removeItem": "Remove {{item}}",
+    "stepOf": "Step {{current}} of {{total}}"
   },
   "createOrWizard": {
     "title": "New {{type}}",
@@ -4494,6 +4496,12 @@
       "endpointUserInfo": "Remove the credentials from the URL; they change where the request actually goes.",
       "endpointNotAbsolute": "Enter a full URL including the host, e.g. https://auth.example.com/oauth/token.",
       "paramCredentialShaped": "One of these parameters is named like a credential. Only non-secret protocol parameters (prompt, audience, …) belong here."
-    }
+    },
+    "backToList": "Back to Connections",
+    "headerSecret": "Stored secret",
+    "discardNewTitle": "Discard this connection?",
+    "discardNewBody": "What you have filled in so far will be lost. Nothing has been created yet.",
+    "confirmReconnect": "Connect this account again?",
+    "confirmReconnectDesc": "This account is working, so there is nothing to repair. Continuing takes you out of EDDI to the provider's sign-in page and replaces the access you granted before."
   }
 }

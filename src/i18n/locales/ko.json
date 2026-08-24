@@ -212,7 +212,9 @@
     "history": "기록",
     "copyId": "에이전트 ID 복사",
     "off": "끄기",
-    "on": "켜기"
+    "on": "켜기",
+    "removeItem": "{{item}} 제거",
+    "stepOf": "{{total}}단계 중 {{current}}단계"
   },
   "agents": {
     "confirmDeleteDescription": "이 작업은 되돌릴 수 없습니다. 에이전트와 모든 데이터가 영구적으로 제거됩니다.",
@@ -4494,6 +4496,12 @@
       "endpointUserInfo": "URL에서 자격 증명을 지우세요. 요청이 실제로 향하는 곳이 달라집니다.",
       "endpointNotAbsolute": "호스트를 포함한 전체 URL을 입력하세요. 예: https://auth.example.com/oauth/token.",
       "paramCredentialShaped": "이 매개변수 중 하나가 자격 증명 같은 이름입니다. 여기에는 비밀이 아닌 프로토콜 매개변수(prompt, audience 등)만 넣을 수 있습니다."
-    }
+    },
+    "backToList": "연결 목록으로 돌아가기",
+    "headerSecret": "저장된 비밀 값",
+    "discardNewTitle": "이 연결을 취소할까요?",
+    "discardNewBody": "지금까지 입력한 내용이 사라집니다. 아직 만들어진 것은 없습니다.",
+    "confirmReconnect": "이 계정을 다시 연결할까요?",
+    "confirmReconnectDesc": "이 계정은 정상 작동 중이라 고칠 것이 없습니다. 계속하면 EDDI를 벗어나 공급자의 로그인 페이지로 이동하고, 이전에 부여한 접근 권한이 대체됩니다."
   }
 }

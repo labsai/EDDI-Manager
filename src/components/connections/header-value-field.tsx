@@ -1,28 +1,21 @@
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { SecretKeyPicker } from "@/components/shared/secret-key-picker";
 import { ValidationMessage } from "@/components/connections/validation-message";
+import { splitTemplate } from "@/lib/secret-reference";
 import type { ValidationCode } from "@/lib/connection-validation";
-
-/**
- * A `valueTemplate` that is a literal prefix followed by exactly one reference.
- *
- * That covers essentially every real header — `Bearer ${vault:jira-token}`,
- * `${vault:amplitude-key}`, `Token ${vault:linear}` — and it is the only shape
- * that can be offered as two comprehensible fields instead of a syntax to
- * learn. Anything else (two references, a reference in the middle) is real and
- * legal, so it falls back to the raw template rather than being refused.
- */
-const PREFIX_AND_REFERENCE =
-  /^([^$]*)(\$\{(?:vault|eddivault|vars):[^}]{1,256}\})$/;
 
 interface HeaderValueFieldProps {
   value: string;
   onChange: (value: string) => void;
   error?: ValidationCode;
   readOnly?: boolean;
+  /** Id of the element naming this composite field, for `aria-labelledby`. */
+  labelledBy?: string;
+  /** Kept for callers that still label the raw input directly. */
   id?: string;
+  testIdPrefix?: string;
 }
 
 /**
@@ -33,58 +26,106 @@ interface HeaderValueFieldProps {
  * text field whose rules (`${vault:…}` only, and at least one of them) are
  * invisible until the save fails.
  *
- * The raw editor is always one click away and is selected automatically for a
- * template this cannot take apart. It is not a fallback for the sake of it: a
- * connection whose stored value only the backend understands must still be
- * editable, and silently rewriting it into the structured shape would be a
- * config change nobody asked for.
+ * ## The mode is state, not a derivation
+ *
+ * It used to be `raw || !splittable`, recomputed from the live value — which
+ * meant the field changed shape *while being typed into*. From an empty guided
+ * field, one keystroke in the prefix box produced `"B"`, which is not a
+ * splittable template, so the guided grid unmounted and was replaced by the raw
+ * input: focus and caret lost after every first character. The same flip fired
+ * in reverse when a closing brace completed a reference, and clearing the
+ * secret chip while a prefix remained stranded the user in raw mode with the
+ * toggle hidden.
+ *
+ * A guided field is guided until somebody says otherwise. It keeps its own
+ * prefix and reference and emits their concatenation; the value is only
+ * re-split when it changes from *outside* (a version switch, a form reset),
+ * which is the one case where the component's idea of the value is stale.
  */
 export function HeaderValueField({
   value,
   onChange,
   error,
   readOnly,
+  labelledBy,
   id,
+  testIdPrefix = "header-value",
 }: HeaderValueFieldProps) {
   const { t } = useTranslation();
 
-  const parsed = useMemo(() => PREFIX_AND_REFERENCE.exec(value.trim()), [value]);
-  /** Blank is structural: it is where an empty field starts, not an odd template. */
-  const structural = value.trim() === "" || parsed !== null;
-  const [raw, setRaw] = useState(!structural);
+  const [mode, setMode] = useState<"guided" | "raw">(() =>
+    canBeGuided(value) ? "guided" : "raw",
+  );
+  const [parts, setParts] = useState(() => splitOrEmpty(value));
 
-  const prefix = parsed?.[1] ?? "";
-  const reference = parsed?.[2] ?? "";
+  /**
+   * The last value this component emitted.
+   *
+   * Anything else arriving in `value` came from the outside, and only then is
+   * re-splitting correct — re-splitting our own emission is what re-introduces
+   * the flip.
+   */
+  const emitted = useRef(value);
 
-  const showRaw = raw || !structural;
+  useEffect(() => {
+    if (value === emitted.current) return;
+    emitted.current = value;
+    setParts(splitOrEmpty(value));
+    setMode(canBeGuided(value) ? "guided" : "raw");
+  }, [value]);
+
+  const emit = (next: string) => {
+    emitted.current = next;
+    onChange(next);
+  };
+
+  const updateParts = (next: { prefix: string; reference: string }) => {
+    setParts(next);
+    emit(`${next.prefix}${next.reference}`);
+  };
+
+  /**
+   * Whether the raw value could be shown as two fields.
+   *
+   * Gates the toggle: switching a template this cannot take apart into the
+   * guided view would have to throw part of it away, and silently rewriting an
+   * author's config is worse than leaving them in the editor that can express
+   * it.
+   */
+  const guidedAvailable = canBeGuided(value);
 
   return (
-    <div className="space-y-2">
-      {showRaw ? (
+    <div
+      className="space-y-2"
+      role="group"
+      aria-labelledby={labelledBy}
+      data-testid={testIdPrefix}
+    >
+      {mode === "raw" ? (
         <Input
           id={id}
           className="font-mono text-xs"
           dir="ltr"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => emit(e.target.value)}
           readOnly={readOnly}
           placeholder="Bearer ${vault:jira-token}"
+          aria-labelledby={labelledBy}
           aria-invalid={error !== undefined || undefined}
-          data-testid="header-value-raw"
+          data-testid={`${testIdPrefix}-raw`}
         />
       ) : (
         <div className="grid gap-2 sm:grid-cols-[minmax(0,9rem)_minmax(0,1fr)]">
           <div className="space-y-1">
             <Input
-              id={id}
               className="h-7 font-mono text-xs"
               dir="ltr"
-              value={prefix}
-              onChange={(e) => onChange(`${e.target.value}${reference}`)}
+              value={parts.prefix}
+              onChange={(e) => updateParts({ ...parts, prefix: e.target.value })}
               readOnly={readOnly}
               placeholder="Bearer "
               aria-label={t("connections.headerPrefix", "Prefix")}
-              data-testid="header-value-prefix"
+              data-testid={`${testIdPrefix}-prefix`}
             />
             <p className="text-[10px] text-muted-foreground">
               {t("connections.headerPrefixHint", "Optional, e.g. “Bearer ”")}
@@ -92,11 +133,12 @@ export function HeaderValueField({
           </div>
           <div className="space-y-1">
             <SecretKeyPicker
-              value={reference}
-              onChange={(next) => onChange(`${prefix}${next}`)}
+              value={parts.reference}
+              onChange={(reference) => updateParts({ ...parts, reference })}
               readOnly={readOnly}
               referenceOnly
-              testId="header-value-secret"
+              ariaLabel={t("connections.headerSecret", "Stored secret")}
+              testId={`${testIdPrefix}-secret`}
             />
             <p className="text-[10px] text-muted-foreground">
               {t("connections.headerSecretHint", "The stored secret to send")}
@@ -109,25 +151,34 @@ export function HeaderValueField({
         <code
           className="truncate rounded bg-muted/50 px-2 py-1 font-mono text-[11px] text-muted-foreground"
           dir="ltr"
-          data-testid="header-value-preview"
+          data-testid={`${testIdPrefix}-preview`}
         >
           {value || t("connections.headerEmptyPreview", "(nothing yet)")}
         </code>
-        {structural && !readOnly && (
+        {!readOnly && (mode === "raw" ? guidedAvailable : true) && (
           <button
             type="button"
-            onClick={() => setRaw((r) => !r)}
+            onClick={() => setMode(mode === "raw" ? "guided" : "raw")}
             className="text-[11px] text-primary hover:underline"
-            data-testid="header-value-toggle"
+            data-testid={`${testIdPrefix}-toggle`}
           >
-            {showRaw
+            {mode === "raw"
               ? t("connections.headerUseFields", "Use the guided fields")
               : t("connections.headerUseRaw", "Edit as a template")}
           </button>
         )}
       </div>
 
-      <ValidationMessage code={error} testId="header-value-error" />
+      <ValidationMessage code={error} testId={`${testIdPrefix}-error`} />
     </div>
   );
+}
+
+/** An empty field starts guided; anything splittable can be shown guided. */
+function canBeGuided(value: string): boolean {
+  return value.trim() === "" || splitTemplate(value) !== null;
+}
+
+function splitOrEmpty(value: string): { prefix: string; reference: string } {
+  return splitTemplate(value) ?? { prefix: "", reference: "" };
 }

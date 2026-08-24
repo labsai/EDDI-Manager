@@ -1,5 +1,6 @@
 import { api, isApiError } from "../api-client";
-import type { AgentDescriptor } from "./agents";
+import { bindingFor } from "../connection-validation";
+import { parseResourceUri, type AgentDescriptor } from "./agents";
 
 /**
  * Connections — how EDDI authenticates to an external system.
@@ -214,9 +215,13 @@ export class ConnectionsError extends Error {
  * same code covers a backend too old to have these routes at all, which is the
  * same fact from the user's side.
  */
-function asConnectionsError(error: unknown, action: string): never {
+function asConnectionsError(
+  error: unknown,
+  action: string,
+  { notFoundMeansDisabled = true }: { notFoundMeansDisabled?: boolean } = {},
+): never {
   if (isApiError(error)) {
-    if (error.status === 404 || error.status === 503) {
+    if ((error.status === 404 && notFoundMeansDisabled) || error.status === 503) {
       throw new ConnectionsError(
         "Account linking is not enabled on this deployment.",
         CONNECTIONS_DISABLED,
@@ -320,7 +325,15 @@ export async function authorizeConnection(
       `/connections/${encodeURIComponent(name)}/authorize?returnTo=${encodeURIComponent(returnTo)}`,
     );
   } catch (error) {
-    return asConnectionsError(error, "start linking");
+    // A 404 here is ambiguous in a way it is not on `/connections/mine`: the
+    // backend's `requireConnection` throws NotFoundException for "no connection
+    // named X" from the same route that answers 404 when the feature is off.
+    // Claiming "linking is switched off" for a connection an admin just deleted
+    // sends the operator to check a setting that is already correct, so the
+    // backend's own message is passed through instead.
+    return asConnectionsError(error, "start linking", {
+      notFoundMeansDisabled: false,
+    });
   }
 }
 
@@ -357,26 +370,16 @@ export async function disconnectConnection(name: string): Promise<void> {
 // ─── Helpers ────────────────────────────────────────────────────
 
 /**
- * Parse both `eddi://` resource URIs and plain `Location` header paths.
+ * Re-exported under a connection-specific name so call sites read naturally.
  *
- * Accepted:
- *   - `eddi://ai.labs.connection/connectionstore/connections/ID?version=N`
- *   - `/connectionstore/connections/ID?version=N`
+ * The parser itself is `parseResourceUri` from `agents.ts` — the shape is
+ * store-agnostic (strip `eddi://`, take the last path segment, read `version`),
+ * and this module previously carried a third character-for-character copy of
+ * it. A URI-shape fix applied to one copy and not the others resolves the wrong
+ * id or silently falls back to version 1, which is a save against the wrong
+ * revision with a green test suite.
  */
-export function parseConnectionResourceUri(resource: string): {
-  id: string;
-  version: number;
-} {
-  const normalised = resource.startsWith("eddi://")
-    ? resource.replace("eddi://", "http://")
-    : resource;
-  const url = new URL(normalised, "http://dummy");
-  const parts = url.pathname.split("/").filter(Boolean);
-  const id = parts[parts.length - 1] ?? resource;
-  const parsedVersion = parseInt(url.searchParams.get("version") || "1", 10);
-  const version = isNaN(parsedVersion) ? 1 : parsedVersion;
-  return { id, version };
-}
+export { parseResourceUri as parseConnectionResourceUri } from "./agents";
 
 /** A descriptor enriched with the config-level facts the list renders. */
 export type EnrichedConnectionDescriptor = ConnectionDescriptor & {
@@ -389,6 +392,14 @@ export type EnrichedConnectionDescriptor = ConnectionDescriptor & {
   origins: string[];
   /** Null when the config could not be read; the card says so rather than lying. */
   unreadable: boolean;
+  /**
+   * The document this row was enriched from.
+   *
+   * Carried so the hook can seed the detail page's cache with it: the list
+   * already paid for the GET, and throwing the body away means clicking a row
+   * re-downloads what was in memory a moment ago. Absent when the read failed.
+   */
+  config?: ConnectionConfiguration;
 };
 
 /**
@@ -411,7 +422,7 @@ export async function getEnrichedConnectionDescriptors(
     ConnectionDescriptor & { id: string; version: number }
   >();
   for (const d of descriptors) {
-    const { id, version } = parseConnectionResourceUri(d.resource);
+    const { id, version } = parseResourceUri(d.resource);
     const existing = grouped.get(id);
     if (!existing || version > existing.version) {
       grouped.set(id, { ...d, id, version });
@@ -432,6 +443,7 @@ export async function getEnrichedConnectionDescriptors(
             binding: config.binding,
             origins: config.baseUrlAllowlist ?? [],
             unreadable: false,
+            config,
           };
         } catch {
           return {
@@ -448,6 +460,86 @@ export async function getEnrichedConnectionDescriptors(
 }
 
 /**
+ * The document to store, built from the auth type rather than from the draft.
+ *
+ * An editor keeps both auth blocks in its draft so a mis-clicked type switch is
+ * reversible. Only the fields the chosen type actually uses may be *stored*,
+ * and "the right block" is not enough granularity: `staticAuth` is used by both
+ * STATIC and BASIC, so switching BASIC → STATIC and saving kept `username` and
+ * a `${vault:…}` `passwordRef` on a connection whose flow reads neither.
+ *
+ * That is not cosmetic. It persists a pointer to a credential the connection
+ * has no reason to hold, shows it in the raw panel, and re-arms it if the type
+ * is ever switched back — a value the author never re-confirmed. The same
+ * applies to `oauth.authorizationUrl` on a client-credentials connection, where
+ * the field is not even rendered.
+ *
+ * Enumerating per type also means a field added to one flow cannot leak into
+ * another by omission: anything not listed here is not sent.
+ */
+export function toStoredConnection(
+  draft: ConnectionConfiguration,
+): ConnectionConfiguration {
+  const base: ConnectionConfiguration = {
+    ...draft,
+    binding: bindingFor(draft.authType),
+    // Only legal on a per-user binding; the backend refuses it elsewhere rather
+    // than ignoring it.
+    allowUnverifiedPrincipal:
+      draft.authType === "OAUTH2_AUTHORIZATION_CODE"
+        ? draft.allowUnverifiedPrincipal
+        : false,
+    staticAuth: null,
+    oauth: null,
+  };
+
+  if (draft.authType === "STATIC") {
+    return {
+      ...base,
+      staticAuth: {
+        headerName: draft.staticAuth?.headerName ?? "",
+        valueTemplate: draft.staticAuth?.valueTemplate ?? "",
+      },
+    };
+  }
+  if (draft.authType === "BASIC") {
+    return {
+      ...base,
+      staticAuth: {
+        headerName: draft.staticAuth?.headerName ?? "",
+        username: draft.staticAuth?.username ?? "",
+        passwordRef: draft.staticAuth?.passwordRef ?? "",
+      },
+    };
+  }
+
+  const oauth = draft.oauth ?? {};
+  const common: OAuthConfig = {
+    tokenUrl: oauth.tokenUrl ?? "",
+    clientId: oauth.clientId ?? "",
+    clientSecret: oauth.clientSecret ?? "",
+    scopes: oauth.scopes ?? [],
+    extraAuthParams: oauth.extraAuthParams ?? {},
+    clientAuthMethod: oauth.clientAuthMethod ?? "client_secret_basic",
+    discoveryUrl: oauth.discoveryUrl ?? null,
+  };
+
+  if (draft.authType === "OAUTH2_AUTHORIZATION_CODE") {
+    return {
+      ...base,
+      oauth: {
+        ...common,
+        authorizationUrl: oauth.authorizationUrl ?? "",
+        // Not switchable: the callback is a public path, and the backend
+        // refuses an authorization-code connection without it.
+        usePkce: true,
+      },
+    };
+  }
+  return { ...base, oauth: { ...common, authorizationUrl: null } };
+}
+
+/**
  * A blank connection of the given type, valid apart from the fields the author
  * must supply.
  *
@@ -460,7 +552,7 @@ export function emptyConnection(authType: AuthType): ConnectionConfiguration {
     name: "",
     description: "",
     authType,
-    binding: authType === "OAUTH2_AUTHORIZATION_CODE" ? "PER_USER" : "SERVICE",
+    binding: bindingFor(authType),
     allowUnverifiedPrincipal: false,
     baseUrlAllowlist: [],
     staticAuth: null,

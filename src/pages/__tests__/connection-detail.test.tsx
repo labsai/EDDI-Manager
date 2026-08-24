@@ -151,6 +151,134 @@ describe("ConnectionDetailPage", () => {
     );
   });
 
+  it("saves a scope typed but never committed with Enter", async () => {
+    // The worst of the silent-loss bugs: Save reported success, the text stayed
+    // visible in the box, and the stored connection had no scopes — so every
+    // user linked without offline_access and the grants died days later with
+    // nothing on screen connecting the two.
+    const user = userEvent.setup();
+    const sent = captureSave();
+    renderDetail("conn1");
+    await screen.findByTestId("connection-name-input");
+
+    await user.type(screen.getByTestId("connection-scopes-input"), "offline_access");
+    await user.click(screen.getByTestId("save-connection-btn"));
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect((sent[0]!.oauth as { scopes: string[] }).scopes).toContain("offline_access");
+  });
+
+  it("saves an origin typed but never committed", async () => {
+    const user = userEvent.setup();
+    const sent = captureSave();
+    renderDetail("conn3");
+    await screen.findByTestId("connection-name-input");
+
+    await user.type(
+      screen.getByTestId("connection-origins-input"),
+      "https://extra.example.com",
+    );
+    await user.click(screen.getByTestId("save-connection-btn"));
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]!.baseUrlAllowlist).toContain("https://extra.example.com");
+  });
+
+  it("drops the BASIC fields when the type is switched to STATIC", async () => {
+    // conn5 is BASIC with a `${vault:legacy-crm-password}` passwordRef. After
+    // the switch that pointer has no flow that reads it, and carrying it across
+    // re-arms it on any later switch back.
+    const user = userEvent.setup();
+    const sent = captureSave();
+    renderDetail("conn5");
+    await screen.findByTestId("connection-name-input");
+
+    await user.selectOptions(
+      screen.getByTestId("connection-auth-type-select"),
+      "STATIC",
+    );
+    // An empty template opens in the guided view, which is the path a real
+    // author takes: a prefix plus a stored secret.
+    await user.type(screen.getByTestId("connection-header-value-prefix"), "Bearer ");
+    await user.type(
+      screen.getByTestId("connection-header-value-secret-input"),
+      "${{vault:legacy-crm-password}",
+    );
+    await user.click(screen.getByTestId("save-connection-btn"));
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    const staticAuth = sent[0]!.staticAuth as Record<string, unknown>;
+    expect(staticAuth.passwordRef).toBeUndefined();
+    expect(staticAuth.username).toBeUndefined();
+    expect(staticAuth.valueTemplate).toContain("${vault:legacy-crm-password}");
+  });
+
+  it("does not let a background refetch overwrite edits in progress", async () => {
+    // A window-focus refetch used to replace the whole draft with the server
+    // copy: no warning, no undo.
+    const user = userEvent.setup();
+    const { queryClient } = renderDetail("conn3");
+    await screen.findByTestId("connection-name-input");
+
+    const description = screen.getByTestId("connection-description-input");
+    await user.clear(description);
+    await user.type(description, "edited locally");
+
+    await queryClient.refetchQueries({ queryKey: ["connections"] });
+
+    await waitFor(() => expect(description).toHaveValue("edited locally"));
+  });
+
+  it("accepts a refetch when the form has no unsaved edits", async () => {
+    // The other half of the rule: a clean form must still pick up the server's
+    // newer copy, or the guard becomes a stale-data bug of its own.
+    const { queryClient } = renderDetail("conn3");
+    await screen.findByTestId("connection-name-input");
+
+    server.use(
+      http.get("*/connectionstore/connections/:id", ({ request }) => {
+        if (new URL(request.url).pathname.endsWith("/descriptors")) return;
+        return HttpResponse.json({
+          name: "amplitude",
+          description: "changed on the server",
+          authType: "STATIC",
+          binding: "SERVICE",
+          allowUnverifiedPrincipal: false,
+          oauth: null,
+          staticAuth: {
+            headerName: "Authorization",
+            valueTemplate: "Bearer ${vault:amplitude-key}",
+          },
+          baseUrlAllowlist: ["https://amplitude.com"],
+        });
+      }),
+    );
+    await queryClient.refetchQueries({ queryKey: ["connections"] });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("connection-description-input")).toHaveValue(
+        "changed on the server",
+      ),
+    );
+  });
+
+  it("asks before an in-app navigation would discard unsaved edits", async () => {
+    const user = userEvent.setup();
+    renderDetail("conn1");
+    await screen.findByTestId("connection-name-input");
+
+    await user.type(
+      screen.getByTestId("connection-description-input"),
+      " and more",
+    );
+    // The form plants this link inside its own binding explainer, so it is a
+    // one-click route out of a half-finished document.
+    await user.click(screen.getByTestId("connection-linked-accounts-link"));
+
+    // The guard dialog, not the page behind it.
+    expect(await screen.findByTestId("unsaved-confirm")).toBeInTheDocument();
+  });
+
   it("replaces the page only when the INITIAL load fails", async () => {
     server.use(
       http.get("*/connectionstore/connections/:id", ({ request }) => {

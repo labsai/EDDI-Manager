@@ -28,6 +28,7 @@ import {
   CONNECTIONS_FORBIDDEN,
   type LinkedAccount,
 } from "@/lib/api/connections";
+import type { TFunction } from "i18next";
 
 /** A connection this viewer could link but has not. Only an admin can enumerate these. */
 export interface ConnectableConnection {
@@ -76,8 +77,30 @@ export function LinkedAccountsPanel({
   const [unlinkTarget, setUnlinkTarget] = useState<string | null>(null);
   /** Which connection the browser is on its way to a provider for. */
   const [leavingFor, setLeavingFor] = useState<string | null>(null);
+  /** A healthy account whose Reconnect needs confirming before the page leaves. */
+  const [reconnectTarget, setReconnectTarget] = useState<string | null>(null);
+  /**
+   * One authorize at a time, for every row type.
+   *
+   * The connectable rows already locked globally while the dashed Connect rows
+   * locked only themselves, so a slow authorize left every Reconnect live. Two
+   * in-flight flows both call `window.location.assign`, and the last one to
+   * resolve wins — which need not be the one the spinner is on.
+   */
+  const linkInFlight = leavingFor !== null;
 
   const code = (error as { code?: string } | null)?.code;
+  /**
+   * A failure state only replaces the list when there is no list to show.
+   *
+   * React Query keeps the last good `data` when a *background* refetch fails,
+   * so an ungated branch turns one blip — a lapsed token, a moment offline, or
+   * the refetch that any `["connections"]` invalidation triggers — into
+   * "linking is switched off" over a screen that was working. Both of these are
+   * definitive statements about the deployment; neither is true of a transient
+   * error, and both were being rendered on top of live data.
+   */
+  const showFailureState = isError && (accounts ?? []).length === 0;
 
   /**
    * Connections that can be linked but are not.
@@ -102,6 +125,7 @@ export function LinkedAccountsPanel({
    * connection editor, where it would silently discard a draft.
    */
   const startLinking = async (name: string) => {
+    if (linkInFlight) return;
     setLeavingFor(name);
     try {
       const { authorizationUrl } = await authorize.mutateAsync({
@@ -115,9 +139,11 @@ export function LinkedAccountsPanel({
     } catch (err) {
       setLeavingFor(null);
       toast.error(
-        err instanceof Error
-          ? err.message
-          : t("connections.linkStartFailed", "Could not start linking."),
+        connectionErrorMessage(
+          t,
+          err,
+          t("connections.linkStartFailed", "Could not start linking."),
+        ),
       );
     }
   };
@@ -134,9 +160,11 @@ export function LinkedAccountsPanel({
       );
     } catch (err) {
       toast.error(
-        err instanceof Error
-          ? err.message
-          : t("connections.unlinkFailed", "Could not unlink that account."),
+        connectionErrorMessage(
+          t,
+          err,
+          t("connections.unlinkFailed", "Could not unlink that account."),
+        ),
       );
     } finally {
       setUnlinkTarget(null);
@@ -161,7 +189,7 @@ export function LinkedAccountsPanel({
     // that stores refresh tokens is one an operator turns on deliberately — and
     // a backend older than the feature answers the same way, which from here is
     // the same fact.
-    if (code === CONNECTIONS_DISABLED) {
+    if (showFailureState && code === CONNECTIONS_DISABLED) {
       return (
         <div
           className="rounded-xl border border-border bg-muted/30 p-5"
@@ -188,7 +216,7 @@ export function LinkedAccountsPanel({
     // Authorization is off, or nobody is signed in. Linking mints a credential,
     // and a credential minted for a self-asserted identity belongs to whoever
     // asked for it — so the backend refuses rather than guessing.
-    if (code === CONNECTIONS_FORBIDDEN) {
+    if (showFailureState && code === CONNECTIONS_FORBIDDEN) {
       return (
         <div
           className="rounded-xl border border-border bg-muted/30 p-5"
@@ -212,7 +240,7 @@ export function LinkedAccountsPanel({
       );
     }
 
-    if (isError) {
+    if (showFailureState) {
       return (
         <ErrorState
           message={t("connections.loadMineFailed", "Could not load your linked accounts")}
@@ -244,7 +272,18 @@ export function LinkedAccountsPanel({
             account={account}
             locale={i18n.language}
             busy={leavingFor === account.connection}
-            onReconnect={() => void startLinking(account.connection)}
+            disabled={linkInFlight}
+            onReconnect={() => {
+              // A healthy account has nothing to fix, and Reconnect sits one
+              // gap from Unlink — so the click that throws the whole tab out to
+              // a provider's consent screen asks first. A broken one goes
+              // straight through: reconnecting IS the remedy there.
+              if (account.status === "ACTIVE" || account.status === "EXPIRED") {
+                setReconnectTarget(account.connection);
+                return;
+              }
+              void startLinking(account.connection);
+            }}
             onUnlink={() => setUnlinkTarget(account.connection)}
           />
         ))}
@@ -267,7 +306,7 @@ export function LinkedAccountsPanel({
             <Button
               size="sm"
               onClick={() => void startLinking(connection.name)}
-              disabled={leavingFor !== null}
+              disabled={linkInFlight}
               data-testid={`connect-${connection.name}`}
             >
               {leavingFor === connection.name ? (
@@ -288,6 +327,24 @@ export function LinkedAccountsPanel({
   const content = (
     <>
       {body}
+      <AlertDialog
+        open={reconnectTarget !== null}
+        onOpenChange={() => setReconnectTarget(null)}
+        variant="warning"
+        title={t("connections.confirmReconnect", "Connect this account again?")}
+        description={t(
+          "connections.confirmReconnectDesc",
+          "This account is working, so there is nothing to repair. Continuing takes you out of EDDI to the provider's sign-in page and replaces the access you granted before.",
+        )}
+        onConfirm={() => {
+          const name = reconnectTarget;
+          setReconnectTarget(null);
+          if (name) void startLinking(name);
+        }}
+        confirmLabel={t("connections.reconnect", "Reconnect")}
+        cancelLabel={t("common.cancel", "Cancel")}
+      />
+
       <AlertDialog
         open={unlinkTarget !== null}
         onOpenChange={() => setUnlinkTarget(null)}
@@ -329,18 +386,48 @@ export function LinkedAccountsPanel({
   );
 }
 
+/**
+ * A `ConnectionsError` as a sentence the reader's locale actually speaks.
+ *
+ * `ConnectionsError.message` is a hardcoded English fallback — the API layer has
+ * no React context and cannot call `t()`, which is precisely why it carries a
+ * `code` instead. Toasting `err.message` threw that away and put English in
+ * front of every non-English user, on the same screen whose body renders the
+ * identical fact translated. That is the regression the code mechanism exists
+ * to prevent, so the codes are resolved here rather than at each call site.
+ */
+function connectionErrorMessage(
+  t: TFunction,
+  error: unknown,
+  fallback: string,
+): string {
+  const code = (error as { code?: string } | null)?.code;
+  if (code === CONNECTIONS_DISABLED) {
+    return t("connections.disabledTitle", "Account linking is switched off");
+  }
+  if (code === CONNECTIONS_FORBIDDEN) {
+    return t("connections.noIdentityTitle", "Sign in to link an account");
+  }
+  // Anything else carries the backend's own message, which is written for the
+  // person who has to act on it — a deleted connection, a store that is down.
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 /* ─── One linked account ───────────────────────────────────────── */
 
 function LinkedAccountRow({
   account,
   locale,
   busy,
+  disabled,
   onReconnect,
   onUnlink,
 }: {
   account: LinkedAccount;
   locale: string;
   busy: boolean;
+  /** Another flow is already on its way to a provider. */
+  disabled: boolean;
   onReconnect: () => void;
   onUnlink: () => void;
 }) {
@@ -351,6 +438,7 @@ function LinkedAccountRow({
   // would cost the user a consent screen to fix nothing.
   const needsAttention =
     account.status === "REFRESH_FAILED" || account.status === "REVOKED";
+  const expiresAt = formatInstant(account.expiresAt, locale);
 
   return (
     <div
@@ -372,9 +460,9 @@ function LinkedAccountRow({
           // and a terrible headline: an access token that expires in forty
           // minutes and renews itself reads as a countdown to a problem.
           title={
-            formatInstant(account.expiresAt, locale)
+            expiresAt
               ? t("connections.detail.expiresAt", {
-                  date: formatInstant(account.expiresAt, locale),
+                  date: expiresAt,
                   defaultValue: "Access token valid until {{date}}",
                 })
               : undefined
@@ -397,7 +485,7 @@ function LinkedAccountRow({
           size="sm"
           variant={needsAttention ? "primary" : "outline"}
           onClick={onReconnect}
-          disabled={busy}
+          disabled={busy || disabled}
           data-testid={`reconnect-${account.connection}`}
         >
           {busy ? (
@@ -463,13 +551,31 @@ function statusDetail(
   }
 }
 
+/**
+ * One formatter per locale, for the app's lifetime.
+ *
+ * `Intl.DateTimeFormat` construction resolves locale data and is by far the
+ * most expensive thing in a row; building one per call meant three per row per
+ * render, and the panel re-renders on every busy-state change.
+ */
+const dateFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function dateFormatter(locale: string): Intl.DateTimeFormat {
+  let formatter = dateFormatters.get(locale);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(locale, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+    dateFormatters.set(locale, formatter);
+  }
+  return formatter;
+}
+
 /** An ISO instant as a local date, or null when there is nothing to show. */
 function formatInstant(value: string | null, locale: string): string | null {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(locale, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
+  return dateFormatter(locale).format(date);
 }

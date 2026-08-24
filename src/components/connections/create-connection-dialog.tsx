@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -11,19 +11,25 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { AccessibleDialog } from "@/components/ui/accessible-dialog";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SecretKeyPicker } from "@/components/shared/secret-key-picker";
-import { HeaderValueField } from "@/components/connections/header-value-field";
+import { StepDots } from "@/components/shared/step-dots";
+import { ConnectionCredentialFields } from "@/components/connections/connection-credential-fields";
 import { OriginAllowlistField } from "@/components/connections/origin-allowlist-field";
 import { ValidationMessage } from "@/components/connections/validation-message";
 import { useCreateConnection } from "@/hooks/use-connections";
 import { getErrorMessage } from "@/lib/api-client";
+import { commitPending } from "@/lib/chip-values";
+import { authTypeDescription, authTypeLabel } from "@/lib/connection-labels";
 import {
+  AUTH_TYPES,
   emptyConnection,
   parseConnectionResourceUri,
   type AuthType,
   type ConnectionConfiguration,
+  type OAuthConfig,
+  type StaticAuth,
 } from "@/lib/api/connections";
 import { validateConnection } from "@/lib/connection-validation";
 
@@ -62,21 +68,68 @@ export function CreateConnectionDialog({
   const [draft, setDraft] = useState<ConnectionConfiguration>(() =>
     emptyConnection("STATIC"),
   );
+  /**
+   * The allowlist text that has been typed but not committed to a chip.
+   *
+   * Held here rather than inside the field so `handleCreate` can fold it in.
+   * Without that, a user who typed an origin and clicked "Create connection"
+   * was refused with "add at least one origin" directly underneath an input
+   * that visibly contained one.
+   */
+  const [pendingOrigin, setPendingOrigin] = useState("");
   /** Errors are shown once a step has been left, not while it is being typed into. */
   const [touched, setTouched] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
 
-  const errors = useMemo(() => validateConnection(draft), [draft]);
+  /** What will actually be sent — the draft with any uncommitted text folded in. */
+  const effectiveDraft = useMemo<ConnectionConfiguration>(
+    () => ({
+      ...draft,
+      baseUrlAllowlist: commitPending(draft.baseUrlAllowlist, pendingOrigin),
+    }),
+    [draft, pendingOrigin],
+  );
+
+  const errors = useMemo(
+    () => validateConnection(effectiveDraft),
+    [effectiveDraft],
+  );
+
+  const isDirty =
+    draft.name.trim() !== "" ||
+    (draft.description ?? "").trim() !== "" ||
+    draft.baseUrlAllowlist.length > 0 ||
+    pendingOrigin.trim() !== "" ||
+    JSON.stringify(draft.staticAuth) !==
+      JSON.stringify(emptyConnection(draft.authType).staticAuth) ||
+    JSON.stringify(draft.oauth) !==
+      JSON.stringify(emptyConnection(draft.authType).oauth);
 
   const reset = useCallback(() => {
     setStep("basics");
     setDraft(emptyConnection("STATIC"));
+    setPendingOrigin("");
     setTouched(false);
+    setConfirmDiscard(false);
   }, []);
 
   const close = useCallback(() => {
     reset();
     onOpenChange(false);
   }, [reset, onOpenChange]);
+
+  /**
+   * Escape and the backdrop reach this. Three steps of transcribed OAuth
+   * settings are too much to throw away on a stray keypress, so a dialog with
+   * anything in it asks first.
+   */
+  const requestClose = useCallback(() => {
+    if (isDirty) {
+      setConfirmDiscard(true);
+      return;
+    }
+    close();
+  }, [isDirty, close]);
 
   /**
    * Switching type replaces the auth block wholesale rather than merging.
@@ -94,6 +147,15 @@ export function CreateConnectionDialog({
       baseUrlAllowlist: prev.baseUrlAllowlist,
     }));
   };
+
+  const patchStatic = (patch: Partial<StaticAuth>) =>
+    setDraft((prev) => ({
+      ...prev,
+      staticAuth: { headerName: "", ...prev.staticAuth, ...patch },
+    }));
+
+  const patchOAuth = (patch: Partial<OAuthConfig>) =>
+    setDraft((prev) => ({ ...prev, oauth: { ...prev.oauth, ...patch } }));
 
   const stepIndex = STEPS.indexOf(step);
   const isFirst = stepIndex === 0;
@@ -138,15 +200,23 @@ export function CreateConnectionDialog({
     setTouched(true);
     if (Object.keys(errors).length > 0) return;
     try {
-      const result = await createMutation.mutateAsync(draft);
-      const { id, version } = parseConnectionResourceUri(result?.location ?? "");
+      const result = await createMutation.mutateAsync(effectiveDraft);
+      const location = (result as { location?: string })?.location;
       toast.success(
         t("connections.created", {
-          name: draft.name,
+          name: effectiveDraft.name,
           defaultValue: '"{{name}}" created.',
         }),
       );
-      onCreated?.(id, version);
+      // Only follow a Location the backend actually sent. A proxy that strips
+      // the header (a CORS `Access-Control-Expose-Headers` omission is the
+      // common cause) would otherwise parse `""` into an empty id and navigate
+      // to `/manage/connections/?version=1`, bouncing the user back to the list
+      // right after being told it worked.
+      if (location) {
+        const { id, version } = parseConnectionResourceUri(location);
+        if (id) onCreated?.(id, version);
+      }
       close();
     } catch (err) {
       // The backend names the field it refused and why — a duplicate name, a
@@ -157,170 +227,162 @@ export function CreateConnectionDialog({
   };
 
   return (
-    <AccessibleDialog
-      open={open}
-      onClose={close}
-      title={t("connections.createTitle", "New connection")}
-      testId="create-connection-dialog"
-      maxWidth="max-w-xl"
-    >
-      {/* Step dots */}
-      <div className="mb-4 flex items-center justify-center gap-2 py-2">
-        {STEPS.map((s, i) => (
-          <div key={s} className="flex items-center gap-2">
-            <div
-              className={`h-2 w-2 rounded-full transition-colors ${
-                i <= stepIndex ? "bg-primary" : "bg-muted"
-              }`}
-            />
-            {i < STEPS.length - 1 && (
-              <div
-                className={`h-px w-8 transition-colors ${
-                  i < stepIndex ? "bg-primary" : "bg-muted"
-                }`}
-              />
-            )}
-          </div>
-        ))}
-      </div>
+    <>
+      <AccessibleDialog
+        open={open}
+        onClose={requestClose}
+        title={t("connections.createTitle", "New connection")}
+        testId="create-connection-dialog"
+        maxWidth="max-w-xl"
+      >
+        <StepDots total={STEPS.length} current={stepIndex} />
 
-      <div className="min-h-[18rem] space-y-4">
-        {step === "basics" && (
-          <>
-            <div className="space-y-1.5">
-              <label
-                className="text-sm font-medium text-foreground"
-                htmlFor="create-connection-name"
-              >
-                {t("connections.name", "Name")}
-              </label>
-              <Input
-                id="create-connection-name"
-                data-testid="create-connection-name"
-                value={draft.name}
-                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                placeholder="jira"
-                autoComplete="off"
-                aria-invalid={(touched && errors.name !== undefined) || undefined}
+        <div className="min-h-[18rem] space-y-4">
+          {step === "basics" && (
+            <>
+              <div className="space-y-1.5">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="create-connection-name"
+                >
+                  {t("connections.name", "Name")}
+                </label>
+                <Input
+                  id="create-connection-name"
+                  data-testid="create-connection-name"
+                  value={draft.name}
+                  // Functional, like every other update here: a non-functional spread
+                  // captures the draft from its render, so two changes landing in one
+                  // batch (a type click and a keystroke) lose the first.
+                  onChange={(e) =>
+                    setDraft((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  placeholder="jira"
+                  autoComplete="off"
+                  aria-invalid={(touched && errors.name !== undefined) || undefined}
+                  aria-describedby="create-connection-name-error"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    "connections.nameHint",
+                    "Agents refer to this connection by name — ${connection:jira}. It cannot be changed later.",
+                  )}
+                </p>
+                {touched && (
+                  <ValidationMessage
+                    code={errors.name}
+                    id="create-connection-name-error"
+                  />
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="create-connection-description"
+                >
+                  {t("connections.description", "Description")}
+                </label>
+                <Input
+                  id="create-connection-description"
+                  data-testid="create-connection-description"
+                  value={draft.description ?? ""}
+                  onChange={(e) =>
+                    setDraft((prev) => ({ ...prev, description: e.target.value }))
+                  }
+                  placeholder={t(
+                    "connections.descriptionPlaceholder",
+                    "What this connects to, for whoever reads the list",
+                  )}
+                />
+              </div>
+
+              <AuthTypeChooser
+                value={draft.authType}
+                onChange={changeAuthType}
               />
+            </>
+          )}
+
+          {step === "credentials" && (
+            <ConnectionCredentialFields
+              draft={draft}
+              onPatchStatic={patchStatic}
+              onPatchOAuth={patchOAuth}
+              errors={touched ? errors : {}}
+              idPrefix="create-connection"
+            />
+          )}
+
+          {step === "origins" && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                {t("connections.allowedOrigins", "Where the credential may be sent")}
+              </label>
               <p className="text-xs text-muted-foreground">
                 {t(
-                  "connections.nameHint",
-                  "Agents refer to this connection by name — ${connection:jira}. It cannot be changed later.",
+                  "connections.allowedOriginsHint",
+                  "List every origin this credential is allowed to reach. Anything not listed is refused, so a later config edit cannot redirect it somewhere else.",
                 )}
               </p>
-              {touched && <ValidationMessage code={errors.name} />}
-            </div>
-
-            <div className="space-y-1.5">
-              <label
-                className="text-sm font-medium text-foreground"
-                htmlFor="create-connection-description"
-              >
-                {t("connections.description", "Description")}
-              </label>
-              <Input
-                id="create-connection-description"
-                data-testid="create-connection-description"
-                value={draft.description ?? ""}
-                onChange={(e) =>
-                  setDraft({ ...draft, description: e.target.value })
+              <OriginAllowlistField
+                value={draft.baseUrlAllowlist}
+                onChange={(baseUrlAllowlist) =>
+                  setDraft((prev) => ({ ...prev, baseUrlAllowlist }))
                 }
-                placeholder={t(
-                  "connections.descriptionPlaceholder",
-                  "What this connects to, for whoever reads the list",
-                )}
+                pending={pendingOrigin}
+                onPendingChange={setPendingOrigin}
+                error={touched ? errors.baseUrlAllowlist : undefined}
+                testId="create-connection-origins"
               />
             </div>
+          )}
+        </div>
 
-            <fieldset className="space-y-2">
-              <legend className="text-sm font-medium text-foreground">
-                {t("connections.howItAuthenticates", "How it authenticates")}
-              </legend>
-              <div className="grid gap-2">
-                {AUTH_TYPE_ORDER.map((authType) => (
-                  <AuthTypeChoice
-                    key={authType}
-                    authType={authType}
-                    selected={draft.authType === authType}
-                    onSelect={() => changeAuthType(authType)}
-                  />
-                ))}
-              </div>
-            </fieldset>
-          </>
-        )}
-
-        {step === "credentials" && (
-          <CredentialsStep
-            draft={draft}
-            setDraft={setDraft}
-            errors={touched ? errors : {}}
-          />
-        )}
-
-        {step === "origins" && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
-              {t("connections.allowedOrigins", "Where the credential may be sent")}
-            </label>
-            <p className="text-xs text-muted-foreground">
-              {t(
-                "connections.allowedOriginsHint",
-                "List every origin this credential is allowed to reach. Anything not listed is refused, so a later config edit cannot redirect it somewhere else.",
-              )}
-            </p>
-            <OriginAllowlistField
-              value={draft.baseUrlAllowlist}
-              onChange={(baseUrlAllowlist) =>
-                setDraft({ ...draft, baseUrlAllowlist })
-              }
-              error={touched ? errors.baseUrlAllowlist : undefined}
-              testId="create-connection-origins"
-            />
-          </div>
-        )}
-      </div>
-
-      <div className="mt-6 flex justify-between">
-        <Button
-          variant="outline"
-          onClick={handleBack}
-          disabled={isFirst}
-          className={isFirst ? "invisible" : ""}
-        >
-          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-          {t("common.back", "Back")}
-        </Button>
-        {isLast ? (
+        <div className="mt-6 flex justify-between">
           <Button
-            onClick={() => void handleCreate()}
-            disabled={createMutation.isPending}
-            data-testid="create-connection-submit"
+            variant="outline"
+            onClick={handleBack}
+            disabled={isFirst}
+            className={isFirst ? "invisible" : ""}
           >
-            {createMutation.isPending
-              ? t("common.saving", "Saving…")
-              : t("connections.createSubmit", "Create connection")}
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            {t("common.back", "Back")}
           </Button>
-        ) : (
-          <Button onClick={handleNext} data-testid="create-connection-next">
-            {t("common.next", "Next")}
-            <ChevronRight className="h-4 w-4" aria-hidden="true" />
-          </Button>
+          {isLast ? (
+            <Button
+              onClick={() => void handleCreate()}
+              disabled={createMutation.isPending}
+              data-testid="create-connection-submit"
+            >
+              {createMutation.isPending
+                ? t("common.saving", "Saving…")
+                : t("connections.createSubmit", "Create connection")}
+            </Button>
+          ) : (
+            <Button onClick={handleNext} data-testid="create-connection-next">
+              {t("common.next", "Next")}
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          )}
+        </div>
+      </AccessibleDialog>
+
+      <UnsavedChangesDialog
+        open={confirmDiscard}
+        onConfirm={close}
+        onCancel={() => setConfirmDiscard(false)}
+        title={t("connections.discardNewTitle", "Discard this connection?")}
+        message={t(
+          "connections.discardNewBody",
+          "What you have filled in so far will be lost. Nothing has been created yet.",
         )}
-      </div>
-    </AccessibleDialog>
+      />
+    </>
   );
 }
 
-/* ─── Auth type choice ─────────────────────────────────────────── */
-
-const AUTH_TYPE_ORDER: AuthType[] = [
-  "STATIC",
-  "BASIC",
-  "OAUTH2_CLIENT_CREDENTIALS",
-  "OAUTH2_AUTHORIZATION_CODE",
-];
+/* ─── Auth type chooser ────────────────────────────────────────── */
 
 const AUTH_TYPE_ICONS: Record<AuthType, LucideIcon> = {
   STATIC: KeyRound,
@@ -330,262 +392,92 @@ const AUTH_TYPE_ICONS: Record<AuthType, LucideIcon> = {
 };
 
 /**
- * One auth type, described by what it means rather than named by its constant.
+ * The four auth types as a real radio group.
  *
- * The copy sits in a switch of literal `t()` calls rather than in a table of
- * key strings, because `check-i18n.mjs` finds keys by scanning for literals —
- * a `t(choice.titleKey)` is invisible to it, and an invisible key is one that
- * ships as English in all eleven locales without anything going red.
+ * `role="radio"` without an owning `radiogroup` is invalid ARIA: the options
+ * are announced as four unrelated toggles with no group name and no "1 of 4",
+ * and the arrow keys every screen-reader user expects do nothing. The roving
+ * `tabIndex` and key handling follow `ViewToggle`, which is the house pattern
+ * the screens skill points at.
  */
-function AuthTypeChoice({
-  authType,
-  selected,
-  onSelect,
+function AuthTypeChooser({
+  value,
+  onChange,
 }: {
-  authType: AuthType;
-  selected: boolean;
-  onSelect: () => void;
+  value: AuthType;
+  onChange: (authType: AuthType) => void;
 }) {
   const { t } = useTranslation();
-  const Icon = AUTH_TYPE_ICONS[authType];
+  const groupRef = useRef<HTMLDivElement>(null);
 
-  const title = () => {
-    switch (authType) {
-      case "STATIC":
-        return t("connections.authType.static", "API key");
-      case "BASIC":
-        return t("connections.authType.basic", "Username & password");
-      case "OAUTH2_CLIENT_CREDENTIALS":
-        return t("connections.authType.clientCredentials", "OAuth service account");
-      case "OAUTH2_AUTHORIZATION_CODE":
-        return t("connections.authType.authorizationCode", "OAuth user login");
-    }
-  };
-
-  const body = () => {
-    switch (authType) {
-      case "STATIC":
-        return t(
-          "connections.choice.staticBody",
-          "One fixed header, the same for everyone — X-Api-Key, or Authorization: Bearer …",
-        );
-      case "BASIC":
-        return t(
-          "connections.choice.basicBody",
-          "HTTP Basic. EDDI does the encoding, so the password stays a separate vault entry you can rotate on its own.",
-        );
-      case "OAUTH2_CLIENT_CREDENTIALS":
-        return t(
-          "connections.choice.clientCredentialsBody",
-          "The agent signs in as itself. One access token shared by everyone, refreshed automatically.",
-        );
-      case "OAUTH2_AUTHORIZATION_CODE":
-        return t(
-          "connections.choice.authorizationCodeBody",
-          "Each person connects their own account and the agent acts as them. Needs sign-in to be switched on, and a vault.",
-        );
-    }
+  const move = (delta: number) => {
+    const index = AUTH_TYPES.indexOf(value);
+    const next = AUTH_TYPES[(index + delta + AUTH_TYPES.length) % AUTH_TYPES.length]!;
+    // Focus the target synchronously — it is already in the DOM, only its
+    // `tabIndex` is about to change. Deferring this to a rAF left a timer that
+    // outlives the dialog and calls `.focus()` on a detached node, which drops
+    // focus to `body` at whatever moment it happens to fire.
+    groupRef.current
+      ?.querySelector<HTMLElement>(`[data-testid="auth-type-choice-${next}"]`)
+      ?.focus();
+    onChange(next);
   };
 
   return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={selected}
-      onClick={onSelect}
-      data-testid={`auth-type-choice-${authType}`}
-      className={`flex items-start gap-3 rounded-lg border p-3 text-start transition-colors ${
-        selected
-          ? "border-primary bg-primary/5"
-          : "border-border hover:border-primary/40 hover:bg-secondary/50"
-      }`}
-    >
-      <Icon
-        className={`mt-0.5 h-4 w-4 shrink-0 ${selected ? "text-primary" : "text-muted-foreground"}`}
-        aria-hidden="true"
-      />
-      <span className="min-w-0">
-        <span className="block text-sm font-medium text-foreground">{title()}</span>
-        <span className="block text-xs text-muted-foreground">{body()}</span>
-      </span>
-    </button>
-  );
-}
-
-/* ─── Credentials step ─────────────────────────────────────────── */
-
-function CredentialsStep({
-  draft,
-  setDraft,
-  errors,
-}: {
-  draft: ConnectionConfiguration;
-  setDraft: (config: ConnectionConfiguration) => void;
-  errors: ReturnType<typeof validateConnection>;
-}) {
-  const { t } = useTranslation();
-
-  const patchStatic = (patch: Partial<NonNullable<ConnectionConfiguration["staticAuth"]>>) =>
-    setDraft({
-      ...draft,
-      staticAuth: { headerName: "Authorization", ...draft.staticAuth, ...patch },
-    });
-
-  const patchOAuth = (patch: Partial<NonNullable<ConnectionConfiguration["oauth"]>>) =>
-    setDraft({ ...draft, oauth: { ...draft.oauth, ...patch } });
-
-  if (draft.authType === "STATIC" || draft.authType === "BASIC") {
-    return (
-      <div className="space-y-4">
-        <div className="space-y-1.5">
-          <label
-            className="text-sm font-medium text-foreground"
-            htmlFor="create-connection-header"
-          >
-            {t("connections.headerName", "Header name")}
-          </label>
-          <Input
-            id="create-connection-header"
-            data-testid="create-connection-header"
-            className="font-mono text-xs"
-            dir="ltr"
-            value={draft.staticAuth?.headerName ?? ""}
-            onChange={(e) => patchStatic({ headerName: e.target.value })}
-            placeholder="Authorization"
-          />
-          <ValidationMessage code={errors["staticAuth.headerName"]} />
-        </div>
-
-        {draft.authType === "STATIC" ? (
-          <div className="space-y-1.5">
-            <label
-              className="text-sm font-medium text-foreground"
-              htmlFor="create-connection-value"
+    <fieldset className="space-y-2">
+      <legend className="text-sm font-medium text-foreground">
+        {t("connections.howItAuthenticates", "How it authenticates")}
+      </legend>
+      <div
+        ref={groupRef}
+        role="radiogroup"
+        aria-label={t("connections.howItAuthenticates", "How it authenticates")}
+        className="grid gap-2"
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+            e.preventDefault();
+            move(1);
+          } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+            e.preventDefault();
+            move(-1);
+          }
+        }}
+      >
+        {AUTH_TYPES.map((authType) => {
+          const Icon = AUTH_TYPE_ICONS[authType];
+          const selected = value === authType;
+          return (
+            <button
+              key={authType}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              // Roving: the group is one tab stop, and the arrows move within it.
+              tabIndex={selected ? 0 : -1}
+              onClick={() => onChange(authType)}
+              data-testid={`auth-type-choice-${authType}`}
+              className={`flex items-start gap-3 rounded-lg border p-3 text-start transition-colors ${
+                selected
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/40 hover:bg-secondary/50"
+              }`}
             >
-              {t("connections.headerValue", "Header value")}
-            </label>
-            <HeaderValueField
-              id="create-connection-value"
-              value={draft.staticAuth?.valueTemplate ?? ""}
-              onChange={(valueTemplate) => patchStatic({ valueTemplate })}
-              error={errors["staticAuth.valueTemplate"]}
-            />
-          </div>
-        ) : (
-          <>
-            <div className="space-y-1.5">
-              <label
-                className="text-sm font-medium text-foreground"
-                htmlFor="create-connection-username"
-              >
-                {t("connections.username", "Username")}
-              </label>
-              <Input
-                id="create-connection-username"
-                data-testid="create-connection-username"
-                value={draft.staticAuth?.username ?? ""}
-                onChange={(e) => patchStatic({ username: e.target.value })}
-                autoComplete="off"
+              <Icon
+                className={`mt-0.5 h-4 w-4 shrink-0 ${selected ? "text-primary" : "text-muted-foreground"}`}
+                aria-hidden="true"
               />
-              <ValidationMessage code={errors["staticAuth.username"]} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">
-                {t("connections.password", "Password")}
-              </label>
-              <SecretKeyPicker
-                value={draft.staticAuth?.passwordRef ?? ""}
-                onChange={(passwordRef) => patchStatic({ passwordRef })}
-                referenceOnly
-                testId="create-connection-password"
-              />
-              <ValidationMessage code={errors["staticAuth.passwordRef"]} />
-            </div>
-          </>
-        )}
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-foreground">
+                  {authTypeLabel(t, authType)}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  {authTypeDescription(t, authType)}
+                </span>
+              </span>
+            </button>
+          );
+        })}
       </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {draft.authType === "OAUTH2_AUTHORIZATION_CODE" && (
-        <div className="space-y-1.5">
-          <label
-            className="text-sm font-medium text-foreground"
-            htmlFor="create-connection-authorization-url"
-          >
-            {t("connections.authorizationUrl", "Authorization URL")}
-          </label>
-          <Input
-            id="create-connection-authorization-url"
-            data-testid="create-connection-authorization-url"
-            className="font-mono text-xs"
-            dir="ltr"
-            value={draft.oauth?.authorizationUrl ?? ""}
-            onChange={(e) => patchOAuth({ authorizationUrl: e.target.value })}
-            placeholder="https://auth.example.com/authorize"
-          />
-          <p className="text-xs text-muted-foreground">
-            {t(
-              "connections.authorizationUrlHint",
-              "Where people are sent to approve access.",
-            )}
-          </p>
-          <ValidationMessage code={errors["oauth.authorizationUrl"]} />
-        </div>
-      )}
-
-      <div className="space-y-1.5">
-        <label
-          className="text-sm font-medium text-foreground"
-          htmlFor="create-connection-token-url"
-        >
-          {t("connections.tokenUrl", "Token URL")}
-        </label>
-        <Input
-          id="create-connection-token-url"
-          data-testid="create-connection-token-url"
-          className="font-mono text-xs"
-          dir="ltr"
-          value={draft.oauth?.tokenUrl ?? ""}
-          onChange={(e) => patchOAuth({ tokenUrl: e.target.value })}
-          placeholder="https://auth.example.com/oauth/token"
-        />
-        <ValidationMessage code={errors["oauth.tokenUrl"]} />
-      </div>
-
-      <div className="space-y-1.5">
-        <label
-          className="text-sm font-medium text-foreground"
-          htmlFor="create-connection-client-id"
-        >
-          {t("connections.clientId", "Client ID")}
-        </label>
-        <Input
-          id="create-connection-client-id"
-          data-testid="create-connection-client-id"
-          className="font-mono text-xs"
-          dir="ltr"
-          value={draft.oauth?.clientId ?? ""}
-          onChange={(e) => patchOAuth({ clientId: e.target.value })}
-          autoComplete="off"
-        />
-        <ValidationMessage code={errors["oauth.clientId"]} />
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t("connections.clientSecret", "Client secret")}
-        </label>
-        <SecretKeyPicker
-          value={draft.oauth?.clientSecret ?? ""}
-          onChange={(clientSecret) => patchOAuth({ clientSecret })}
-          referenceOnly
-          testId="create-connection-client-secret"
-        />
-        <ValidationMessage code={errors["oauth.clientSecret"]} />
-      </div>
-    </div>
+    </fieldset>
   );
 }

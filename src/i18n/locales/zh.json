@@ -212,7 +212,9 @@
     "history": "历史记录",
     "copyId": "复制代理 ID",
     "off": "关闭",
-    "on": "开启"
+    "on": "开启",
+    "removeItem": "移除 {{item}}",
+    "stepOf": "第 {{current}} 步，共 {{total}} 步"
   },
   "agents": {
     "confirmDeleteDescription": "此操作无法撤销。该智能体及其所有数据将被永久删除。",
@@ -4494,6 +4496,12 @@
       "endpointUserInfo": "请从 URL 中删除凭据；它们会改变请求的真实去向。",
       "endpointNotAbsolute": "请填写包含主机的完整 URL，例如 https://auth.example.com/oauth/token。",
       "paramCredentialShaped": "其中一个参数的名称像是凭据。这里只能放非机密的协议参数（prompt、audience 等）。"
-    }
+    },
+    "backToList": "返回连接列表",
+    "headerSecret": "已存密钥",
+    "discardNewTitle": "放弃这个连接？",
+    "discardNewBody": "你目前填写的内容将会丢失。目前尚未创建任何内容。",
+    "confirmReconnect": "重新关联此账户？",
+    "confirmReconnectDesc": "该账户运行正常，无需修复。继续将带你离开 EDDI 前往服务商的登录页面，并替换你此前授予的访问权限。"
   }
 }

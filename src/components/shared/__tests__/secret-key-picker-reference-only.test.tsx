@@ -143,6 +143,90 @@ describe("SecretKeyPicker in reference-only mode", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it("braces an unbraced ${vars:…} without rewriting its scheme", async () => {
+    // The gap this closes: the picker's own scheme list was missing `vars`, so
+    // a reference the backend accepts was refused by the field meant to help
+    // write one — and the old canonicaliser would have mangled it into
+    // `${vault:vars:…}` had it fired.
+    const user = userEvent.setup();
+    renderWithProviders(<ControlledPicker initial="vars:tenant-key" referenceOnly />);
+
+    expect(screen.getByTestId("secret-key-picker-literal-warning")).toBeInTheDocument();
+    await user.click(screen.getByTestId("secret-key-picker-input"));
+    await user.tab();
+
+    await waitFor(() =>
+      expect(screen.getByText("vars:tenant-key")).toBeInTheDocument(),
+    );
+    expect(
+      screen.queryByTestId("secret-key-picker-literal-warning"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not rewrite the value of a read-only field", async () => {
+    // Every other mutating handler guards on readOnly; blur did not, so merely
+    // tabbing through a locked field emitted a change and dirtied the form.
+    const user = userEvent.setup();
+    renderWithProviders(
+      <SecretKeyPicker
+        value="vault:jira-client-secret"
+        onChange={onChange}
+        referenceOnly
+        readOnly
+      />,
+    );
+
+    await user.click(screen.getByTestId("secret-key-picker-input"));
+    await user.tab();
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("describes the field with the warning, not just marks it invalid", async () => {
+    renderWithProviders(
+      <SecretKeyPicker value="sk-live-abcdef" onChange={onChange} referenceOnly />,
+    );
+
+    const input = screen.getByTestId("secret-key-picker-input");
+    const warning = screen.getByTestId("secret-key-picker-literal-warning");
+    // Without the association the field announces "invalid" and never says why.
+    expect(warning).toHaveAttribute("id");
+    expect(input.getAttribute("aria-describedby")).toContain(
+      warning.getAttribute("id"),
+    );
+  });
+
+  it("keeps its own invalid state when a caller passes aria-invalid={false}", () => {
+    // `??` let an explicit false suppress the internally derived state, so the
+    // one field that is actually wrong was the one "jump to first invalid"
+    // skipped.
+    renderWithProviders(
+      <SecretKeyPicker
+        value="sk-live-abcdef"
+        onChange={onChange}
+        referenceOnly
+        aria-invalid={false}
+      />,
+    );
+
+    expect(screen.getByTestId("secret-key-picker-input")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+  });
+
+  it("opens the vault popup even when the click would canonicalise the value", async () => {
+    // Blur used to canonicalise mid-click, swapping the input for a chip and
+    // unmounting this very button between mousedown and mouseup.
+    const user = userEvent.setup();
+    renderWithProviders(<ControlledPicker initial="vault:jira-client-secret" referenceOnly />);
+
+    await user.click(screen.getByTestId("secret-key-picker-input"));
+    await user.click(await screen.findByTestId("secret-key-picker-vault-btn"));
+
+    expect(await screen.findByTestId("vault-popup")).toBeInTheDocument();
+  });
+
   it("emits a canonical reference when a vault key is picked", async () => {
     const user = userEvent.setup();
     renderWithProviders(<SecretKeyPicker value="" onChange={onChange} referenceOnly />);

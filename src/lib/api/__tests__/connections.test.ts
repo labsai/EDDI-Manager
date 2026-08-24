@@ -12,7 +12,10 @@ import {
   isConnectionErrorCode,
   listMyConnections,
   parseConnectionResourceUri,
+  toStoredConnection,
+  type ConnectionConfiguration,
 } from "@/lib/api/connections";
+import { parseResourceUri } from "@/lib/api/agents";
 
 describe("parseConnectionResourceUri", () => {
   it("parses an eddi:// resource URI", () => {
@@ -33,6 +36,113 @@ describe("parseConnectionResourceUri", () => {
     expect(
       parseConnectionResourceUri("/connectionstore/connections/conn9"),
     ).toEqual({ id: "conn9", version: 1 });
+  });
+});
+
+describe("parseConnectionResourceUri is the shared parser", () => {
+  it("is literally `parseResourceUri`, not a third copy of it", () => {
+    // Three character-for-character copies existed. A URI-shape fix applied to
+    // one and not the others resolves the wrong id — a save against the wrong
+    // revision, with every copy's own tests still green.
+    expect(parseConnectionResourceUri).toBe(parseResourceUri);
+  });
+});
+
+describe("toStoredConnection — the document sent, built from the type", () => {
+  const base: ConnectionConfiguration = {
+    name: "x",
+    authType: "STATIC",
+    binding: "SERVICE",
+    allowUnverifiedPrincipal: false,
+    baseUrlAllowlist: ["https://api.example.com"],
+  };
+
+  it("keeps only the STATIC fields when the type is STATIC", () => {
+    // The failure this prevents: switching BASIC → STATIC used to carry the
+    // username and a `${vault:…}` passwordRef into a document whose flow reads
+    // neither — a credential pointer the connection has no reason to hold.
+    const stored = toStoredConnection({
+      ...base,
+      authType: "STATIC",
+      staticAuth: {
+        headerName: "Authorization",
+        valueTemplate: "Bearer ${vault:k}",
+        username: "left-over",
+        passwordRef: "${vault:left-over}",
+      },
+    });
+    expect(stored.staticAuth).toEqual({
+      headerName: "Authorization",
+      valueTemplate: "Bearer ${vault:k}",
+    });
+    expect(stored.oauth).toBeNull();
+  });
+
+  it("keeps only the BASIC fields when the type is BASIC", () => {
+    const stored = toStoredConnection({
+      ...base,
+      authType: "BASIC",
+      staticAuth: {
+        headerName: "Authorization",
+        username: "svc",
+        passwordRef: "${vault:pw}",
+        valueTemplate: "Bearer ${vault:left-over}",
+      },
+    });
+    expect(stored.staticAuth).toEqual({
+      headerName: "Authorization",
+      username: "svc",
+      passwordRef: "${vault:pw}",
+    });
+  });
+
+  it("drops the authorization URL from a client-credentials connection", () => {
+    // The field is not even rendered for this type, so an author cannot see or
+    // clear what would otherwise be saved.
+    const stored = toStoredConnection({
+      ...base,
+      authType: "OAUTH2_CLIENT_CREDENTIALS",
+      oauth: {
+        authorizationUrl: "https://auth.example.com/authorize",
+        tokenUrl: "https://auth.example.com/token",
+        clientId: "id",
+        clientSecret: "${vault:s}",
+      },
+    });
+    expect(stored.oauth?.authorizationUrl).toBeNull();
+    expect(stored.oauth?.tokenUrl).toBe("https://auth.example.com/token");
+    expect(stored.staticAuth).toBeNull();
+  });
+
+  it("forces PKCE on for a user-login connection", () => {
+    const stored = toStoredConnection({
+      ...base,
+      authType: "OAUTH2_AUTHORIZATION_CODE",
+      oauth: { tokenUrl: "https://a.example.com/t", usePkce: false },
+    });
+    expect(stored.oauth?.usePkce).toBe(true);
+  });
+
+  it("derives the binding rather than trusting the draft", () => {
+    const stored = toStoredConnection({
+      ...base,
+      authType: "OAUTH2_AUTHORIZATION_CODE",
+      binding: "SERVICE",
+      oauth: { tokenUrl: "https://a.example.com/t" },
+    });
+    expect(stored.binding).toBe("PER_USER");
+  });
+
+  it("clears the unverified-principal flag off a non-per-user connection", () => {
+    // The backend refuses it there rather than ignoring it, and a flag whose
+    // name promises to loosen an identity check reads as a live decision.
+    const stored = toStoredConnection({
+      ...base,
+      authType: "STATIC",
+      allowUnverifiedPrincipal: true,
+      staticAuth: { headerName: "A", valueTemplate: "${vault:k}" },
+    });
+    expect(stored.allowUnverifiedPrincipal).toBe(false);
   });
 });
 
@@ -208,6 +318,35 @@ describe("authorizeConnection", () => {
     const result = await authorizeConnection("jira", "/manage/linked-accounts");
     expect(seen).toBe("/manage/linked-accounts");
     expect(result.authorizationUrl).toBe("https://provider.example/auth");
+  });
+
+  it("does not claim the feature is off when the connection is missing", async () => {
+    // Both facts arrive as a 404 on this route. Reporting a deleted connection
+    // as "linking is switched off" sends the operator to check a setting that
+    // is already correct.
+    server.use(
+      http.post(
+        "*/connections/:name/authorize",
+        () => new HttpResponse("No connection named 'jira'.", { status: 404 }),
+      ),
+    );
+    await expect(authorizeConnection("jira", "/x")).rejects.toMatchObject({
+      code: undefined,
+      status: 404,
+      message: "No connection named 'jira'.",
+    });
+  });
+
+  it("still reports a 503 as the feature being unavailable", async () => {
+    server.use(
+      http.post(
+        "*/connections/:name/authorize",
+        () => new HttpResponse(null, { status: 503 }),
+      ),
+    );
+    await expect(authorizeConnection("jira", "/x")).rejects.toMatchObject({
+      code: CONNECTIONS_DISABLED,
+    });
   });
 
   it("encodes a connection name that needs it", async () => {
