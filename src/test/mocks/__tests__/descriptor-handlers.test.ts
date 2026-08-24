@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { api } from "@/lib/api-client";
 
 /**
  * MSW resolves handlers in registration order, and `handlers.ts` registers two
@@ -23,13 +24,16 @@ import { describe, it, expect } from "vitest";
  * `*./groupstore/groups/descriptors` are different strings to it.)
  */
 
-const BASE = "http://localhost";
-
-async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`);
-  expect(res.ok, `${path} responded ${res.status}`).toBe(true);
-  return (await res.json()) as T;
-}
+/**
+ * Through `ApiClient`, not a bare fetch against a hardcoded host.
+ *
+ * It is what the app uses, so these probe the handlers by the same URL the
+ * real callers build — a mock whose pattern no longer matches what the client
+ * sends would show up here rather than only in a page test. It also throws on
+ * a non-2xx, so a missing handler fails as itself instead of as a confusing
+ * shape assertion further down.
+ */
+const getJson = <T,>(path: string): Promise<T> => api.get<T>(path);
 
 interface Descriptor {
   resource?: string;
