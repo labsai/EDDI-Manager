@@ -2,6 +2,70 @@
 
 ## Current Status (v6.3.0)
 
+### How a linked account is actually consumed (traced end to end, after getting it wrong once)
+
+Where a `PER_USER` connection resolves — and where it refuses — is not obvious from
+either repo alone, and the obvious reading is wrong. Recorded here with the
+`origin/main` call sites so the next person can re-check rather than re-derive.
+
+**The wrong answer, and why it is tempting.** `GroupConversationService` runs
+discussions on `Executors.newVirtualThreadPerTaskExecutor()`, and
+`ResolutionPrincipalContext` is a plain `ThreadLocal` that nothing inherits. That
+looks conclusive — group turns have no principal, so per-user connections must fail
+closed. It is not, for two reasons that only show up if you keep reading.
+
+**1. Later turns never consult the request thread.**
+`ConversationService.withResolutionPrincipal` (~:1162) rebuilds the principal from
+the *conversation memory* — `new ResolutionPrincipal(memory.getUserId(),
+memory.getResolutionProvenance())`. Provenance is decided **once**, at
+`startConversation` on whatever thread creates the conversation (~:372), and
+persisted (~:391). Which thread runs turn #7 is irrelevant by construction, and the
+source comment says so: "Every later turn — a say tomorrow, a HITL resume next week
+— runs on a request that proves nothing about this conversation's owner, which is
+why the answer is persisted below rather than re-derived."
+
+**2. The group service carries the caller across the async boundary.**
+`GroupConversationService:516` does `callerIdentityContext.captureOrCurrent()` on
+the request thread and submits `withIdentity(discussionCaller, …)`. Grepping that
+file for `ResolutionPrincipal` finds nothing and invites the wrong conclusion; what
+propagates is `CallerIdentity`, which is exactly what `deriveResolutionPrincipal`
+reads.
+
+**The verified chain (group).** `RestGroupConversation` →
+`OwnershipValidator.validateAndResolveUserId(identity, request.userId())`, which
+returns the caller's own id when the body omits one → `gc.setUserId(...)` →
+`startAndDiscussAsync` captures and binds the caller →
+`MemberTurnExecutor:275` calls `conversationService.startConversation(env,
+member.agentId(), gc.getUserId(), …)` → `deriveResolutionPrincipal` finds the bound
+caller, ids match → **VERIFIED**, persisted per member conversation →
+`ConnectionResolver.resolvePrincipal` resolves that human's grant.
+
+**1:1 is the same chain, shorter.** The Manager's `startConversation` sends no
+`userId` (`chat.ts`), so it resolves to the caller's id → VERIFIED.
+
+**Consequence worth knowing:** every member agent in a discussion resolves the
+*same* person's grant. Five agents debating all act as you against Jira — not one
+account each.
+
+**Where it refuses, all deliberately:**
+- An `eddi-admin` starting a conversation *as another user* — `OwnershipValidator`
+  permits the explicit `userId`, but then `caller.userId().equals(conversationUserId)`
+  is false → `SELF_ASSERTED` → refused. Impersonating somebody must not let you
+  spend their tokens.
+- `authorization.enabled=false` — nothing is verified, so nothing resolves. This is
+  the case `allowUnverifiedPrincipal` exists for, and why the editor makes turning
+  it on an explicit confirmation.
+- Conversations created before this release carry no stored provenance →
+  `SELF_ASSERTED` → 409 whose message already ends "must be started again".
+
+**Still absent, by design of the API rather than of the UI:** there is no
+"reference a document from my connected account" affordance in either chat surface,
+and none can be built from the Manager alone. Connections are consumed by *agent
+config* (`${connection:name}` inside apicalls / mcpcalls / rag / llm) when the agent
+makes an outbound call; chat attachments are uploads via
+`/conversations/{id}/attachments`, an unrelated mechanism. Nothing today can
+enumerate a user's remote content, so a picker would need a new backend surface.
+
 ### Completed Phases
 - **Connections review remediation** (branch: `claude/eddi-manager-connections-241f3f`): a nine-angle review of the connections commit produced ten verified findings; all ten are fixed, with the below-cap cleanup. **5787 passing (373 files)**, +90.
   - **Save silently dropped uncommitted chip text.** A scope or origin typed and not committed with Enter was discarded while the save toasted success — and the text stayed on screen, so nothing contradicted it. The failure surfaced days later as grants dying of `REFRESH_FAILED` because `offline_access` was never stored. Fixed by lifting the pending text into the form (`ChipInput` takes `pending`/`onPendingChange`), so the parent always holds everything about to be saved; `commitPending` folds it in at save time and blur-commit handles the ordinary path. Blur alone was not enough — blur and click are separate events, so the parent could still read pre-commit state.
@@ -15,6 +79,7 @@
   - **A11y**: the auth-type chooser is a real `radiogroup` with roving `tabIndex` and arrow keys; the reference-only warning is wired to `aria-describedby`; every `referenceOnly` picker has a resolving label; `StepDots` announces "Step 2 of 3"; the vault button no longer loses its own click to a blur-triggered re-render.
   - **Reuse**: `parseResourceUri` from `agents.ts` instead of a third copy, one `ConnectionCredentialFields` instead of ~150 duplicated lines, shared `ChipInput`/`StepDots`/`connection-labels`, `BackLink`, and the command palette knows both new pages.
   - **`code_verifier` is a live backend bug**, not just a mirror gap: EDDI strips `_` before consulting a set whose only matching entry keeps it, so its own check misses the name. Filed upstream; the mirror normalises both sides and is deliberately one name stricter than the backend until that lands.
+
 - **Connections in the Manager** (branch: `claude/eddi-manager-connections-241f3f`): the backend's connections API landed on EDDI `origin/main` (PR #711) and nothing in the Manager surfaced it. Two audiences, two surfaces, one API module. **5697 passing (368 files)**, +107.
   - **Two route groups, deliberately not folded together.** `/connectionstore/connections` is `eddi-admin` versioned CRUD and lives at `/manage/connections`; `/connections` is any signed-in user's own grant lifecycle and lives at `/manage/linked-accounts`, reachable from the top-bar user menu. The per-user panel is embedded on the admin page too, because `ConnectionsConfig.defaultReturnTo()` sends everyone there after a provider round trip.
   - **The plan's "503 = feature off" was wrong, and it mattered.** `RestConnectionAuthorization.requireEnabled()` throws `NotFoundException`, not a 503 — the comment in the source says why: `ClientErrorExceptionMapper` copies a message into the body only for 4xx, so the 503 it used to throw delivered an empty body and left the sentence naming the setting in the server log. A bare 404 on `/connections/mine` would have rendered as "not found" on a page that is very much found, so `connections.ts` maps it (and a 503, defensively) to a translatable `CONNECTIONS_DISABLED` code and the panel renders a *state*, not an error. Equally: the **admin store is not gated by `eddi.connections.enabled` at all** — connections can be authored while linking is switched off, and the UI reflects that.
