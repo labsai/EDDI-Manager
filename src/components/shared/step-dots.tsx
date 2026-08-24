@@ -29,10 +29,9 @@ export function StepDots({ total, current, testId = "step-dots" }: StepDotsProps
       data-testid={testId}
     >
       <span className="sr-only">
-        {t("common.stepOf", {
+        {t("common.stepOf", "Step {{current}} of {{total}}", {
           current: current + 1,
           total,
-          defaultValue: "Step {{current}} of {{total}}",
         })}
       </span>
       {Array.from({ length: total }).map((_, index) => (

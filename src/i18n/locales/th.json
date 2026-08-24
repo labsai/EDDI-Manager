@@ -214,7 +214,8 @@
     "off": "ปิด",
     "on": "เปิด",
     "removeItem": "นำ {{item}} ออก",
-    "stepOf": "ขั้นที่ {{current}} จาก {{total}}"
+    "stepOf": "ขั้นที่ {{current}} จาก {{total}}",
+    "versionShort": "v{{version}}"
   },
   "agents": {
     "confirmDeleteDescription": "การดำเนินการนี้ไม่สามารถย้อนกลับได้ เอเจนต์และข้อมูลทั้งหมดจะถูกลบอย่างถาวร",
@@ -3326,7 +3327,7 @@
     "placeholder": "API key หรือ ${vault:key-name}",
     "vaultDown": "ยังไม่ได้กำหนดค่า Vault — ตั้งค่าผู้ให้บริการข้อมูลลับในแบ็กเอนด์ EDDI",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "ช่องนี้รับการอ้างอิงห้องนิรภัย ไม่ใช่ตัวความลับเอง เลือกคีย์ หรือเก็บค่าไว้ในห้องนิรภัยก่อน"
+    "mustBeReference": "ช่องนี้รับการอ้างอิง — ${vault:key} หรือ ${vars:key} — ไม่ใช่ตัวความลับเอง เลือกคีย์ หรือเก็บค่าไว้ในห้องนิรภัยก่อน"
   },
   "snippetEditor": {
     "category": "หมวดหมู่",

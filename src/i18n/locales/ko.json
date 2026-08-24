@@ -214,7 +214,8 @@
     "off": "끄기",
     "on": "켜기",
     "removeItem": "{{item}} 제거",
-    "stepOf": "{{total}}단계 중 {{current}}단계"
+    "stepOf": "{{total}}단계 중 {{current}}단계",
+    "versionShort": "v{{version}}"
   },
   "agents": {
     "confirmDeleteDescription": "이 작업은 되돌릴 수 없습니다. 에이전트와 모든 데이터가 영구적으로 제거됩니다.",
@@ -3326,7 +3327,7 @@
     "placeholder": "API 키 또는 ${vault:key-name}",
     "vaultDown": "볼트가 구성되지 않았습니다 — EDDI 백엔드에서 시크릿 제공자를 설정하세요",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "이 항목에는 비밀 값 자체가 아니라 볼트 참조를 넣습니다. 키를 고르거나, 값을 먼저 볼트에 저장하세요."
+    "mustBeReference": "이 항목에는 비밀 값 자체가 아니라 참조 — ${vault:key} 또는 ${vars:key} — 를 넣습니다. 키를 고르거나, 값을 먼저 볼트에 저장하세요."
   },
   "snippetEditor": {
     "category": "카테고리",

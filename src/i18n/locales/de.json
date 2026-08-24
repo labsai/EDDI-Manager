@@ -214,7 +214,8 @@
     "off": "Aus",
     "on": "Ein",
     "removeItem": "{{item}} entfernen",
-    "stepOf": "Schritt {{current}} von {{total}}"
+    "stepOf": "Schritt {{current}} von {{total}}",
+    "versionShort": "v{{version}}"
   },
   "agents": {
     "confirmDeleteDescription": "Diese Aktion kann nicht rückgängig gemacht werden. Der Agent und alle seine Daten werden dauerhaft entfernt.",
@@ -3326,7 +3327,7 @@
     "placeholder": "API-Schlüssel oder ${vault:key-name}",
     "vaultDown": "Vault ist nicht konfiguriert — richten Sie einen Secret-Provider im EDDI-Backend ein",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "Dieses Feld nimmt eine Vault-Referenz auf, nicht das Geheimnis selbst. Wählen Sie einen Schlüssel oder legen Sie den Wert zuerst im Vault ab."
+    "mustBeReference": "Dieses Feld nimmt eine Referenz auf — ${vault:key} oder ${vars:key} —, nicht das Geheimnis selbst. Wählen Sie einen Schlüssel oder legen Sie den Wert zuerst im Vault ab."
   },
   "snippetEditor": {
     "category": "Kategorie",
@@ -4365,7 +4366,7 @@
     "count": "{{shown}} angezeigt",
     "empty": "Noch keine Verbindungen",
     "emptyDesc": "Legen Sie eine an, damit sich Ihre Agenten bei einem externen System authentifizieren können.",
-    "guidance": "Eine Verbindung besteht aus einem Zugangsdatum und der Liste der Origins, an die es gesendet werden darf. Agenten verweisen über den Namen darauf — ${connection:jira} — und EDDI löst sie pro Anfrage auf. Dieselbe Verbindung kann daher einen unternehmensweiten API-Schlüssel oder das persönliche Konto jeder einzelnen Person tragen.",
+    "guidance": "Eine Verbindung besteht aus Zugangsdaten und der Liste der Origins, an die sie gesendet werden dürfen. Agenten verweisen über den Namen darauf — ${connection:jira} — und EDDI löst sie pro Anfrage auf. Dieselbe Verbindung kann daher einen unternehmensweiten API-Schlüssel oder das persönliche Konto jeder einzelnen Person tragen.",
     "howItAuthenticates": "Art der Authentifizierung",
     "confirmDelete": "Diese Verbindung löschen?",
     "confirmDeleteDesc": "Jedes darüber verknüpfte Konto wird gleichzeitig getrennt — Tokens dürfen die Verbindung nicht überleben, aus der sie stammen. Agenten, die den Namen verwenden, können sich danach nicht mehr authentifizieren.",
@@ -4394,7 +4395,7 @@
     "bindingPerUserTitle": "Gilt für jede Person einzeln",
     "bindingServiceTitle": "Gilt für ein gemeinsames Konto",
     "bindingPerUserBody": "Alle verknüpfen ihr eigenes Konto und der Agent handelt in ihrem Namen. Das ergibt sich aus der Authentifizierungsart — nur eine Benutzeranmeldung erzeugt eine Freigabe pro Person.",
-    "bindingServiceBody": "Ein Zugangsdatum, für alle dasselbe. Das ergibt sich aus der Authentifizierungsart — ein fester Schlüssel bleibt für alle derselbe, unabhängig von der Bindung.",
+    "bindingServiceBody": "Dieselben Zugangsdaten für alle. Das ergibt sich aus der Authentifizierungsart — ein fester Schlüssel bleibt für alle derselbe, unabhängig von der Bindung.",
     "bindingPerUserWhere": "Verknüpfen können Personen ihr Konto unter",
     "allowUnverified": "Benutzeridentitäten eines vorgelagerten Proxys vertrauen",
     "allowUnverifiedBody": "Nur für Installationen, die ihre Benutzer vorgelagert authentifizieren. Ist dies aktiv, kann alles, was Ihrem Proxy eine Benutzerkennung nennen kann, die gespeicherten Zugangsdaten dieser Person verwenden — die Angabe wird danach nicht mehr geprüft.",
@@ -4486,7 +4487,7 @@
       "originHost": "Eine Origin braucht einen Hostnamen.",
       "headerNameRequired": "Benennen Sie den Header, in dem die Zugangsdaten gesendet werden, z. B. Authorization.",
       "templateRequired": "Ein Header-Wert ist erforderlich, z. B. Bearer ${vault:jira-token}.",
-      "templateNoReference": "Dieser Wert enthält keine ${vault:…}-Referenz und ist damit ein Klartext-Zugangsdatum. Legen Sie ihn im Vault ab und verweisen Sie hier darauf.",
+      "templateNoReference": "Dieser Wert enthält keine ${vault:…}-Referenz und steht damit im Klartext hier. Legen Sie ihn im Vault ab und verweisen Sie hier darauf.",
       "templateBadSegment": "In einem Header-Wert dürfen nur ${vault:…} und ${vars:…} eingesetzt werden.",
       "usernameRequired": "Basic-Authentifizierung braucht einen Benutzernamen.",
       "secretMustBeReference": "Hier muss eine ${vault:…}-Referenz stehen, nicht das Geheimnis selbst. Legen Sie den Wert im Vault ab und verweisen Sie hier darauf.",
@@ -4495,7 +4496,7 @@
       "endpointNotHttps": "Muss https sein — das Client-Secret wird an diese URL gesendet.",
       "endpointUserInfo": "Entfernen Sie die Zugangsdaten aus der URL; sie verändern, wohin die Anfrage tatsächlich geht.",
       "endpointNotAbsolute": "Geben Sie eine vollständige URL samt Host an, z. B. https://auth.example.com/oauth/token.",
-      "paramCredentialShaped": "Einer dieser Parameter trägt den Namen eines Zugangsdatums. Hierher gehören nur nicht geheime Protokollparameter (prompt, audience, …)."
+      "paramCredentialShaped": "Einer dieser Parameter ist wie Zugangsdaten benannt. Hierher gehören nur nicht geheime Protokollparameter (prompt, audience, …)."
     },
     "backToList": "Zurück zu den Verbindungen",
     "headerSecret": "Gespeichertes Geheimnis",

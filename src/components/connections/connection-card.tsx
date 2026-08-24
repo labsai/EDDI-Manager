@@ -32,6 +32,11 @@ export function ConnectionCard({
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
+        // Only the card itself. Enter and Space bubble from the Duplicate and
+        // Delete buttons nested inside it, so an unguarded handler navigated
+        // away instead of deleting — and `preventDefault` suppressed the button
+        // activation on the way past.
+        if (e.target !== e.currentTarget) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           navigate(to);
@@ -116,7 +121,9 @@ export function ConnectionCard({
       )}
 
       <div className="flex items-center justify-between border-t border-border/30 pt-1 text-xs text-muted-foreground">
-        <span>v{connection.version}</span>
+        <span>
+          {t("common.versionShort", "v{{version}}", { version: connection.version })}
+        </span>
         {/* The viewer's chosen language, not the browser's: the two differ
             whenever somebody picks a locale in the top bar. */}
         <span>

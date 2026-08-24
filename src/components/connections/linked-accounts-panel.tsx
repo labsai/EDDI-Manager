@@ -23,6 +23,7 @@ import {
   useAuthorizeConnection,
   useDisconnectConnection,
 } from "@/hooks/use-connections";
+import { navigateAway } from "@/lib/navigate-away";
 import {
   CONNECTIONS_DISABLED,
   CONNECTIONS_FORBIDDEN,
@@ -135,7 +136,7 @@ export function LinkedAccountsPanel({
         // the user their place on the page but never the link itself.
         returnTo: location.pathname,
       });
-      window.location.assign(authorizationUrl);
+      navigateAway(authorizationUrl);
     } catch (err) {
       setLeavingFor(null);
       toast.error(

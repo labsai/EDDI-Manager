@@ -214,7 +214,8 @@
     "off": "Off",
     "on": "On",
     "removeItem": "Remove {{item}}",
-    "stepOf": "Step {{current}} of {{total}}"
+    "stepOf": "Step {{current}} of {{total}}",
+    "versionShort": "v{{version}}"
   },
   "createOrWizard": {
     "title": "New {{type}}",
@@ -3366,7 +3367,7 @@
     "placeholder": "API key or ${vault:key-name}",
     "vaultDown": "Vault is not configured — set up a secret provider in the EDDI backend",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "This field takes a vault reference, not the secret itself. Pick a key, or store the value in the vault first."
+    "mustBeReference": "This field takes a reference — ${vault:key} or ${vars:key} — not the secret itself. Pick a key, or store the value in the vault first."
   },
   "snippetEditor": {
     "category": "Category",

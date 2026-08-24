@@ -214,7 +214,8 @@
     "off": "关闭",
     "on": "开启",
     "removeItem": "移除 {{item}}",
-    "stepOf": "第 {{current}} 步，共 {{total}} 步"
+    "stepOf": "第 {{current}} 步，共 {{total}} 步",
+    "versionShort": "v{{version}}"
   },
   "agents": {
     "confirmDeleteDescription": "此操作无法撤销。该智能体及其所有数据将被永久删除。",
@@ -3326,7 +3327,7 @@
     "placeholder": "API 密钥或 ${vault:key-name}",
     "vaultDown": "保管库尚未配置——请在 EDDI 后端设置 Secret 提供程序",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "此字段接受保险库引用，而不是密钥本身。请选择一个密钥，或先把值存入保险库。"
+    "mustBeReference": "此字段接受引用 —— ${vault:key} 或 ${vars:key} —— 而不是密钥本身。请选择一个密钥，或先把值存入保险库。"
   },
   "snippetEditor": {
     "category": "类别",

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Plug, Plus, Search, ShieldAlert } from "lucide-react";
@@ -325,7 +325,19 @@ export function ConnectionsPage() {
                       data-testid={`connection-row-${connection.id}`}
                     >
                       <td className="px-4 py-3 font-medium">
-                        {connection.connectionName || connection.name}
+                        {/* A real link, not just a row click: the row's onClick
+                            is a mouse affordance only, so without this the
+                            table view had no keyboard route into a connection
+                            at all. It also restores middle-click and
+                            open-in-new-tab, which navigate() cannot offer. */}
+                        <Link
+                          to={`/manage/connections/${connection.id}?version=${connection.version}`}
+                          className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          onClick={(e) => e.stopPropagation()}
+                          data-testid={`connection-link-${connection.id}`}
+                        >
+                          {connection.connectionName || connection.name}
+                        </Link>
                       </td>
                       <td className="px-4 py-3">
                         <AuthTypeBadge authType={connection.authType} />
@@ -339,7 +351,11 @@ export function ConnectionsPage() {
                       >
                         {connection.origins.join(", ") || "—"}
                       </td>
-                      <td className="px-4 py-3 text-end">v{connection.version}</td>
+                      <td className="px-4 py-3 text-end">
+                        {t("common.versionShort", "v{{version}}", {
+                          version: connection.version,
+                        })}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

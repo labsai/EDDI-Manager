@@ -214,7 +214,8 @@
     "off": "Desligado",
     "on": "Ligado",
     "removeItem": "Remover {{item}}",
-    "stepOf": "Etapa {{current}} de {{total}}"
+    "stepOf": "Etapa {{current}} de {{total}}",
+    "versionShort": "v{{version}}"
   },
   "agents": {
     "confirmDeleteDescription": "Esta ação não pode ser desfeita. O agente e todos os seus dados serão removidos permanentemente.",
@@ -3355,7 +3356,7 @@
     "placeholder": "Chave de API ou ${vault:key-name}",
     "vaultDown": "O cofre não está configurado — configure um provedor de segredos no backend do EDDI",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "Este campo aceita uma referência ao cofre, não o segredo em si. Escolha uma chave ou guarde o valor no cofre primeiro."
+    "mustBeReference": "Este campo aceita uma referência — ${vault:chave} ou ${vars:chave} — e não o segredo em si. Escolha uma chave ou guarde o valor no cofre primeiro."
   },
   "snippetEditor": {
     "category": "Categoria",

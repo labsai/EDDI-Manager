@@ -58,8 +58,13 @@ const CANONICAL = new RegExp(`^\\$\\{(${SCHEME_ALTERNATION}):([^}]{1,256})\\}$`)
  *
  * The backend refuses these, so they exist here only to be recognised and
  * corrected, never to be stored.
+ *
+ * The body excludes `}` for the same reason the canonical pattern does: with
+ * `.` there, `vault:key}` parsed as a body of `key}` and canonicalised to
+ * `${vault:key}}` — a value this module's own `isSecretReference` rejects, so
+ * the correction produced something no less broken than the input.
  */
-const UNBRACED = new RegExp(`^(${SCHEME_ALTERNATION}):(.{1,256})$`, "i");
+const UNBRACED = new RegExp(`^(${SCHEME_ALTERNATION}):([^}]{1,256})$`, "i");
 
 /**
  * Anything heading *towards* a reference, including input that is not one yet.

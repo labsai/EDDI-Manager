@@ -214,7 +214,8 @@
     "off": "बंद",
     "on": "चालू",
     "removeItem": "{{item}} हटाएँ",
-    "stepOf": "चरण {{current}} / {{total}}"
+    "stepOf": "चरण {{current}} / {{total}}",
+    "versionShort": "v{{version}}"
   },
   "agents": {
     "confirmDeleteDescription": "इस क्रिया को पूर्ववत नहीं किया जा सकता। एजेंट और इसका सारा डेटा स्थायी रूप से हटा दिया जाएगा।",
@@ -3326,7 +3327,7 @@
     "placeholder": "API कुंजी या ${vault:key-name}",
     "vaultDown": "Vault कॉन्फ़िगर नहीं है — EDDI बैकएंड में एक सीक्रेट प्रदाता सेट करें",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "यह फ़ील्ड गुप्त मान नहीं, वॉल्ट का संदर्भ लेता है। कोई कुंजी चुनें, या पहले मान को वॉल्ट में सहेजें।"
+    "mustBeReference": "यह फ़ील्ड गुप्त मान नहीं, बल्कि संदर्भ लेता है — ${vault:key} या ${vars:key}। कोई कुंजी चुनें, या पहले मान को वॉल्ट में सहेजें।"
   },
   "snippetEditor": {
     "category": "श्रेणी",

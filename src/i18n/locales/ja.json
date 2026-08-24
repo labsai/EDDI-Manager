@@ -214,7 +214,8 @@
     "off": "オフ",
     "on": "オン",
     "removeItem": "{{item}} を削除",
-    "stepOf": "ステップ {{current}} / {{total}}"
+    "stepOf": "ステップ {{current}} / {{total}}",
+    "versionShort": "v{{version}}"
   },
   "agents": {
     "confirmDeleteDescription": "この操作は元に戻せません。エージェントとそのすべてのデータが完全に削除されます。",
@@ -3326,7 +3327,7 @@
     "placeholder": "API キーまたは ${vault:key-name}",
     "vaultDown": "Vault が設定されていません — EDDI バックエンドでシークレットプロバイダーを設定してください",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "この項目にはシークレットそのものではなく Vault の参照を入力します。キーを選ぶか、先に値を Vault に保存してください。"
+    "mustBeReference": "この項目にはシークレットそのものではなく参照 — ${vault:key} または ${vars:key} — を入力します。キーを選ぶか、先に値を Vault に保存してください。"
   },
   "snippetEditor": {
     "category": "カテゴリ",

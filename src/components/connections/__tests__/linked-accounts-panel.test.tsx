@@ -1,10 +1,21 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/mocks/server";
 import { renderWithProviders, userEvent } from "@/test/test-utils";
 import { toast } from "sonner";
+import { navigateAway } from "@/lib/navigate-away";
 import { LinkedAccountsPanel } from "@/components/connections/linked-accounts-panel";
+
+/**
+ * The one place the app leaves itself, mocked at its own module.
+ *
+ * Redefining `window.location` works here only because Vitest builds its own
+ * window — jsdom 26 declares `location` non-configurable, so the stub was one
+ * environment change away from throwing before any assertion ran.
+ */
+vi.mock("@/lib/navigate-away", () => ({ navigateAway: vi.fn() }));
+const assign = vi.mocked(navigateAway);
 
 /** Toasts are the only place the coded errors surface, so they are asserted on. */
 const toastSpy = { error: vi.spyOn(toast, "error") };
@@ -38,26 +49,9 @@ function mine(body: object | null, status = 200) {
   );
 }
 
-let assign: ReturnType<typeof vi.fn>;
-let originalLocation: Location;
-
 beforeEach(() => {
   toastSpy.error.mockClear();
-  originalLocation = window.location;
-  assign = vi.fn();
-  Object.defineProperty(window, "location", {
-    writable: true,
-    configurable: true,
-    value: { ...originalLocation, assign },
-  });
-});
-
-afterEach(() => {
-  Object.defineProperty(window, "location", {
-    writable: true,
-    configurable: true,
-    value: originalLocation,
-  });
+  assign.mockClear();
 });
 
 describe("LinkedAccountsPanel", () => {

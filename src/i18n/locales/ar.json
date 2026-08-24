@@ -214,7 +214,8 @@
     "off": "معطّل",
     "on": "مفعّل",
     "removeItem": "إزالة {{item}}",
-    "stepOf": "الخطوة {{current}} من {{total}}"
+    "stepOf": "الخطوة {{current}} من {{total}}",
+    "versionShort": "الإصدار {{version}}"
   },
   "agents": {
     "confirmDeleteDescription": "لا يمكن التراجع عن هذا الإجراء. ستتم إزالة الوكيل وجميع بياناته نهائياً.",
@@ -3442,7 +3443,7 @@
     "placeholder": "مفتاح API أو ${vault:key-name}",
     "vaultDown": "الخزنة غير مُهيّأة — أعدّ مزوّد أسرار في خلفية EDDI",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "يقبل هذا الحقل مرجعًا إلى الخزنة لا السر نفسه. اختر مفتاحًا، أو احفظ القيمة في الخزنة أولًا."
+    "mustBeReference": "يقبل هذا الحقل مرجعًا — ‎${vault:key}‎ أو ‎${vars:key}‎ — لا السر نفسه. اختر مفتاحًا، أو احفظ القيمة في الخزنة أولًا."
   },
   "snippetEditor": {
     "category": "الفئة",

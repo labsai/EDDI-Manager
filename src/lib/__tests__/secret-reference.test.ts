@@ -93,6 +93,16 @@ describe("canonicalizeReference", () => {
     expect(canonicalizeReference("${vault:key}")).toBeNull();
   });
 
+  it("never produces a value its own parser would reject", () => {
+    // `vault:key}` used to canonicalise to `${vault:key}}` — a correction that
+    // left the value exactly as unusable as it found it.
+    for (const input of ["vault:key}", "vars:a}b", "eddivault:}"]) {
+      const result = canonicalizeReference(input);
+      if (result !== null) expect(isSecretReference(result)).toBe(true);
+    }
+    expect(canonicalizeReference("vault:key}")).toBeNull();
+  });
+
   it("has nothing to do for a literal or an empty value", () => {
     expect(canonicalizeReference("sk-live-abc")).toBeNull();
     expect(canonicalizeReference("   ")).toBeNull();

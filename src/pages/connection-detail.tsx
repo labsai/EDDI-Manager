@@ -235,13 +235,18 @@ export function ConnectionDetailPage() {
     // `outgoing` already folds in any uncommitted chip text and drops the
     // fields this auth type does not use — see `toStoredConnection`.
     try {
-      // The draft becomes the new baseline the moment it is accepted, so the
-      // form stops reporting itself dirty and a later refetch may re-seed it.
+      const result = await updateMutation.mutateAsync({ id, version, config: outgoing });
+
+      // Only now. Committing the baseline before the request resolved made a
+      // FAILED save look clean: `isDirty` went false, so the unsaved-changes
+      // guard stopped protecting edits the backend had just refused, and the
+      // next background refetch replaced them with the server copy. The whole
+      // point of the guard is the case where the save did not happen.
       setDraft(outgoing);
       setPendingScope("");
       setPendingOrigin("");
       baselineRef.current = JSON.stringify(outgoing);
-      const result = await updateMutation.mutateAsync({ id, version, config: outgoing });
+
       const location = (result as { location?: string })?.location;
       if (location) {
         // Follow the new version, or the next save conflicts with itself.
@@ -341,7 +346,9 @@ export function ConnectionDetailPage() {
           <h1 className="truncate text-xl font-bold tracking-tight">
             {draft.name || t("connections.unnamed", "Unnamed connection")}
           </h1>
-          <p className="text-xs text-muted-foreground">v{version}</p>
+          <p className="text-xs text-muted-foreground">
+            {t("common.versionShort", "v{{version}}", { version })}
+          </p>
         </div>
         <Button
           variant="outline"
