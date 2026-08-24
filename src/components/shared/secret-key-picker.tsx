@@ -40,6 +40,29 @@ interface SecretKeyPickerProps {
   "aria-invalid"?: boolean;
   /** Id(s) of the element(s) describing this field — typically its error text. */
   "aria-describedby"?: string;
+  /**
+   * Refuse a literal: the field may hold only a `${vault:…}` / `${vars:…}`
+   * reference.
+   *
+   * Added for connections, whose backend rejects a plaintext secret in
+   * `oauth.clientSecret` and `staticAuth.passwordRef` outright — a literal
+   * there would sit outside the vault, outside export scrubbing and outside
+   * deploy-time grant enforcement at once. Without this mode the picker
+   * cheerfully accepts a pasted key and the failure arrives as a 400 on save,
+   * naming a field the user can no longer see.
+   *
+   * Three things change, and nothing changes for callers that leave it off:
+   *
+   *  - the plain-text branch stops being a password box (there is no secret to
+   *    mask — only a reference is admissible) and says so when the value is not
+   *    one yet;
+   *  - a pasted `vault:key` is normalised to the braced `${vault:key}` the
+   *    backend's anchored pattern actually accepts. The unbraced spellings are
+   *    recognised here for reading, and would have been saved verbatim and
+   *    refused;
+   *  - `${vars:…}` counts as a reference, because the backend accepts it.
+   */
+  referenceOnly?: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -121,6 +144,29 @@ function extractTenantFromKey(vaultKey: string): string | undefined {
 /** Create a vault reference string in the canonical `${vault:...}` format */
 function toVaultRef(keyName: string): string {
   return `\${vault:${keyName}}`;
+}
+
+/** Any braced reference the backend accepts, split into scheme and body. */
+const CANONICAL_REFERENCE = /^\$\{(vault|eddivault|vars):([^}]{1,256})\}$/;
+
+/**
+ * What the chip shows for a reference.
+ *
+ * A vault key renders bare, as it always has. A `${vars:…}` reference keeps its
+ * scheme, because "which global variable" is the whole content of the value and
+ * dropping the prefix would make it indistinguishable from a vault key that
+ * does not exist.
+ */
+function referenceLabel(value: string): string {
+  const match = CANONICAL_REFERENCE.exec(value.trim());
+  if (!match) return extractVaultKey(value);
+  return match[1] === "vars" ? `vars:${match[2]}` : (match[2] ?? "");
+}
+
+/** Whether a reference points into the vault (as opposed to `${vars:…}`). */
+function isVaultScheme(value: string): boolean {
+  const match = CANONICAL_REFERENCE.exec(value.trim());
+  return match ? match[1] !== "vars" : true;
 }
 
 // ─── CreateSecretModal ───────────────────────────────────────────────────────
@@ -472,6 +518,7 @@ export function SecretKeyPicker({
   id,
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
+  referenceOnly = false,
 }: SecretKeyPickerProps) {
   const { t } = useTranslation();
 
@@ -506,8 +553,16 @@ export function SecretKeyPicker({
   );
 
   // Derived state
-  const hasVaultRef = isVaultRef(value);
-  const currentVaultKey = hasVaultRef ? extractVaultKey(value) : "";
+  //
+  // In reference-only mode the chip stands for "this value will resolve", so it
+  // may only appear for the braced form the backend's anchored pattern accepts.
+  // Showing it for `vault:key` would tell the user the field is fine and then
+  // fail the save.
+  const isCanonicalRef = CANONICAL_REFERENCE.test(value.trim());
+  const hasVaultRef = referenceOnly ? isCanonicalRef : isVaultRef(value);
+  const currentVaultKey = hasVaultRef ? referenceLabel(value) : "";
+  /** A non-empty value that is not (yet) an admissible reference. */
+  const literalRejected = referenceOnly && value.trim() !== "" && !isCanonicalRef;
   // Only strip the tenant prefix when it matches this picker's tenantId;
   // otherwise a reference like ${vault:tenantA/key} would incorrectly
   // resolve against the current tenant's key list.
@@ -516,10 +571,15 @@ export function SecretKeyPicker({
     refTenant === undefined || refTenant === tenantId
       ? bareKeyName(currentVaultKey)
       : currentVaultKey; // keep as-is so the lookup correctly fails
-  const currentKeyExists = secretKeyNames.has(currentBareKey);
-  const currentDescription = hasVaultRef
-    ? secretList.find((s) => s.keyName === currentBareKey)?.description ?? null
-    : null;
+  // A `${vars:…}` reference resolves against the global variable store, which
+  // this picker cannot see. Checking it against the vault key list would flag
+  // every one of them as missing.
+  const pointsAtVault = isVaultScheme(value);
+  const currentKeyExists = !pointsAtVault || secretKeyNames.has(currentBareKey);
+  const currentDescription =
+    hasVaultRef && pointsAtVault
+      ? secretList.find((s) => s.keyName === currentBareKey)?.description ?? null
+      : null;
 
   // Filtered list for keyboard nav count
   const filteredForNav = useMemo(() => {
@@ -582,6 +642,27 @@ export function SecretKeyPicker({
     },
     [onChange, closePopup],
   );
+
+  /**
+   * Put an unbraced reference into the braced form on the way out of the field.
+   *
+   * Reference-only fields are saved to a backend that matches an *anchored*
+   * `${…}` pattern, so the unbraced spellings this component accepts for
+   * reading (`vault:key`, legacy `eddivault:key`) would be stored verbatim and
+   * refused with a 400 naming a field the user can no longer see.
+   *
+   * On blur, deliberately, and not on every keystroke: rewriting the value
+   * while somebody is typing it destroys the half-typed reference — `${vault:`
+   * canonicalises to `${vault:}` and the rest of the word lands after the
+   * closing brace. Nothing is normalised until they are done.
+   */
+  const handleBlur = useCallback(() => {
+    if (!referenceOnly) return;
+    const trimmed = value.trim();
+    if (!trimmed || CANONICAL_REFERENCE.test(trimmed)) return;
+    if (!isVaultRef(trimmed) || trimmed.startsWith("${")) return;
+    onChange(toVaultRef(extractVaultKey(trimmed)));
+  }, [referenceOnly, value, onChange]);
 
   const handleInputKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -705,19 +786,26 @@ export function SecretKeyPicker({
         <div className="relative flex-1">
           <input
             id={id}
-            aria-invalid={ariaInvalid}
             aria-describedby={ariaDescribedBy}
-            type={showPassword ? "text" : "password"}
+            // Nothing to mask: in reference-only mode the only admissible value
+            // is a pointer, and masking it hides the one thing worth reading.
+            type={referenceOnly || showPassword ? "text" : "password"}
             value={value}
             onChange={(e) => handleDirectChange(e.target.value)}
             onKeyDown={handleInputKeyDown}
+            onBlur={handleBlur}
             readOnly={readOnly}
             placeholder={
               placeholder ??
-              t("secretPicker.placeholder", "API key or ${vault:key-name}")
+              (referenceOnly
+                ? t("secretPicker.referencePlaceholder", "${vault:key-name}")
+                : t("secretPicker.placeholder", "API key or ${vault:key-name}"))
             }
             dir="ltr"
-            className={`h-7 w-full border border-input bg-background pe-14 ps-2 font-mono text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring ${
+            aria-invalid={ariaInvalid ?? (literalRejected || undefined)}
+            className={`h-7 w-full border bg-background ps-2 font-mono text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring ${
+              referenceOnly ? "pe-2" : "pe-14"
+            } ${literalRejected ? "border-destructive" : "border-input"} ${
               vaultAvailable && !readOnly
                 ? "rounded-s-md rounded-e-none"
                 : "rounded-md"
@@ -725,20 +813,22 @@ export function SecretKeyPicker({
             data-testid={`${testId}-input`}
           />
           {/* Eye toggle */}
-          <button
-            type="button"
-            onClick={() => setShowPassword((p) => !p)}
-            disabled={readOnly}
-            className="absolute inset-e-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
-            tabIndex={-1}
-            aria-label={showPassword ? "Hide" : "Show"}
-          >
-            {showPassword ? (
-              <EyeOff className="h-3 w-3" />
-            ) : (
-              <Eye className="h-3 w-3" />
-            )}
-          </button>
+          {!referenceOnly && (
+            <button
+              type="button"
+              onClick={() => setShowPassword((p) => !p)}
+              disabled={readOnly}
+              className="absolute inset-e-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+              tabIndex={-1}
+              aria-label={showPassword ? "Hide" : "Show"}
+            >
+              {showPassword ? (
+                <EyeOff className="h-3 w-3" />
+              ) : (
+                <Eye className="h-3 w-3" />
+              )}
+            </button>
+          )}
         </div>
 
         {/* Vault opener button */}
@@ -761,6 +851,24 @@ export function SecretKeyPicker({
           </button>
         )}
       </div>
+
+      {/* A literal was typed or pasted into a field that only takes a pointer.
+          Said here, while the value is still on screen and fixable, rather than
+          arriving as a 400 after Save has thrown the focus away. */}
+      {literalRejected && (
+        <p
+          className="mt-1 flex items-start gap-1 text-[11px] text-destructive"
+          data-testid={`${testId}-literal-warning`}
+        >
+          <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+          <span>
+            {t(
+              "secretPicker.mustBeReference",
+              "This field takes a vault reference, not the secret itself. Pick a key, or store the value in the vault first.",
+            )}
+          </span>
+        </p>
+      )}
 
       {/* Vault suggestion popup */}
       {popupOpen && (
