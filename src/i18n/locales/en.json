@@ -4503,6 +4503,7 @@
     "discardNewTitle": "Discard this connection?",
     "discardNewBody": "What you have filled in so far will be lost. Nothing has been created yet.",
     "confirmReconnect": "Connect this account again?",
-    "confirmReconnectDesc": "This account is working, so there is nothing to repair. Continuing takes you out of EDDI to the provider's sign-in page and replaces the access you granted before."
+    "confirmReconnectDesc": "This account is working, so there is nothing to repair. Continuing takes you out of EDDI to the provider's sign-in page and replaces the access you granted before.",
+    "paramDuplicate": "Another parameter already uses this name. Only the last one is saved."
   }
 }

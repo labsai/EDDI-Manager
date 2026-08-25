@@ -155,6 +155,57 @@ describe("CreateConnectionDialog — the created response", () => {
   });
 });
 
+describe("CreateConnectionDialog — step gating", () => {
+  it("will not advance past a step whose own field is invalid", async () => {
+    const user = userEvent.setup();
+    await renderDialog();
+
+    // Empty name: Next must not move, and the reason must appear.
+    await user.click(screen.getByTestId("create-connection-next"));
+
+    expect(screen.getByTestId("create-connection-name")).toBeInTheDocument();
+    expect(screen.queryByTestId("create-connection-submit")).not.toBeInTheDocument();
+  });
+
+  it("names the fault rather than just refusing", async () => {
+    const user = userEvent.setup();
+    await renderDialog();
+
+    // A name the backend's own pattern rejects — ${connection:…} would stop
+    // resolving silently, which is why the format is enforced this early.
+    await user.type(screen.getByTestId("create-connection-name"), "not a name!");
+    await user.click(screen.getByTestId("create-connection-next"));
+
+    expect(screen.getByTestId("create-connection-name")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+  });
+
+  it("does not block a step on a field belonging to a later one", async () => {
+    // The classic way a wizard becomes unusable: the allowlist is required, but
+    // it lives two steps ahead and must not hold up the name.
+    const user = userEvent.setup();
+    await renderDialog();
+
+    await user.type(screen.getByTestId("create-connection-name"), "notion");
+    await user.click(screen.getByTestId("create-connection-next"));
+
+    expect(screen.queryByTestId("create-connection-name")).not.toBeInTheDocument();
+  });
+
+  it("clears the fault as soon as the field is corrected", async () => {
+    const user = userEvent.setup();
+    await renderDialog();
+
+    await user.click(screen.getByTestId("create-connection-next"));
+    await user.type(screen.getByTestId("create-connection-name"), "notion");
+    await user.click(screen.getByTestId("create-connection-next"));
+
+    expect(screen.queryByTestId("create-connection-name")).not.toBeInTheDocument();
+  });
+});
+
 describe("CreateConnectionDialog — discarding", () => {
   it("asks before throwing away a part-filled wizard", async () => {
     const user = userEvent.setup();

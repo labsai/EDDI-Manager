@@ -240,6 +240,60 @@ describe("LinkedAccountsPanel — starting a link", () => {
     );
   });
 
+  it("frees the buttons again when the browser comes Back from the provider", async () => {
+    // `leavingFor` is deliberately left set after navigateAway — while the page
+    // really is leaving, the lock and the spinner should hold. But Back from
+    // the consent screen restores this page from the back/forward cache with
+    // its JS state intact, so the flag survived a navigation that never
+    // happened: every button stayed disabled and one row span forever.
+    mine([]);
+    server.use(
+      http.post("*/connections/:name/authorize", () =>
+        HttpResponse.json({ authorizationUrl: "https://provider.example/a" }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderWithProviders(
+      <LinkedAccountsPanel connectable={[{ name: "jira" }, { name: "drive" }]} />,
+    );
+
+    await user.click(await screen.findByTestId("connect-jira"));
+    await waitFor(() => expect(assign).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getByTestId("connect-drive")).toBeDisabled());
+
+    // A bfcache restore, which is the only thing `persisted` distinguishes.
+    const restore = new Event("pageshow") as Event & { persisted?: boolean };
+    Object.defineProperty(restore, "persisted", { value: true });
+    window.dispatchEvent(restore);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("connect-drive")).not.toBeDisabled(),
+    );
+    expect(screen.getByTestId("connect-jira")).not.toBeDisabled();
+  });
+
+  it("keeps the buttons locked on a fresh load, which is not a restore", async () => {
+    // `persisted: false` is an ordinary navigation. Clearing the lock on it
+    // would defeat the lock during the moment the page is actually leaving.
+    mine([]);
+    server.use(
+      http.post("*/connections/:name/authorize", () =>
+        HttpResponse.json({ authorizationUrl: "https://provider.example/a" }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderWithProviders(
+      <LinkedAccountsPanel connectable={[{ name: "jira" }, { name: "drive" }]} />,
+    );
+
+    await user.click(await screen.findByTestId("connect-jira"));
+    await waitFor(() => expect(screen.getByTestId("connect-drive")).toBeDisabled());
+
+    window.dispatchEvent(new Event("pageshow"));
+
+    expect(screen.getByTestId("connect-drive")).toBeDisabled();
+  });
+
   it("allows only one authorize at a time", async () => {
     // Two in-flight flows both call window.location.assign and the last to
     // resolve wins — which need not be the one the spinner is on.

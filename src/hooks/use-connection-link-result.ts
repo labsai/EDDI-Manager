@@ -8,6 +8,7 @@ import {
   isConnectionErrorCode,
   type ConnectionErrorCode,
 } from "@/lib/api/connections";
+import { MINE_KEY } from "@/hooks/use-connections";
 
 /**
  * What the browser came back from the provider carrying.
@@ -57,15 +58,36 @@ export function useConnectionLinkResult(): LinkOutcome {
 
     if (connected !== null) {
       setOutcome({ kind: "connected", connection: connected });
-      toast.success(
-        t("connections.linked", {
-          name: connected,
-          defaultValue: 'Connected — "{{name}}" is now linked to your account.',
-        }),
-      );
+
       // The list on screen predates the round trip. Status, scopes and expiry
       // all come from the grant that was just written.
-      void queryClient.invalidateQueries({ queryKey: ["connections", "mine"] });
+      //
+      // `type: "all"` because the refetch is not only a refresh, it is the
+      // check: `?connected=<name>` is a plain URL parameter, so anyone can hand
+      // the user a link that congratulates them on a grant that was never
+      // created. Confirming the name against the refreshed list costs nothing
+      // here and makes the success claim mean something.
+      //
+      // Silence rather than a denial when the list comes back without it: the
+      // user did not do anything, so there is nothing to report. And when there
+      // is no list to check against — the query never ran, or the refetch
+      // failed — the toast still fires, because an unverifiable success is
+      // still far more likely to be a real one.
+      void queryClient
+        .refetchQueries({ queryKey: MINE_KEY, type: "all" })
+        .then(() => {
+          const state = queryClient.getQueryState(MINE_KEY);
+          const accounts = state?.data as { connection: string }[] | undefined;
+          const checkable = state?.status === "success" && accounts !== undefined;
+          if (checkable && !accounts.some((a) => a.connection === connected)) return;
+
+          toast.success(
+            t("connections.linked", {
+              name: connected,
+              defaultValue: 'Connected — "{{name}}" is now linked to your account.',
+            }),
+          );
+        });
     } else {
       const code = isConnectionErrorCode(error) ? error : "unknown";
       setOutcome({ kind: "error", code });

@@ -1,10 +1,14 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/mocks/server";
 import { useLocation } from "react-router-dom";
 import { renderPage, userEvent } from "@/test/test-utils";
 import { ConnectionsPage } from "@/pages/connections";
+import { toast } from "sonner";
+
+const successSpy = vi.spyOn(toast, "success");
+beforeEach(() => successSpy.mockClear());
 
 /**
  * The router's own location, rendered so a test can assert on it.
@@ -114,6 +118,40 @@ describe("ConnectionsPage", () => {
     // Only the two parameters this owns are stripped; anything else on the URL
     // belongs to the page.
     expect(screen.getByTestId("router-search")).toHaveTextContent("version=2");
+  });
+
+  it("does not congratulate the user on a link that never happened", async () => {
+    // `?connected=<name>` is a plain URL parameter, so anyone can hand a signed-in
+    // user a link that claims a grant was created. Confirming the name against
+    // the refreshed list is what makes the success claim mean anything.
+    server.use(http.get("*/connections/mine", () => HttpResponse.json([])));
+    renderConnections("/manage/connections?connected=payroll");
+
+    await screen.findByTestId("connection-card-conn1");
+    await waitFor(() =>
+      expect(screen.getByTestId("router-search")).not.toHaveTextContent("connected"),
+    );
+    expect(successSpy).not.toHaveBeenCalled();
+  });
+
+  it("still announces a link the refreshed list confirms", async () => {
+    // The other half: the check must not silence a real success.
+    server.use(
+      http.get("*/connections/mine", () =>
+        HttpResponse.json([
+          {
+            connection: "jira",
+            status: "ACTIVE",
+            expiresAt: null,
+            scopes: null,
+            connectedAt: "2026-01-05T10:00:00Z",
+          },
+        ]),
+      ),
+    );
+    renderConnections("/manage/connections?connected=jira");
+
+    await waitFor(() => expect(successSpy).toHaveBeenCalled());
   });
 
   it("only offers Connect for the per-user connections", async () => {

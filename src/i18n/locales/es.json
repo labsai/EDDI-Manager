@@ -4538,6 +4538,7 @@
     "discardNewTitle": "¿Descartar esta conexión?",
     "discardNewBody": "Se perderá lo que haya rellenado hasta ahora. Todavía no se ha creado nada.",
     "confirmReconnect": "¿Volver a conectar esta cuenta?",
-    "confirmReconnectDesc": "Esta cuenta funciona, así que no hay nada que reparar. Si continúa, saldrá de EDDI a la página de inicio de sesión del proveedor y se reemplazará el acceso que concedió antes."
+    "confirmReconnectDesc": "Esta cuenta funciona, así que no hay nada que reparar. Si continúa, saldrá de EDDI a la página de inicio de sesión del proveedor y se reemplazará el acceso que concedió antes.",
+    "paramDuplicate": "Otro parámetro ya usa este nombre. Solo se guarda el último."
   }
 }

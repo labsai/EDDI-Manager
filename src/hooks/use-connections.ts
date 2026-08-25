@@ -10,6 +10,7 @@ import {
   listMyConnections,
   authorizeConnection,
   disconnectConnection,
+  parseConnectionResourceUri as parseResourceUri,
   type ConnectionConfiguration,
 } from "@/lib/api/connections";
 
@@ -21,7 +22,7 @@ const CONNECTIONS_KEY = ["connections"] as const;
  * A child of `["connections"]` on purpose: deleting a connection deletes its
  * grants, so a config mutation invalidating the parent takes this with it.
  */
-const MINE_KEY = [...CONNECTIONS_KEY, "mine"] as const;
+export const MINE_KEY = [...CONNECTIONS_KEY, "mine"] as const;
 
 // ─── Admin CRUD ─────────────────────────────────────────────────
 
@@ -109,8 +110,27 @@ export function useUpdateConnection() {
       version: number;
       config: ConnectionConfiguration;
     }) => updateConnection(id, version, config),
-    onSuccess: () => {
+    onSuccess: (result, { id, config }) => {
       queryClient.invalidateQueries({ queryKey: CONNECTIONS_KEY });
+
+      // Seed the version this save just created.
+      //
+      // A successful PUT returns the new version in its Location, and the
+      // detail page follows it — which changes its query key. Without a seed
+      // that key has no data, so the page drops to its loading skeleton and
+      // fetches back the document it had itself just sent: a flash on every
+      // save, and a moment in which the saved edits are not on screen. The
+      // invalidation above still schedules a background refetch, so a
+      // server-side rewrite is picked up; it just no longer blocks the render.
+      const location = (result as { location?: string } | undefined)?.location;
+      if (!location) return;
+      try {
+        const { version } = parseResourceUri(location);
+        queryClient.setQueryData([...CONNECTIONS_KEY, id, version], config);
+      } catch {
+        // An unparseable Location is the server's business, not the cache's.
+        // The page falls back to fetching, which is what it did before.
+      }
     },
   });
 }

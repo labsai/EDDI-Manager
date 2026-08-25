@@ -178,9 +178,12 @@ export function ConnectionDetailPage() {
     pendingScope.trim() !== "" ||
     pendingOrigin.trim() !== "";
 
-  // Covers tab close and reload. In-app navigation is guarded explicitly below,
-  // because this app uses <BrowserRouter> and React Router's blocker needs the
-  // data router.
+  // Covers tab close and reload. In-app navigation is guarded explicitly below
+  // — on this page's own two exits, the back link and the linked-accounts link
+  // — because the app uses <BrowserRouter> and React Router's blocker needs the
+  // data router. Leaving by the sidebar or the command palette is not guarded,
+  // here or anywhere else in the app; that is a gap in the router setup rather
+  // than in this page.
   useUnsavedChangesGuard(isDirty);
 
   /** Leave for `to`, asking first when there are unsaved edits. */
@@ -250,6 +253,8 @@ export function ConnectionDetailPage() {
       const location = (result as { location?: string })?.location;
       if (location) {
         // Follow the new version, or the next save conflicts with itself.
+        // The mutation has already seeded this version's cache with what we
+        // sent, so the switch re-seeds the form instead of showing a skeleton.
         const { version: newVersion } = parseConnectionResourceUri(location);
         setSearchParams({ version: String(newVersion) }, { replace: true });
       }
@@ -340,6 +345,7 @@ export function ConnectionDetailPage() {
       <BackLink
         to="/manage/connections"
         label={t("connections.backToList", "Back to Connections")}
+        onNavigate={leaveFor}
       />
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
@@ -772,12 +778,48 @@ function ExtraParamsField({
   error?: ValidationCode;
 }) {
   const { t } = useTranslation();
-  const entries = Object.entries(value);
+
+  /**
+   * The rows are a list, even though the field is a map.
+   *
+   * Deriving them from `Object.entries(value)` on every render meant a rename
+   * passing through a name already in the map destroyed a row: `fromEntries`
+   * merges the collision, the entry count drops by one, and the value that had
+   * been beside the other name is gone — no warning, no undo, and the row
+   * vanishes under the cursor mid-word. Keeping the list here lets both rows
+   * exist while one of them is being typed, which is the only way the user can
+   * see the clash and fix it.
+   */
+  const [rows, setRows] = useState<[string, string][]>(() => Object.entries(value));
+
+  /** The last map this field emitted; anything else in `value` came from outside. */
+  const emitted = useRef(value);
+
+  useEffect(() => {
+    if (value === emitted.current) return;
+    emitted.current = value;
+    setRows(Object.entries(value));
+  }, [value]);
+
+  const emit = (next: [string, string][]) => {
+    setRows(next);
+    // A later row wins the collision, matching what the wire format can hold.
+    // Empty rows are dropped on the way out rather than being refused, so an
+    // "Add parameter" the author thought better of costs them nothing.
+    const map = Object.fromEntries(next.filter(([key]) => key.trim() !== ""));
+    emitted.current = map;
+    onChange(map);
+  };
 
   const replace = (index: number, entry: [string, string]) =>
-    onChange(
-      Object.fromEntries(entries.map((current, i) => (i === index ? entry : current))),
-    );
+    emit(rows.map((current, i) => (i === index ? entry : current)));
+
+  /** Names typed more than once — marked, because only one of them survives a save. */
+  const duplicated = new Set(
+    rows
+      .map(([key]) => key)
+      .filter((key, i, all) => key.trim() !== "" && all.indexOf(key) !== i),
+  );
 
   return (
     <div className="space-y-2">
@@ -790,45 +832,60 @@ function ExtraParamsField({
           "Non-secret protocol parameters the provider expects — prompt, audience, access_type. Never a key or a token: this map is stored in the connection document in plain text.",
         )}
       </p>
-      {entries.map(([key, val], index) => (
-        <div key={index} className="flex gap-2">
-          <Input
-            className="h-8 font-mono text-xs"
-            dir="ltr"
-            value={key}
-            onChange={(e) => replace(index, [e.target.value, val])}
-            placeholder="prompt"
-            aria-label={t("connections.paramName", "Parameter name")}
-          />
-          <Input
-            className="h-8 font-mono text-xs"
-            dir="ltr"
-            value={val}
-            onChange={(e) => replace(index, [key, e.target.value])}
-            placeholder="consent"
-            aria-label={t("connections.paramValue", "Parameter value")}
-          />
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 text-destructive hover:text-destructive"
-            onClick={() =>
-              onChange(Object.fromEntries(entries.filter((_, i) => i !== index)))
-            }
-            aria-label={t("connections.removeParam", "Remove parameter")}
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
+      {rows.map(([key, val], index) => (
+        <div key={index} className="space-y-1">
+          <div className="flex gap-2">
+            <Input
+              className="h-8 font-mono text-xs"
+              dir="ltr"
+              value={key}
+              onChange={(e) => replace(index, [e.target.value, val])}
+              placeholder="prompt"
+              aria-label={t("connections.paramName", "Parameter name")}
+              aria-invalid={duplicated.has(key) || undefined}
+              data-testid={`connection-param-name-${index}`}
+            />
+            <Input
+              className="h-8 font-mono text-xs"
+              dir="ltr"
+              value={val}
+              onChange={(e) => replace(index, [key, e.target.value])}
+              placeholder="consent"
+              aria-label={t("connections.paramValue", "Parameter value")}
+              data-testid={`connection-param-value-${index}`}
+            />
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={() => emit(rows.filter((_, i) => i !== index))}
+              aria-label={t("connections.removeParam", "Remove parameter")}
+              data-testid={`connection-remove-param-${index}`}
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+          {duplicated.has(key) && (
+            <p
+              className="text-[10px] text-amber-600 dark:text-amber-400"
+              data-testid={`connection-param-duplicate-${index}`}
+            >
+              {t(
+                "connections.paramDuplicate",
+                "Another parameter already uses this name. Only the last one is saved.",
+              )}
+            </p>
+          )}
         </div>
       ))}
       <Button
         type="button"
         size="sm"
         variant="outline"
-        onClick={() => onChange({ ...value, "": "" })}
+        onClick={() => emit([...rows, ["", ""]])}
         data-testid="connection-add-param"
-        disabled={Object.prototype.hasOwnProperty.call(value, "")}
+        disabled={rows.some(([key]) => key.trim() === "")}
       >
         <Plus className="h-3.5 w-3.5" aria-hidden="true" />
         {t("connections.addParam", "Add parameter")}

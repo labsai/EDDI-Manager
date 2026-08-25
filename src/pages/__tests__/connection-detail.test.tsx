@@ -279,6 +279,121 @@ describe("ConnectionDetailPage", () => {
     expect(await screen.findByTestId("unsaved-confirm")).toBeInTheDocument();
   });
 
+  it("asks before the back link would discard unsaved edits", async () => {
+    // The most prominent exit on the page. It was a plain <Link> while the
+    // obscure linked-accounts link went through the guard, so the one route
+    // everybody takes was the one route that dropped the draft silently.
+    const user = userEvent.setup();
+    renderDetail("conn1");
+    await screen.findByTestId("connection-name-input");
+
+    await user.type(
+      screen.getByTestId("connection-description-input"),
+      " and more",
+    );
+    await user.click(screen.getByTestId("back-to-list"));
+
+    expect(await screen.findByTestId("unsaved-confirm")).toBeInTheDocument();
+  });
+
+  it("lets the back link through when there is nothing to lose", async () => {
+    const user = userEvent.setup();
+    renderDetail("conn1");
+    await screen.findByTestId("connection-name-input");
+
+    await user.click(screen.getByTestId("back-to-list"));
+
+    expect(screen.queryByTestId("unsaved-confirm")).not.toBeInTheDocument();
+  });
+
+  it("keeps the form dirty when the save is REFUSED", async () => {
+    // The regression that matters most on this page. Committing the baseline
+    // before the request resolved made a failed save look clean: `isDirty` went
+    // false, the guard stopped guarding, and the next refetch replaced edits
+    // the backend had just rejected. The guard exists for exactly this case.
+    const user = userEvent.setup();
+    server.use(
+      http.put("*/connectionstore/connections/:id", () =>
+        HttpResponse.json({ message: "nope" }, { status: 400 }),
+      ),
+    );
+    const { queryClient } = renderDetail("conn1");
+    await screen.findByTestId("connection-name-input");
+
+    const description = screen.getByTestId("connection-description-input");
+    await user.clear(description);
+    await user.type(description, "edited locally");
+    await user.click(screen.getByTestId("save-connection-btn"));
+
+    // Still on screen after the refusal...
+    await waitFor(() => expect(description).toHaveValue("edited locally"));
+
+    // ...and still protected: a refetch must not be allowed to overwrite it.
+    await queryClient.refetchQueries({ queryKey: ["connections"] });
+    await waitFor(() => expect(description).toHaveValue("edited locally"));
+
+    // And the guard still considers the page dirty.
+    await user.click(screen.getByTestId("back-to-list"));
+    expect(await screen.findByTestId("unsaved-confirm")).toBeInTheDocument();
+  });
+
+  it("shows the saved document instead of a skeleton after a save", async () => {
+    // A successful PUT moves the page to the new version, which changes the
+    // query key. Unseeded, that key has no data: the page fell back to its
+    // loading skeleton and re-fetched the document it had just sent.
+    const user = userEvent.setup();
+    captureSave();
+    renderDetail("conn1");
+    await screen.findByTestId("connection-name-input");
+
+    const description = screen.getByTestId("connection-description-input");
+    await user.clear(description);
+    await user.type(description, "saved copy");
+    await user.click(screen.getByTestId("save-connection-btn"));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("connection-description-input")).toHaveValue(
+        "saved copy",
+      ),
+    );
+    expect(screen.queryByTestId("connection-detail-loading")).not.toBeInTheDocument();
+  });
+
+  it("keeps both rows when a parameter is renamed onto an existing name", async () => {
+    // Deriving the rows from Object.entries meant `fromEntries` merged the
+    // collision as it was typed: the row count dropped by one and the other
+    // value was gone — no warning, no undo, and the row vanished under the
+    // cursor mid-word.
+    const user = userEvent.setup();
+    renderDetail("conn1"); // audience + prompt
+    await screen.findByTestId("connection-name-input");
+
+    const first = screen.getByTestId("connection-param-name-0");
+    await user.clear(first);
+    await user.type(first, "prompt");
+
+    expect(screen.getByTestId("connection-param-name-0")).toHaveValue("prompt");
+    expect(screen.getByTestId("connection-param-name-1")).toHaveValue("prompt");
+    expect(screen.getByTestId("connection-param-duplicate-0")).toBeInTheDocument();
+  });
+
+  it("does not send an empty parameter row", async () => {
+    // "Add parameter" then thinking better of it used to store {"": ""}.
+    const user = userEvent.setup();
+    const sent = captureSave();
+    renderDetail("conn1");
+    await screen.findByTestId("connection-name-input");
+
+    await user.click(screen.getByTestId("connection-add-param"));
+    await user.click(screen.getByTestId("save-connection-btn"));
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    const params = (sent[0]!.oauth as { extraAuthParams: Record<string, string> })
+      .extraAuthParams;
+    expect(Object.keys(params)).not.toContain("");
+    expect(params).toEqual({ audience: "api.atlassian.com", prompt: "consent" });
+  });
+
   it("replaces the page only when the INITIAL load fails", async () => {
     server.use(
       http.get("*/connectionstore/connections/:id", ({ request }) => {

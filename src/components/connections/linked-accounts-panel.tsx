@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -89,6 +89,25 @@ export function LinkedAccountsPanel({
    * resolve wins — which need not be the one the spinner is on.
    */
   const linkInFlight = leavingFor !== null;
+
+  /**
+   * Come back from the provider with the buttons live again.
+   *
+   * `leavingFor` is deliberately not cleared after `navigateAway` — while the
+   * page really is leaving, the lock and the spinner should hold. But Back from
+   * the provider's consent screen restores this page from the back/forward
+   * cache with its JS state intact, so the flag survives a navigation that
+   * never completed: every Connect and Reconnect stays disabled and one row
+   * spins indefinitely, until a manual reload. `pageshow` with `persisted` is
+   * the only signal that distinguishes a restore from a fresh load.
+   */
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setLeavingFor(null);
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   const code = (error as { code?: string } | null)?.code;
   /**

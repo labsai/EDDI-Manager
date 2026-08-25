@@ -112,6 +112,65 @@ describe("HeaderValueField", () => {
     );
   });
 
+  it("re-splits the guided fields when returning from the raw editor", async () => {
+    // The guided fields only track the value while they own it: raw edits go
+    // out through `emit`, which marks them as ours, so the re-split effect
+    // deliberately ignores them. Without a re-split on the way back, the fields
+    // showed the pre-raw pair and the next guided keystroke emitted *that* —
+    // silently reverting the raw edit.
+    const user = userEvent.setup();
+    renderWithProviders(<Host initial="Bearer ${vault:old}" />);
+
+    await user.click(screen.getByTestId("header-value-toggle"));
+    const raw = screen.getByTestId("header-value-raw");
+    await user.clear(raw);
+    await user.type(raw, "Token ${{vault:new}");
+    await waitFor(() =>
+      expect(screen.getByTestId("value")).toHaveTextContent("Token ${vault:new}"),
+    );
+
+    await user.click(screen.getByTestId("header-value-toggle"));
+
+    expect(screen.getByTestId("header-value-prefix")).toHaveValue("Token ");
+    // A held reference renders as the picker's chip, which shows the key name.
+    expect(screen.getByTestId("header-value-secret")).toHaveTextContent("new");
+  });
+
+  it("does not revert a raw edit when the guided fields are typed into next", async () => {
+    // The failure this actually caused: one keystroke in the prefix box after
+    // the round trip re-emitted the stale pair, throwing the raw edit away.
+    const user = userEvent.setup();
+    renderWithProviders(<Host initial="Bearer ${vault:old}" />);
+
+    await user.click(screen.getByTestId("header-value-toggle"));
+    const raw = screen.getByTestId("header-value-raw");
+    await user.clear(raw);
+    await user.type(raw, "Token ${{vault:new}");
+    await user.click(screen.getByTestId("header-value-toggle"));
+
+    await user.type(screen.getByTestId("header-value-prefix"), "!");
+
+    await waitFor(() =>
+      expect(screen.getByTestId("value")).toHaveTextContent("Token !${vault:new}"),
+    );
+  });
+
+  it("re-splits from empty parts when a mounted-raw value becomes splittable", async () => {
+    // A field that mounted raw has no parts at all, so the first guided
+    // keystroke used to replace the whole template with a single character.
+    const user = userEvent.setup();
+    renderWithProviders(<Host initial="${vault:a} and ${vault:b}" />);
+
+    const raw = screen.getByTestId("header-value-raw");
+    await user.clear(raw);
+    await user.type(raw, "Bearer ${{vault:fixed}");
+
+    await user.click(screen.getByTestId("header-value-toggle"));
+
+    expect(screen.getByTestId("header-value-prefix")).toHaveValue("Bearer ");
+    expect(screen.getByTestId("header-value-secret")).toHaveTextContent("fixed");
+  });
+
   it("shows the composed template as a preview", () => {
     renderWithProviders(<Host initial="Bearer ${vault:k}" />);
     expect(screen.getByTestId("header-value-preview")).toHaveTextContent(

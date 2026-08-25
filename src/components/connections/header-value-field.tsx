@@ -94,6 +94,25 @@ export function HeaderValueField({
    */
   const guidedAvailable = canBeGuided(value);
 
+  /**
+   * Re-split on the way back into the guided view.
+   *
+   * `parts` only tracks the value while the guided fields own it: raw-mode
+   * edits go out through `emit`, which marks them as ours, so the re-split
+   * effect deliberately ignores them. Returning to guided without this line
+   * therefore showed whatever the fields held *before* the raw edit, and the
+   * next guided keystroke emitted the concatenation of that stale pair —
+   * silently reverting the edit the user had just made in the raw box.
+   */
+  const toggleMode = () => {
+    if (mode === "raw") {
+      setParts(splitOrEmpty(value));
+      setMode("guided");
+      return;
+    }
+    setMode("raw");
+  };
+
   return (
     <div
       className="space-y-2"
@@ -158,7 +177,7 @@ export function HeaderValueField({
         {!readOnly && (mode === "raw" ? guidedAvailable : true) && (
           <button
             type="button"
-            onClick={() => setMode(mode === "raw" ? "guided" : "raw")}
+            onClick={toggleMode}
             className="text-[11px] text-primary hover:underline"
             data-testid={`${testIdPrefix}-toggle`}
           >

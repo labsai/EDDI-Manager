@@ -4503,6 +4503,7 @@
     "discardNewTitle": "放弃这个连接？",
     "discardNewBody": "你目前填写的内容将会丢失。目前尚未创建任何内容。",
     "confirmReconnect": "重新关联此账户？",
-    "confirmReconnectDesc": "该账户运行正常，无需修复。继续将带你离开 EDDI 前往服务商的登录页面，并替换你此前授予的访问权限。"
+    "confirmReconnectDesc": "该账户运行正常，无需修复。继续将带你离开 EDDI 前往服务商的登录页面，并替换你此前授予的访问权限。",
+    "paramDuplicate": "已有另一个参数使用此名称。只会保存最后一个。"
   }
 }
