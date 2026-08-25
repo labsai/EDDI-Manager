@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseTranscriptContent, parseEmojiVerification, truncateContent, safeFormatDate } from "@/components/groups/group-utils";
+import { parseTranscriptContent, parseEmojiVerification, parseVerdictJson, truncateContent, safeFormatDate } from "@/components/groups/group-utils";
 
 describe("group-utils", () => {
   describe("parseTranscriptContent", () => {
@@ -199,5 +199,89 @@ describe("group-utils", () => {
     it("returns raw value for invalid dates as fallback", () => {
       expect(safeFormatDate("not-a-date")).toBe("not-a-date");
     });
+  });
+});
+
+/**
+ * A DEBATE judge answers in JSON, so the SYNTHESIS transcript entry's body is a
+ * ```json block. The engine parses the same object into the conversation's
+ * `DecisionRecord` — which is what the verdict card renders — but the raw text
+ * stays on the entry, and every surface that showed that entry printed the blob
+ * verbatim. In a demo the conclusion of the whole discussion read as JSON.
+ */
+describe("parseVerdictJson", () => {
+  const VERDICT = {
+    winner: "TIE",
+    scores: { PRO: 7, CON: 7 },
+    reasoning: "Both sides argued substantively.",
+  };
+
+  it("reads a verdict out of a ```json fence", () => {
+    const parsed = parseVerdictJson("```json\n" + JSON.stringify(VERDICT, null, 2) + "\n```");
+    expect(parsed).toEqual(VERDICT);
+  });
+
+  it("reads a bare verdict, and one fenced without a language tag", () => {
+    expect(parseVerdictJson(JSON.stringify(VERDICT))).toEqual(VERDICT);
+    expect(parseVerdictJson("```\n" + JSON.stringify(VERDICT) + "\n```")).toEqual(VERDICT);
+  });
+
+  it("keeps the winner and the tally optional", () => {
+    expect(parseVerdictJson(JSON.stringify({ reasoning: "Nobody scored." }))).toEqual({
+      winner: null,
+      scores: null,
+      reasoning: "Nobody scored.",
+    });
+  });
+
+  it("drops non-numeric scores rather than rendering them", () => {
+    const parsed = parseVerdictJson(
+      JSON.stringify({ reasoning: "x", scores: { PRO: 7, CON: "seven" } }),
+    );
+    expect(parsed!.scores).toEqual({ PRO: 7 });
+  });
+
+  it("is not a verdict without prose to show", () => {
+    // `reasoning` is the discriminator: a bare {winner, scores} carries nothing
+    // the verdict card is not already showing better.
+    expect(parseVerdictJson(JSON.stringify({ winner: "PRO", scores: { PRO: 9 } }))).toBeNull();
+    expect(parseVerdictJson(JSON.stringify({ reasoning: "   " }))).toBeNull();
+  });
+
+  it("leaves ordinary prose, arrays and malformed JSON alone", () => {
+    expect(parseVerdictJson("The panel could not agree.")).toBeNull();
+    expect(parseVerdictJson('[{"reasoning":"x"}]')).toBeNull();
+    expect(parseVerdictJson("```json\n{ not json }\n```")).toBeNull();
+    expect(parseVerdictJson("")).toBeNull();
+    expect(parseVerdictJson(null)).toBeNull();
+  });
+
+  it("does not unwrap a body that is more than one fence", () => {
+    // Prose around a snippet is prose, not a verdict — unwrapping it would
+    // throw the surrounding words away.
+    expect(parseVerdictJson('Here it is:\n```json\n{"reasoning":"x"}\n```')).toBeNull();
+  });
+});
+
+describe("parseTranscriptContent — JSON that is somebody's answer", () => {
+  it("renders a verdict as its reasoning", () => {
+    const content =
+      "```json\n" + JSON.stringify({ winner: "TIE", reasoning: "It was close." }) + "\n```";
+    expect(parseTranscriptContent(content)).toBe("It was close.");
+  });
+
+  it("still collapses an EMPTY response envelope to nothing", () => {
+    // The narrowing must not cost the envelope behaviour: an empty answer is
+    // empty, not a blob.
+    expect(parseTranscriptContent(JSON.stringify({ output: [] }))).toBe("");
+  });
+
+  it("no longer swallows a non-envelope object whole", () => {
+    // This used to return "" for anything that was an object without `output`,
+    // so an unrecognised answer rendered as a blank card.
+    const out = parseTranscriptContent(JSON.stringify({ verdict: "PRO", margin: 2 }));
+    expect(out).toContain("verdict");
+    expect(out).toContain("PRO");
+    expect(out).toContain("margin");
   });
 });

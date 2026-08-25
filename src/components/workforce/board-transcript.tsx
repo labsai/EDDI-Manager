@@ -10,7 +10,7 @@ import { hasDisplayableDecision } from "@/lib/group-config";
 import type { DecisionRecord, TranscriptEntry, TranscriptEntryType } from "@/lib/api/groups";
 import { entryTypeInfo } from "@/lib/api/groups";
 import type { ConvergenceProgress } from "@/hooks/use-group-discussion-stream";
-import { formatMarkdownText } from "@/components/groups/group-utils";
+import { parseTranscriptContent } from "@/components/groups/group-utils";
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -235,14 +235,20 @@ function SynthesisCard({ content, delay }: { content: string; delay: number }) {
   const [collapsible, setCollapsible] = useState(false);
   const synthRef = useRef<HTMLDivElement>(null);
 
+  // A DEBATE judge answers in JSON, so the raw entry body is a ```json block.
+  // `parseTranscriptContent` unwraps it (and EDDI's response envelope) down to
+  // the prose this card exists to show; the winner and the tally are the verdict
+  // card's job, directly above. Copy hands over the same text that is on screen.
+  const body = useMemo(() => parseTranscriptContent(content), [content]);
+
   useEffect(() => {
     if (synthRef.current) {
       setCollapsible(synthRef.current.scrollHeight > 300);
     }
-  }, [content]);
+  }, [body]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(content);
+    navigator.clipboard.writeText(body);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -291,7 +297,7 @@ function SynthesisCard({ content, delay }: { content: string; delay: number }) {
         )}
       >
         <div className="prose prose-sm dark:prose-invert max-w-none text-foreground [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{formatMarkdownText(content)}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
         </div>
         {collapsible && !expanded && (
           <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-card to-transparent pointer-events-none" />

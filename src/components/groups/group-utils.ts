@@ -281,13 +281,98 @@ export function formatMarkdownText(text: string): string {
 // ─── Content Parsing ─────────────────────────────────────────────
 
 /**
+ * A judge's verdict exactly as EDDI's DEBATE synthesis prompt asks for it: the
+ * winning side, the per-side scores, and the reasoning that earned them.
+ */
+export interface VerdictJson {
+  winner: string | null;
+  scores: Record<string, number> | null;
+  /** The judge's prose. Always non-empty — it is what makes a verdict renderable. */
+  reasoning: string;
+}
+
+/** Unwrap a body that is nothing but one fenced code block. */
+function stripLoneCodeFence(content: string): string {
+  const match = /^\s*(?:```|~~~)[^\n]*\n([\s\S]*?)\n?(?:```|~~~)\s*$/.exec(content);
+  return match?.[1] ?? content;
+}
+
+/**
+ * Read a judge's verdict out of a SYNTHESIS body, or `null` when the body is
+ * ordinary prose.
+ *
+ * The engine parses the same object into the conversation's `DecisionRecord`,
+ * which is what the verdict card renders — but the model's raw answer stays on
+ * the SYNTHESIS transcript entry, and every surface that shows that entry used
+ * to print the JSON verbatim. A ```json fence is the usual wrapper, so it is
+ * unwrapped before parsing.
+ *
+ * `reasoning` is the discriminator, not `winner`: it is the field that carries
+ * prose, and a verdict without it has nothing to show that the verdict card is
+ * not already showing better.
+ */
+export function parseVerdictJson(content: string | null | undefined): VerdictJson | null {
+  if (!content) return null;
+  const body = stripLoneCodeFence(content).trim();
+  if (!body.startsWith("{")) return null;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    return null;
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+
+  const record = parsed as Record<string, unknown>;
+  const reasoning = typeof record.reasoning === "string" ? record.reasoning.trim() : "";
+  if (!reasoning) return null;
+
+  const rawScores = record.scores;
+  let scores: Record<string, number> | null = null;
+  if (rawScores && typeof rawScores === "object" && !Array.isArray(rawScores)) {
+    const numeric = Object.entries(rawScores).filter(
+      (entry): entry is [string, number] => typeof entry[1] === "number",
+    );
+    if (numeric.length > 0) scores = Object.fromEntries(numeric);
+  }
+
+  return {
+    winner: typeof record.winner === "string" ? record.winner : null,
+    scores,
+    reasoning,
+  };
+}
+
+/**
+ * Last resort for a JSON object this build has no reader for: a markdown
+ * definition list, so an unrecognised shape still reads as content rather than
+ * as a dump. Nested values keep their JSON form inline — the point is that the
+ * keys become legible, not that arbitrary trees get a bespoke layout.
+ */
+function readableJsonObject(record: Record<string, unknown>): string {
+  const lines = Object.entries(record).map(([key, value]) => {
+    const rendered =
+      typeof value === "string" ? value : JSON.stringify(value) ?? String(value);
+    return `**${key}**: ${rendered}`;
+  });
+  return lines.join("\n\n");
+}
+
+/**
  * Parse transcript entry content, which may be:
  * 1. JSON from backend `extractResponse()` — e.g. `{"output":[{"type":"text","text":"..."}],...}`
- * 2. Plain text (already extracted, or from fixed backend)
- * Returns the cleaned text string. Returns "" if JSON was parsed but contained no text.
+ * 2. A judge's verdict object, fenced or bare (see {@link parseVerdictJson})
+ * 3. Plain text (already extracted, or from fixed backend)
+ * Returns the cleaned text string. Returns "" for a response ENVELOPE that
+ * carried no text — an empty answer is empty. Any other object is somebody's
+ * real answer and is rendered, never dropped and never printed as a blob.
  */
 export function parseTranscriptContent(content: string): string {
   if (!content) return "";
+
+  const verdict = parseVerdictJson(content);
+  if (verdict) return formatMarkdownText(verdict.reasoning);
 
   let extracted = content;
 
@@ -300,6 +385,12 @@ export function parseTranscriptContent(content: string): string {
       // Format 1: { "output": [{ "type": "text", "text": "..." }], ... }
       if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
         const texts: string[] = [];
+        // Only a response ENVELOPE may collapse to "" below. Any other object
+        // that happens to carry no `output` is a real answer, and returning ""
+        // for it rendered a blank card where the agent had said something.
+        const isEnvelope = Object.keys(parsed).some(
+          (key) => key === "output" || key.startsWith("output:text:"),
+        );
 
         // Check nested "output" array
         if (Array.isArray(parsed.output)) {
@@ -327,8 +418,10 @@ export function parseTranscriptContent(content: string): string {
 
         if (texts.length > 0) {
           extracted = texts.join("\n\n");
-        } else {
+        } else if (isEnvelope) {
           return "";
+        } else {
+          extracted = readableJsonObject(parsed as Record<string, unknown>);
         }
       } else if (Array.isArray(parsed)) {
         // Format 2: [{ "type": "text", "text": "..." }, ...] — top-level array

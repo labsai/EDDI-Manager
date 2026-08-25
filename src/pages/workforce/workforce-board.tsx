@@ -374,6 +374,9 @@ function WorkforceBoard() {
   const handleNewDiscussion = useCallback(() => {
     resetStream();
     setSelectedConvId(null);
+    // Whichever slide-over was open is about the discussion being left behind.
+    setShowHistory(false);
+    setShowMembers(false);
   }, [resetStream, setSelectedConvId]);
 
   // ─── Lifecycle mutations ──────────────────────────────────────
@@ -629,9 +632,18 @@ function WorkforceBoard() {
           </div>
       </div>
 
-      <div className="flex flex-1 min-h-0">
-        {/* Main content — transcript + input */}
-        <div className="flex flex-1 min-h-0 flex-col">
+      {/* `relative` so the slide-over panels below overlay the board CONTENT and
+          leave the action bar above them clickable. */}
+      <div className="relative flex flex-1 min-h-0">
+        {/* Main content — transcript + input.
+            `min-w-0` is load-bearing: a flex item defaults to `min-width: auto`,
+            so one unbreakable line in a transcript entry — a judge's verdict
+            printed as a single-line JSON string, a stack trace, a long URL —
+            sizes this column to its content instead of to the row. The row then
+            pushed the config panel, the composer's Send button and every
+            per-message action thousands of pixels off-screen, where `MAIN`'s
+            `overflow-hidden` clipped them away with nothing to scroll to. */}
+        <div className="flex flex-1 min-w-0 min-h-0 flex-col">
           {/* Transcript area — BoardTranscript owns the scroll box so it can
               keep itself pinned to the newest message while streaming. */}
           {displayTranscript.length > 0 || showAnyTaskBoard ? (
@@ -830,27 +842,28 @@ function WorkforceBoard() {
             />
           </div>
         )}
-      </div>
 
       {/* Members sheet slide-over */}
       {showMembers && (
         <>
           <div
-            className="fixed inset-0 z-30 bg-black/30"
+            className="absolute inset-0 z-30 bg-black/30"
             onClick={() => {
               setShowMembers(false);
               requestAnimationFrame(() => panelTriggerRef.current?.focus());
             }}
             aria-hidden="true"
           />
+          {/* Not `aria-modal`: the action bar above stays clickable on purpose,
+              so the Team/Sessions toggles still toggle. Focus is still trapped
+              and Escape still closes. */}
           <div
             ref={membersRef}
             role="dialog"
-            aria-modal="true"
             aria-label={t("Workforce.board.membersPanel", "Team panel")}
             onKeyDown={(e) => handlePanelKeyDown(e, membersRef)}
             className={cn(
-              "fixed inset-y-0 end-0 z-40 w-80",
+              "absolute inset-y-0 end-0 z-40 w-80",
               "bg-card",
               "border-s border-border",
               "shadow-xl",
@@ -874,7 +887,7 @@ function WorkforceBoard() {
       {showHistory && (
         <>
           <div
-            className="fixed inset-0 z-30 bg-black/30"
+            className="absolute inset-0 z-30 bg-black/30"
             onClick={() => {
               setShowHistory(false);
               requestAnimationFrame(() => panelTriggerRef.current?.focus());
@@ -884,11 +897,10 @@ function WorkforceBoard() {
           <div
             ref={historyRef}
             role="dialog"
-            aria-modal="true"
             aria-label={t("Workforce.board.sessionsPanel", "Sessions panel")}
             onKeyDown={(e) => handlePanelKeyDown(e, historyRef)}
             className={cn(
-              "fixed inset-y-0 end-0 z-40 w-80",
+              "absolute inset-y-0 end-0 z-40 w-80",
               "bg-card",
               "border-s border-border",
               "shadow-xl",
@@ -908,6 +920,7 @@ function WorkforceBoard() {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

@@ -57,6 +57,20 @@ export type MemberFailurePolicy = "SKIP" | "RETRY" | "ABORT";
 export type MemberUnavailablePolicy = "SKIP" | "FAIL";
 
 /**
+ * What a missing `ProtocolConfig.onAgentFailure` / `onMemberUnavailable` means.
+ *
+ * Both are non-null on the backend record, but its JSON simply leaves out
+ * whatever the stored document never carried — a group created straight over the
+ * API rather than through the wizard arrives without them. Everything on this
+ * side treats them as set: the settings editor merges these same defaults in
+ * before binding its `<select>`s, and the config panel formats them for display.
+ * SKIP is what the wizard, the templates and that editor all write, so defaulting
+ * to it shows what a save from this UI would actually store.
+ */
+export const DEFAULT_MEMBER_FAILURE_POLICY: MemberFailurePolicy = "SKIP";
+export const DEFAULT_MEMBER_UNAVAILABLE_POLICY: MemberUnavailablePolicy = "SKIP";
+
+/**
  * What happens once `ProtocolConfig.maxCostPerDiscussion` is exceeded (EDDI I1).
  * The backend's canonical constructor coalesces a null to SYNTHESIZE_NOW, so
  * every reader may treat the field as set once a ceiling exists.
@@ -637,19 +651,43 @@ export const FACILITATOR_MAX_MOVES_CEILING = 100;
 
 /**
  * Coerce a config as it arrives from the backend into the canonical shapes this
- * codebase assumes. Today that is only `lifecyclePolicy`'s wire format (see
- * {@link normalizeLifecyclePolicy}); the seam exists so the next `@JsonValue`
- * enum has one obvious home instead of a normalisation scattered per consumer.
+ * codebase assumes: `lifecyclePolicy`'s wire format (see
+ * {@link normalizeLifecyclePolicy}) and the two `ProtocolConfig` member policies
+ * the backend omits when they were never set (see
+ * {@link DEFAULT_MEMBER_FAILURE_POLICY}). The seam exists so each such fixup has
+ * one obvious home instead of a normalisation scattered per consumer.
  *
  * Returns the SAME object when nothing needed changing, so callers comparing by
  * reference (dirty tracking) are unaffected on the common path.
  */
 export function normalizeGroupConfig<T extends AgentGroupConfiguration>(config: T): T {
-  const dynamic = config.dynamicAgents;
-  if (!dynamic) return config;
-  const canonical = normalizeLifecyclePolicy(dynamic.lifecyclePolicy);
-  if (canonical === dynamic.lifecyclePolicy) return config;
-  return { ...config, dynamicAgents: { ...dynamic, lifecyclePolicy: canonical } };
+  let normalized = config;
+
+  const protocol = normalized.protocol;
+  if (protocol && (!protocol.onAgentFailure || !protocol.onMemberUnavailable)) {
+    normalized = {
+      ...normalized,
+      protocol: {
+        ...protocol,
+        onAgentFailure: protocol.onAgentFailure ?? DEFAULT_MEMBER_FAILURE_POLICY,
+        onMemberUnavailable:
+          protocol.onMemberUnavailable ?? DEFAULT_MEMBER_UNAVAILABLE_POLICY,
+      },
+    };
+  }
+
+  const dynamic = normalized.dynamicAgents;
+  if (dynamic) {
+    const canonical = normalizeLifecyclePolicy(dynamic.lifecyclePolicy);
+    if (canonical !== dynamic.lifecyclePolicy) {
+      normalized = {
+        ...normalized,
+        dynamicAgents: { ...dynamic, lifecyclePolicy: canonical },
+      };
+    }
+  }
+
+  return normalized;
 }
 
 export interface TranscriptEntry {

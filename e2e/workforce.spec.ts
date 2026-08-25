@@ -221,3 +221,158 @@ test.describe("Workforce dashboard — template delete", () => {
     ).toBeVisible();
   });
 });
+/**
+ * The board rendering a FINISHED discussion — the state a demo ends in, and the
+ * state three separate defects only showed up in.
+ *
+ * The fixture (`gconv-verdict` in the MSW handlers) carries what a real debate
+ * carries and the tidy `gconv1` one does not: a judge's verdict answered as a
+ * ```json block, and a member message containing one unbreakable token.
+ *
+ * ## Why the existing overflow guards could not catch this
+ *
+ * `rtl.spec.ts` asserts `documentElement.scrollWidth === clientWidth` and
+ * `main.scrollWidth === main.clientWidth`. Both pass here no matter how badly
+ * the layout breaks, because the app shell clips rather than scrolls — a
+ * deliberate choice (6bc077de: "clip turns the failure mode from 'whole page
+ * pans' into 'one element is visibly clipped'"). Clipping caps `scrollWidth` at
+ * `clientWidth`, so an element parked at x=37,705 registers as *zero* overflow.
+ * The guard reported clean while the config panel, the composer's Send button
+ * and every per-message action sat thousands of pixels outside the window.
+ *
+ * So this measures the thing that actually matters — whether elements are still
+ * inside the viewport — instead of whether the document scrolls.
+ */
+test.describe("Workforce board — a finished discussion stays inside the window", () => {
+  const BOARD = "/workforce/grp2?version=1&conversation=gconv-verdict";
+
+  /**
+   * Elements whose box escapes the viewport, ignoring anything sitting inside a
+   * deliberate horizontal scroller.
+   *
+   * That exemption is the difference between the bug and the cure: a wide code
+   * block inside a `<pre overflow-x:auto>` is *supposed* to be wider than the
+   * window and scroll within its own box. What must never happen is the box
+   * itself — or the panel next to it — leaving the window.
+   */
+  const escapees = (page: import("@playwright/test").Page) =>
+    page.evaluate(() => {
+      const out: string[] = [];
+      for (const el of Array.from(document.querySelectorAll("*"))) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) continue;
+        if (rect.right <= window.innerWidth + 1 && rect.left >= -1) continue;
+
+        let scrollable = false;
+        for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
+          const overflowX = getComputedStyle(p).overflowX;
+          if (overflowX === "auto" || overflowX === "scroll") {
+            scrollable = true;
+            break;
+          }
+        }
+        if (scrollable) continue;
+
+        out.push(
+          `<${el.tagName.toLowerCase()} class="${(el.getAttribute("class") ?? "").slice(0, 60)}"> right=${Math.round(rect.right)}`,
+        );
+      }
+      return out;
+    });
+
+  for (const vp of [
+    { label: "desktop", width: 1280, height: 900 },
+    { label: "tablet", width: 768, height: 1024 },
+  ]) {
+    test(`no element escapes the viewport at ${vp.label} (${vp.width}px)`, async ({ page }) => {
+      await page.setViewportSize(vp);
+      await page.goto(BOARD);
+      await waitForApp(page);
+      // Gate on the transcript, not just the shell: this asserts an ABSENCE, so
+      // an empty board would pass it vacuously.
+      await expect(page.getByTestId("decision-record")).toBeVisible();
+
+      expect(await escapees(page)).toEqual([]);
+    });
+  }
+
+  test("the composer and the details panel stay reachable", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(BOARD);
+    await waitForApp(page);
+    await expect(page.getByTestId("decision-record")).toBeVisible();
+
+    // `toBeInViewport` is the assertion the old `scrollWidth` probes could not
+    // make: it fails on an element that is laid out but parked outside the
+    // window, which is exactly how this broke.
+    await expect(page.getByRole("button", { name: "Send" })).toBeInViewport();
+    await expect(page.getByRole("button", { name: "Hide details panel" })).toBeInViewport();
+  });
+
+  test("the judge's verdict reads as prose, never as raw JSON", async ({ page }) => {
+    await page.goto(BOARD);
+    await waitForApp(page);
+
+    const synthesis = page.getByLabel("Synthesis result");
+    await expect(synthesis).toContainText("Both sides argued substantively");
+    // The winner and the tally are the verdict card's job, directly above it.
+    await expect(page.getByTestId("decision-record")).toContainText("Tie");
+    // Not `not.toContainText("winner")`: the point is that no JSON *structure*
+    // survives to the screen, which is what the raw block put there.
+    await expect(synthesis).not.toContainText('"winner"');
+    await expect(synthesis).not.toContainText('"scores"');
+  });
+});
+
+/**
+ * The Sessions and Team slide-overs used to be `fixed inset-y-0 end-0`, i.e.
+ * full-viewport-height and pinned to the trailing edge — which put them
+ * directly on top of the right-hand half of the board's own action bar. Every
+ * control there, including the "+ New" button and the Sessions toggle that
+ * opened the panel, was unclickable while a panel was open: the first click
+ * landed on the panel instead.
+ *
+ * That is the whole of "the New conversation button doesn't work — sometimes".
+ * It worked with no panel open and failed with one, which is exactly what
+ * "sometimes" looks like from the outside.
+ */
+test.describe("Workforce board — slide-overs must not cover the action bar", () => {
+  const BOARD = "/workforce/grp2?version=1&conversation=gconv-verdict";
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto(BOARD);
+    await waitForApp(page);
+    await page.getByRole("button", { name: "Sessions" }).click();
+    await expect(page.getByRole("dialog", { name: "Sessions panel" })).toBeVisible();
+  });
+
+  test("the panel starts below the action bar", async ({ page }) => {
+    const bar = await page.getByTestId("new-discussion-btn").boundingBox();
+    const panel = await page.getByRole("dialog", { name: "Sessions panel" }).boundingBox();
+    if (!bar || !panel) throw new Error("expected both the New button and the panel to be laid out");
+
+    // Not an overlap check on the whole bar — the panel is allowed to sit
+    // beside the transcript. What it must clear is the row the controls are in.
+    expect(panel.y).toBeGreaterThanOrEqual(bar.y + bar.height);
+  });
+
+  test("+ New still starts a new discussion with the panel open", async ({ page }) => {
+    // A plain `.click()` would pass even with the panel on top, because
+    // Playwright scrolls and force-hits the element it was given. Asserting on
+    // what is actually at those coordinates is what reproduces a covered click.
+    const topmost = await page.getByTestId("new-discussion-btn").evaluate((btn) => {
+      const rect = btn.getBoundingClientRect();
+      const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      return hit ? btn.contains(hit) : false;
+    });
+    expect(topmost, "the + New button was covered by the Sessions panel").toBe(true);
+
+    await page.getByTestId("new-discussion-btn").click();
+
+    // The selection is URL-backed, so a started-fresh board is one with no
+    // `conversation` param and the idle placeholder on screen.
+    await expect(page).toHaveURL(/\?version=1$/);
+    await expect(page.getByRole("dialog", { name: "Sessions panel" })).toBeHidden();
+    await expect(page.getByTestId("decision-record")).toHaveCount(0);
+  });
+});
