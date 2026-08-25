@@ -634,7 +634,7 @@ function verdictConversation() {
         timestamp: at(600_000),
       }),
       entry({
-        content: `I traced the pipeline run here:\n\n\`\`\`\n${UNBREAKABLE_LINE}\n\`\`\`\n\nThe numbers hold.`,
+        content: `## My Proposition\n\nI traced the pipeline run here:\n\n\`\`\`\n${UNBREAKABLE_LINE}\n\`\`\`\n\n---\n\n## Argument 1\n\nThe numbers hold.`,
         timestamp: at(480_000),
       }),
       entry({

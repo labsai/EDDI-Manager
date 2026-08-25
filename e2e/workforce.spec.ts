@@ -355,6 +355,43 @@ test.describe("Workforce board — a finished discussion stays inside the window
     await expect(page.getByRole("button", { name: "Hide details panel" })).toBeVisible();
   });
 
+  /**
+   * A model writing a long argument separates its sections with `---`, and the
+   * typography plugin sizes that rule for a document: 2.857em on both sides,
+   * 40px at prose-sm. Margin collapsing does not save it — the rule sits
+   * between two blocks that both want space — so each divider cost 80px in a
+   * card whose paragraphs are 4px apart, and the message read as three times
+   * taller than its content.
+   *
+   * Asserted as a RATIO rather than a pixel count: the intent is that a divider
+   * costs about as much as the heading it introduces, which survives a change
+   * to the base font size or to the heading scale. A pixel assertion would just
+   * be this rule spelled twice.
+   */
+  test("a markdown divider does not cost more than the heading it introduces", async ({
+    page,
+  }) => {
+    await page.goto(BOARD);
+    await waitForApp(page);
+    await expect(page.getByTestId("decision-record")).toBeVisible();
+
+    const spacing = await page.evaluate(() => {
+      const rule = document.querySelector(".prose hr");
+      if (!rule) return null;
+      const heading = rule.nextElementSibling;
+      if (!heading || !/^H[1-6]$/.test(heading.tagName)) return null;
+      const px = (v: string) => parseFloat(v) || 0;
+      return {
+        ruleMargin: px(getComputedStyle(rule).marginTop),
+        headingMargin: px(getComputedStyle(heading).marginTop),
+      };
+    });
+
+    expect(spacing, "expected a markdown rule followed by a heading in the fixture").not.toBeNull();
+    expect(spacing!.ruleMargin).toBeGreaterThan(0);
+    expect(spacing!.ruleMargin).toBeLessThanOrEqual(spacing!.headingMargin);
+  });
+
   test("the judge's verdict reads as prose, never as raw JSON", async ({ page }) => {
     await page.goto(BOARD);
     await waitForApp(page);

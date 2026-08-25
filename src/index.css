@@ -365,6 +365,24 @@
   font-size: 1em;
 }
 
+/* A markdown `---` is a divider, not a chapter break.
+
+   Same reasoning as the headings above, and the same placement rule. The
+   typography plugin gives `hr` a 2.857em margin on both sides — 40px at
+   prose-sm's 14px — and margin collapsing does not help, because the rule sits
+   between two blocks that both want space. A group member who separates every
+   section with `---` (models do this constantly) spent 80px of card on each
+   one: measured at 100px between the end of one paragraph and the text of the
+   next heading, in a card whose paragraphs are 4px apart.
+
+   1em keeps the separator legible while letting the heading's own margin-top
+   win the collapse, so a divider costs about as much as the heading it
+   introduces rather than three times more. */
+.prose hr {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
 /* Markdown tables inside chat bubbles: readable and self-contained. The
    typography plugin provides the base table styling; these add the chat
    specifics — hairline row borders, breathing room in cells, and horizontal
