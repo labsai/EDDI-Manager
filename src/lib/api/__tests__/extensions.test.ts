@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { describe, it, expect } from "vitest";
 import { Puzzle } from "lucide-react";
 import { RESOURCE_TYPES } from "../resources";
@@ -168,8 +169,17 @@ describe("Fallbacks for unknown / bare-prefix inputs", () => {
   const knownPrefixed = Object.keys(EXTENSION_TYPE_INFO)[0]!;
   const knownBare = knownPrefixed.replace("eddi://", "");
 
+  // The labels resolve through i18n now, so the accessor needs a `t`. This
+  // stub returns the fallback, which is what a missing translation would.
+  const t = ((_key: string, fallback?: string) => fallback ?? _key) as unknown as TFunction;
+
   it("getExtensionLabel returns raw type for unknown", () => {
-    expect(getExtensionLabel("eddi://unknown")).toBe("eddi://unknown");
+    expect(getExtensionLabel("eddi://unknown", t)).toBe("eddi://unknown");
+  });
+
+  it("getExtensionLabel resolves a known type through i18n", () => {
+    expect(getExtensionLabel("eddi://ai.labs.apicalls", t)).toBe("API Calls");
+    expect(getExtensionLabel("eddi://ai.labs.httpcalls", t)).toBe("API Calls (legacy)");
   });
 
   it("getExtensionIcon returns Puzzle for unknown, resolves for known", () => {

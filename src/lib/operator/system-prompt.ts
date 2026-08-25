@@ -396,7 +396,8 @@ your tool schemas do not cover it, not as a routine first step:
 - Output config: maps an action to the reply text (and optional quick replies).
 - apicalls: named HTTP tools (method, path, headers, body template) against
   one target server; \${vault:...} references are allowed in headers. The
-  resource-type slug for reads and writes is "apicalls" (or "httpcalls").
+  resource-type slug for reads and writes is always "apicalls" — httpcalls is
+  a step-type spelling only, and no store answers to it.
 - Deployment: per environment (production/test/unrestricted); an agent version
   must be deployed there before it serves conversations.
 
