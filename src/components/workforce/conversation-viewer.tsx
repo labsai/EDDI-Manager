@@ -259,7 +259,7 @@ function AgentEntryCard({
                 isCollapsible && !isExpanded && "max-h-36",
               )}
             >
-              <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80 [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
+              <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80 [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {truncateContent(
                     parsedContent,
@@ -352,7 +352,7 @@ function SynthesisEntryCard({
         )}
       >
         {hasContent ? (
-          <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80 ps-6 [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
+          <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80 ps-6 [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {truncateContent(
                 parsedContent,
@@ -491,7 +491,7 @@ function SynthesizedAnswerFooter({ content }: { content: string }) {
           isCollapsible && !isExpanded && "max-h-36",
         )}
       >
-        <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80 [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
+        <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80 [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {truncateContent(parsedContent, t("groups.contentTruncated", "[Content truncated]"))}
           </ReactMarkdown>

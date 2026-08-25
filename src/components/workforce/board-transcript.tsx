@@ -297,7 +297,7 @@ function SynthesisCard({ content, delay }: { content: string; delay: number }) {
           collapsible && !expanded && "max-h-72",
         )}
       >
-        <div className="prose prose-sm dark:prose-invert max-w-none overflow-hidden break-words text-foreground [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:overflow-x-auto [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1">
+        <div className="prose prose-sm dark:prose-invert max-w-none overflow-hidden text-foreground [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
         </div>
         {collapsible && !expanded && (
