@@ -111,26 +111,33 @@ export function useUpdateConnection() {
       config: ConnectionConfiguration;
     }) => updateConnection(id, version, config),
     onSuccess: (result, { id, config }) => {
-      queryClient.invalidateQueries({ queryKey: CONNECTIONS_KEY });
-
-      // Seed the version this save just created.
+      // Seed the version this save just created — BEFORE the invalidation.
       //
       // A successful PUT returns the new version in its Location, and the
-      // detail page follows it — which changes its query key. Without a seed
+      // detail page follows it, which changes its query key. Without a seed
       // that key has no data, so the page drops to its loading skeleton and
       // fetches back the document it had itself just sent: a flash on every
-      // save, and a moment in which the saved edits are not on screen. The
-      // invalidation above still schedules a background refetch, so a
-      // server-side rewrite is picked up; it just no longer blocks the render.
+      // save, and a moment in which the saved edits are not on screen.
+      //
+      // The order is the whole trick. `invalidateQueries` only marks the
+      // queries that exist when it runs, and the global `staleTime` is 30s —
+      // so seeding afterwards produces a *fresh* entry that no observer will
+      // refetch, and anything the server normalised on write stays invisible
+      // for half a minute. Seeding first means the invalidation catches this
+      // key too: the page renders the seed immediately and the refetch that
+      // reconciles it with the server happens behind that.
       const location = (result as { location?: string } | undefined)?.location;
-      if (!location) return;
-      try {
-        const { version } = parseResourceUri(location);
-        queryClient.setQueryData([...CONNECTIONS_KEY, id, version], config);
-      } catch {
-        // An unparseable Location is the server's business, not the cache's.
-        // The page falls back to fetching, which is what it did before.
+      if (location) {
+        try {
+          const { version } = parseResourceUri(location);
+          queryClient.setQueryData([...CONNECTIONS_KEY, id, version], config);
+        } catch {
+          // An unparseable Location is the server's business, not the cache's.
+          // The page falls back to fetching, which is what it did before.
+        }
       }
+
+      queryClient.invalidateQueries({ queryKey: CONNECTIONS_KEY });
     },
   });
 }
