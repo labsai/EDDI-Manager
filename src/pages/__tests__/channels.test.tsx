@@ -176,6 +176,43 @@ describe("ChannelsPage", () => {
     });
   });
 
+  it("gives the table view a keyboard route into a channel", async () => {
+    // The row's onClick is a mouse affordance only — no role, no tabIndex, no
+    // key handler — so before this the list view could not be used from the
+    // keyboard at all. A real link also restores middle-click and
+    // open-in-new-tab, which navigate() cannot offer.
+    renderWithProviders(<ChannelsPage />, { initialRoute: "/manage/channels" });
+    await waitFor(() =>
+      expect(screen.getAllByTestId(/^channel-card-/).length).toBeGreaterThanOrEqual(1),
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId("view-toggle-list"));
+
+    const links = await screen.findAllByTestId(/^channel-link-/);
+    expect(links.length).toBeGreaterThanOrEqual(1);
+    // An anchor with an href is what makes it reachable and openable.
+    expect(links[0]).toHaveAttribute("href", expect.stringContaining("/manage/channels/"));
+    expect(links[0]!.tagName).toBe("A");
+  });
+
+  it("points that link at the row's own version", async () => {
+    // A link to the wrong version opens a different document than the row
+    // describes, which is worse than no link.
+    renderWithProviders(<ChannelsPage />, { initialRoute: "/manage/channels" });
+    await waitFor(() =>
+      expect(screen.getAllByTestId(/^channel-card-/).length).toBeGreaterThanOrEqual(1),
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId("view-toggle-list"));
+
+    const links = await screen.findAllByTestId(/^channel-link-/);
+    for (const link of links) {
+      expect(link.getAttribute("href")).toMatch(/^\/manage\/channels\/[^?]+\?version=\d+$/);
+    }
+  });
+
   // ─── Delete dialog ──────────────────────────────────────────────────────
 
   it("opens delete confirmation dialog", async () => {
