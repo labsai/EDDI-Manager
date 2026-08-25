@@ -312,8 +312,17 @@ test.describe("Workforce board — a finished discussion stays inside the window
         // Visually-hidden content clips into a 1px box on purpose — that is how
         // `sr-only` works, and the skip-to-content link is one.
         if (el.clientWidth <= 1 || el.clientHeight <= 1) continue;
-        if (getComputedStyle(el).overflowX === "visible") continue;
-        if (el.scrollWidth <= el.clientWidth + 1) continue;
+        const style = getComputedStyle(el);
+        // `truncate` DECLARES that overflowing is intended and shows an ellipsis
+        // for it. Exempting it by declared intent rather than by size matters:
+        // this passed locally at 190px and failed on CI at 193px, purely on font
+        // metrics, so a size-based tolerance would have been a flake generator.
+        if (style.textOverflow === "ellipsis") continue;
+        if (style.overflowX === "visible") continue;
+        // 4px absorbs sub-pixel rounding and the font-metric differences between
+        // a dev machine and CI. It cannot mask what this looks for: the failures
+        // are three orders of magnitude larger — 14,573 inside 602.
+        if (el.scrollWidth <= el.clientWidth + 4) continue;
         out.push(
           `<${el.tagName.toLowerCase()} class="${(el.getAttribute("class") ?? "").slice(0, 60)}"> ${el.scrollWidth}>${el.clientWidth}`,
         );
