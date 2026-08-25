@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen } from "@testing-library/react";
 import { renderWithProviders, userEvent } from "@/test/test-utils";
-import { RulesEditor, type RulesConfig } from "@/components/editors/rules-editor";
+import {
+  RulesEditor,
+  type RulesConfig,
+  type RulesConfigInput,
+} from "@/components/editors/rules-editor";
 
 const emptyConfig: RulesConfig = {
   appendActions: false,
@@ -274,7 +278,7 @@ describe("RulesEditor", () => {
    * handlers returned the spelling the editor wanted rather than the one the
    * server sent.
    */
-  const legacyShapedConfig = {
+  const legacyShapedConfig: RulesConfigInput = {
     appendActions: true,
     expressionsAsActions: false,
     behaviorGroups: [
@@ -295,7 +299,7 @@ describe("RulesEditor", () => {
         ],
       },
     ],
-  } as unknown as RulesConfig;
+  };
 
   it("renders rules that arrived under the legacy 'rules' key", () => {
     renderWithProviders(
@@ -319,11 +323,14 @@ describe("RulesEditor", () => {
     );
 
     const arg = onChange.mock.lastCall![0] as RulesConfig;
-    const group = arg.behaviorGroups[0]! as RulesConfig["behaviorGroups"][number];
+    const group = arg.behaviorGroups[0]!;
     expect(group.behaviorRules).toHaveLength(1);
-    // Both keys present would let Jackson's last-one-wins decide which list
-    // survives the save by field order — a way to lose rules silently.
-    expect(group.rules).toBeUndefined();
+    // Asserted on the runtime keys, not the type: RulesConfig no longer declares
+    // `rules`, but types are erased, and a spread that carried the legacy key
+    // through would still reach the server. Both keys present would let
+    // Jackson's last-one-wins decide which list survives the save by field
+    // order — a way to lose rules silently.
+    expect(Object.keys(group)).not.toContain("rules");
   });
 
   it("emits backend-correct preset configs when switching to a new condition type", async () => {

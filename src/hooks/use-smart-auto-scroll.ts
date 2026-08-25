@@ -88,6 +88,15 @@ export function useSmartAutoScroll<T extends HTMLElement = HTMLDivElement>({
    * drags the viewport back.
    */
   const noteUserScrolledUp = useCallback(() => {
+    const el = scrollRef.current;
+    // A gesture that cannot actually move the container must not pause
+    // following. Nothing scrolls, so no `scroll` event fires, so `handleScroll`
+    // never runs to undo the pause — and the view would sit paused with the
+    // "Scroll to bottom" control showing while the user is still at the bottom,
+    // with new tokens no longer following. `scrollTop === 0` covers both ways
+    // that happens: content that fits the viewport never leaves 0, and neither
+    // does a container already scrolled to the top.
+    if (!el || el.scrollTop <= 0) return;
     isNearBottomRef.current = false;
     setShowScrollFab(true);
   }, []);

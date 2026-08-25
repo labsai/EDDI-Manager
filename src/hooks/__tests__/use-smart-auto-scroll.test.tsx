@@ -37,14 +37,23 @@ describe("useSmartAutoScroll", () => {
     );
   }
 
-  function mountScroller() {
+  /**
+   * @param overflows
+   *   false models a conversation short enough to fit the viewport — nothing to
+   *   scroll, so `scrollTop` is pinned at 0 and no gesture produces a `scroll`
+   *   event.
+   */
+  function mountScroller({ overflows = true }: { overflows?: boolean } = {}) {
     const calls: ScrollToOptions[] = [];
     const view = render(<Harness tokens={0} />);
     const el = view.getByTestId("scroller") as HTMLDivElement;
 
-    Object.defineProperty(el, "scrollHeight", { value: 1000, configurable: true });
+    Object.defineProperty(el, "scrollHeight", {
+      value: overflows ? 1000 : 200,
+      configurable: true,
+    });
     Object.defineProperty(el, "clientHeight", { value: 200, configurable: true });
-    let scrollTop = 800;
+    let scrollTop = overflows ? 800 : 0;
     Object.defineProperty(el, "scrollTop", {
       configurable: true,
       get: () => scrollTop,
@@ -54,7 +63,7 @@ describe("useSmartAutoScroll", () => {
     });
     el.scrollTo = ((opts: ScrollToOptions) => {
       calls.push(opts);
-      scrollTop = 800;
+      scrollTop = overflows ? 800 : 0;
     }) as HTMLElement["scrollTo"];
 
     return { view, el, calls, setScrollTop: (v: number) => (scrollTop = v) };
@@ -150,6 +159,47 @@ describe("useSmartAutoScroll", () => {
     });
 
     expect(calls.length).toBe(before);
+  });
+
+  it("ignores an upward gesture the container cannot act on", () => {
+    // A short conversation that fits the viewport. Wheeling up scrolls nothing,
+    // so no `scroll` event follows to correct the state — pausing here would
+    // strand the user with a "Scroll to bottom" control while they are already
+    // at the bottom, and stop the reply following.
+    const { view, el, calls } = mountScroller({ overflows: false });
+
+    act(() => {
+      view.rerender(<Harness tokens={1} />);
+    });
+    const before = calls.length;
+
+    act(() => {
+      el.dispatchEvent(new WheelEvent("wheel", { deltaY: -120, bubbles: true }));
+    });
+    act(() => {
+      view.rerender(<Harness tokens={2} />);
+    });
+
+    expect(calls.length).toBe(before + 1);
+    expect(el.getAttribute("data-fab")).toBe("hidden");
+  });
+
+  it("ignores PageUp at the very top, where there is nowhere further to go", () => {
+    const { view, el, calls } = mountScroller({ overflows: false });
+
+    act(() => {
+      view.rerender(<Harness tokens={1} />);
+    });
+    const before = calls.length;
+
+    act(() => {
+      el.dispatchEvent(new KeyboardEvent("keydown", { key: "PageUp", bubbles: true }));
+    });
+    act(() => {
+      view.rerender(<Harness tokens={2} />);
+    });
+
+    expect(calls.length).toBe(before + 1);
   });
 
   it("resumes following once the user scrolls back to the bottom", () => {
