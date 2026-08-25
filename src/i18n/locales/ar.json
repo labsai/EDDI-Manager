@@ -4653,7 +4653,7 @@
     "rules": "القواعد",
     "property": "مُعيّن الخصائص",
     "apicalls": "استدعاءات API",
-    "httpcallsLegacy": "استدعاءات API (قديم)",
+    "httpcallsLegacy": "استدعاءات API (قديمة)",
     "llm": "نموذج لغوي",
     "output": "الإخراج",
     "templating": "القوالب",
