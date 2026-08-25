@@ -280,4 +280,93 @@ describe("SecretKeyPicker", () => {
       expect(screen.queryByTestId("secret-key-picker-vault-btn")).not.toBeInTheDocument();
     });
   });
+
+  /**
+   * The vault popup's own keyboard navigation.
+   *
+   * Opening the popup moves focus into its filter input, so the main input's
+   * key handler — which owns `highlightedIndex` — stops receiving anything, and
+   * the popup is a sibling of that input rather than a child, so nothing
+   * reached it by bubbling either. The popup's own handler called
+   * `preventDefault()` on both arrows and left a comment saying the parent
+   * would handle them. Nothing did: the list was mouse-only.
+   */
+  describe("keyboard navigation in the vault popup", () => {
+    async function openPopup() {
+      const user = userEvent.setup();
+      renderWithProviders(<SecretKeyPicker value="" onChange={mockOnChange} />);
+      await user.click(await screen.findByTestId("secret-key-picker-vault-btn"));
+      await screen.findByTestId("vault-popup");
+      // The popup focuses its filter on a timer; the arrows are meaningless
+      // until it has, because that is what makes the main input lose focus.
+      await waitFor(() =>
+        expect(screen.getByTestId("vault-popup-filter")).toHaveFocus(),
+      );
+      return user;
+    }
+
+    it("moves the highlight down with ArrowDown", async () => {
+      const user = await openPopup();
+
+      await user.keyboard("{ArrowDown}");
+
+      expect(screen.getByTestId("vault-key-openai-key")).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+    });
+
+    it("selects the highlighted key with Enter", async () => {
+      const user = await openPopup();
+
+      await user.keyboard("{ArrowDown}{ArrowDown}{Enter}");
+
+      // Second key in the sorted list.
+      expect(mockOnChange).toHaveBeenCalledWith("${vault:slack-token}");
+    });
+
+    it("wraps to the last key with ArrowUp from the top", async () => {
+      const user = await openPopup();
+
+      await user.keyboard("{ArrowUp}");
+
+      expect(screen.getByTestId("vault-key-slack-token")).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+    });
+
+    it("announces the highlighted key rather than only colouring it", async () => {
+      // The highlight is a background colour, which is nothing to a screen
+      // reader. aria-activedescendant is what makes the arrows perceivable.
+      const user = await openPopup();
+
+      await user.keyboard("{ArrowDown}");
+
+      expect(screen.getByTestId("vault-popup-filter")).toHaveAttribute(
+        "aria-activedescendant",
+        "vault-option-openai-key",
+      );
+    });
+
+    it("still closes on Escape", async () => {
+      // Escape used to be handled by the popup's own handler, which this change
+      // replaced wholesale with the parent's.
+      const user = await openPopup();
+
+      await user.keyboard("{Escape}");
+
+      await waitFor(() =>
+        expect(screen.queryByTestId("vault-popup")).not.toBeInTheDocument(),
+      );
+    });
+
+    it("does not select anything when Enter is pressed with no highlight", async () => {
+      const user = await openPopup();
+
+      await user.keyboard("{Enter}");
+
+      expect(mockOnChange).not.toHaveBeenCalled();
+    });
+  });
 });
