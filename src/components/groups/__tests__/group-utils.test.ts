@@ -226,11 +226,38 @@ describe("parseVerdictJson", () => {
     expect(parseVerdictJson("```\n" + JSON.stringify(VERDICT) + "\n```")).toEqual(VERDICT);
   });
 
-  it("keeps the winner and the tally optional", () => {
-    expect(parseVerdictJson(JSON.stringify({ reasoning: "Nobody scored." }))).toEqual({
-      winner: null,
+  it("accepts a verdict with a winner but no tally, and vice versa", () => {
+    expect(parseVerdictJson(JSON.stringify({ winner: "PRO", reasoning: "Clear." }))).toEqual({
+      winner: "PRO",
       scores: null,
-      reasoning: "Nobody scored.",
+      reasoning: "Clear.",
+    });
+    expect(parseVerdictJson(JSON.stringify({ scores: { PRO: 9 }, reasoning: "Clear." }))).toEqual({
+      winner: null,
+      scores: { PRO: 9 },
+      reasoning: "Clear.",
+    });
+  });
+
+  /**
+   * `reasoning` alone used to be the discriminator, which was wrong in both
+   * directions: it swallowed every other structured answer carrying that field,
+   * and it let a response envelope with a sibling `reasoning` outrank the answer
+   * in its own `output` array.
+   */
+  it("does not claim any object that merely has a reasoning field", () => {
+    expect(parseVerdictJson(JSON.stringify({ position: "PRO", reasoning: "because" }))).toBeNull();
+    expect(parseVerdictJson(JSON.stringify({ reasoning: "a chain of thought" }))).toBeNull();
+  });
+
+  it("reads a tally-only verdict, with empty prose", () => {
+    // Not null: the object IS a verdict, it just has nothing left to say once
+    // the verdict card has rendered the outcome. Returning null here sent the
+    // caller back to printing the raw JSON — the exact demo defect.
+    expect(parseVerdictJson(JSON.stringify({ winner: "PRO", scores: { PRO: 9, CON: 3 } }))).toEqual({
+      winner: "PRO",
+      scores: { PRO: 9, CON: 3 },
+      reasoning: "",
     });
   });
 
@@ -241,16 +268,15 @@ describe("parseVerdictJson", () => {
     expect(parsed!.scores).toEqual({ PRO: 7 });
   });
 
-  it("is not a verdict without prose to show", () => {
-    // `reasoning` is the discriminator: a bare {winner, scores} carries nothing
-    // the verdict card is not already showing better.
-    expect(parseVerdictJson(JSON.stringify({ winner: "PRO", scores: { PRO: 9 } }))).toBeNull();
-    expect(parseVerdictJson(JSON.stringify({ reasoning: "   " }))).toBeNull();
+  it("is not a verdict without an outcome", () => {
+    expect(parseVerdictJson(JSON.stringify({ scores: {} }))).toBeNull();
+    expect(parseVerdictJson(JSON.stringify({ scores: { PRO: "nine" } }))).toBeNull();
+    expect(parseVerdictJson(JSON.stringify({ winner: 3 }))).toBeNull();
   });
 
   it("leaves ordinary prose, arrays and malformed JSON alone", () => {
     expect(parseVerdictJson("The panel could not agree.")).toBeNull();
-    expect(parseVerdictJson('[{"reasoning":"x"}]')).toBeNull();
+    expect(parseVerdictJson('[{"winner":"PRO"}]')).toBeNull();
     expect(parseVerdictJson("```json\n{ not json }\n```")).toBeNull();
     expect(parseVerdictJson("")).toBeNull();
     expect(parseVerdictJson(null)).toBeNull();
@@ -259,7 +285,7 @@ describe("parseVerdictJson", () => {
   it("does not unwrap a body that is more than one fence", () => {
     // Prose around a snippet is prose, not a verdict — unwrapping it would
     // throw the surrounding words away.
-    expect(parseVerdictJson('Here it is:\n```json\n{"reasoning":"x"}\n```')).toBeNull();
+    expect(parseVerdictJson('Here it is:\n```json\n{"winner":"PRO"}\n```')).toBeNull();
   });
 });
 
@@ -268,6 +294,42 @@ describe("parseTranscriptContent — JSON that is somebody's answer", () => {
     const content =
       "```json\n" + JSON.stringify({ winner: "TIE", reasoning: "It was close." }) + "\n```";
     expect(parseTranscriptContent(content)).toBe("It was close.");
+  });
+
+  it("renders a tally-only verdict as nothing, not as the blob", () => {
+    const content =
+      "```json\n" + JSON.stringify({ winner: "PRO", scores: { PRO: 9, CON: 3 } }) + "\n```";
+    expect(parseTranscriptContent(content)).toBe("");
+  });
+
+  /**
+   * The envelope is resolved first. Reading the verdict first meant an envelope
+   * carrying a sibling `reasoning` rendered the model's chain of thought and
+   * silently discarded the answer inside `output`.
+   */
+  it("prefers the envelope's answer over a sibling reasoning key", () => {
+    const content = JSON.stringify({
+      output: [{ type: "text", text: "THE REAL ANSWER" }],
+      reasoning: "an internal chain of thought",
+    });
+    expect(parseTranscriptContent(content)).toBe("THE REAL ANSWER");
+  });
+
+  it("keeps every field of a structured answer that is not a verdict", () => {
+    const out = parseTranscriptContent(JSON.stringify({ position: "PRO", reasoning: "because" }));
+    expect(out).toContain("position");
+    expect(out).toContain("PRO");
+    expect(out).toContain("because");
+  });
+
+  it("reads a single-string output envelope", () => {
+    expect(parseTranscriptContent(JSON.stringify({ output: "hello" }))).toBe("hello");
+  });
+
+  it("renders a list of unrecognised objects rather than a blank card", () => {
+    expect(parseTranscriptContent(JSON.stringify([{ foo: "bar" }]))).toContain("foo");
+    // An empty list is still an empty answer.
+    expect(parseTranscriptContent("[]")).toBe("");
   });
 
   it("still collapses an EMPTY response envelope to nothing", () => {

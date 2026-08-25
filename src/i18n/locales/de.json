@@ -2531,6 +2531,7 @@
     "negotiationSuperseded": "Ersetzt",
     "negotiationTableTitle": "Verhandlungstisch",
     "notSet": "nicht festgelegt",
+    "policyNotSet": "—",
     "retroConfigLabel": "Retro-Erkenntnisse",
     "retroConfigValue": "{{perRun}}/Lauf, max. {{stored}} gespeichert",
     "stateAwaitingHumanInput": "Warten auf Mitglied",

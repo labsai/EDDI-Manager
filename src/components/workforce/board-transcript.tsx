@@ -144,7 +144,7 @@ function QuestionBubble({ content, delay }: { content: string | null; delay: num
         </div>
         <div className="flex flex-col items-end gap-1">
           <div className="bg-foreground/10 text-foreground rounded-2xl rounded-ee-md px-4 py-2.5">
-            <p className="text-sm whitespace-pre-wrap leading-relaxed">{content ?? ""}</p>
+            <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{content ?? ""}</p>
           </div>
         </div>
       </div>
@@ -257,6 +257,7 @@ function SynthesisCard({ content, delay }: { content: string; delay: number }) {
     <div
       role="status"
       aria-label={t("Workforce.board.synthesisResult", "Synthesis result")}
+      data-testid="synthesis-card"
       className={cn(
         "rounded-xl border border-border p-4",
         "bg-card",
@@ -296,7 +297,7 @@ function SynthesisCard({ content, delay }: { content: string; delay: number }) {
           collapsible && !expanded && "max-h-72",
         )}
       >
-        <div className="prose prose-sm dark:prose-invert max-w-none text-foreground [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1">
+        <div className="prose prose-sm dark:prose-invert max-w-none overflow-hidden break-words text-foreground [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:overflow-x-auto [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
         </div>
         {collapsible && !expanded && (

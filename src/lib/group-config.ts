@@ -208,7 +208,7 @@ export function effectiveDelegationTimeout(value: number | null | undefined): nu
  * absent values degrade to something readable instead.
  */
 export function memberPolicyLabel(t: TFunction, policy: string | null | undefined): string {
-  if (!policy) return "—";
+  if (!policy) return t("groups.policyNotSet", "—");
   const titled = policy.charAt(0).toUpperCase() + policy.slice(1).toLowerCase();
   return t(`groupWizard.policy${titled}`, titled);
 }

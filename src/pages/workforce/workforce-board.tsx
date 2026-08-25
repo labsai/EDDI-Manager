@@ -195,6 +195,21 @@ function WorkforceBoard() {
     if (ongoing) setSelectedConvId(ongoing.id);
   }, [conversations, selectedConvId, streamState.conversationId, setSelectedConvId]);
 
+  /*
+   * These panels used to trap Tab, and were `aria-modal`. Both are gone with
+   * the move off `fixed`, and deliberately so: the panels no longer cover the
+   * action bar, and the whole point of that is that "+ New" and the Team /
+   * Sessions toggles stay usable while one is open. A trap would have given
+   * that back to mouse users only — a keyboard user would still have been
+   * unable to Tab to the button the fix exists to reach, and a screen-reader
+   * user would have been told the rest of the page was inert when it is not.
+   *
+   * What remains is the non-modal drawer contract, which is coherent: Escape
+   * closes, clicking the scrim closes, focus moves into the panel on open and
+   * returns to the trigger on close, and Tab leaves the panel like any other
+   * region.
+   */
+
   // Close slide-over panels on Escape + restore focus
   useEffect(() => {
     if (!showMembers && !showHistory) return;
@@ -221,24 +236,6 @@ function WorkforceBoard() {
     });
   }, [showMembers, showHistory]);
 
-  // Focus trap handler for slide-over panels
-  const handlePanelKeyDown = useCallback((e: React.KeyboardEvent, ref: React.RefObject<HTMLDivElement | null>) => {
-    if (e.key !== 'Tab') return;
-    const focusable = ref.current?.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    if (!focusable?.length) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (!first || !last) return;
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }, []);
 
   // ─── Derived state ─────────────────────────────────────────────
   const isStreaming = streamState.isStreaming;
@@ -587,6 +584,7 @@ function WorkforceBoard() {
             className={cn("h-8 w-8", showMembers && "bg-primary/10")}
             aria-label={t("Workforce.board.members", "Team")}
             aria-expanded={showMembers}
+            data-testid="members-toggle"
           >
             <UsersIcon />
           </Button>
@@ -601,6 +599,7 @@ function WorkforceBoard() {
             className={cn("h-8 w-8", showHistory && "bg-primary/10")}
             aria-label={t("Workforce.board.sessions", "Sessions")}
             aria-expanded={showHistory}
+            data-testid="sessions-toggle"
           >
             <ClockIcon />
           </Button>
@@ -832,6 +831,7 @@ function WorkforceBoard() {
                 onClick={() => setShowConfig(false)}
                 className="p-0.5 rounded hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={t("Workforce.board.hideConfig", "Hide details panel")}
+                data-testid="board-config-hide"
               >
                 <PanelRightClose className="h-3.5 w-3.5" />
               </button>
@@ -854,14 +854,13 @@ function WorkforceBoard() {
             }}
             aria-hidden="true"
           />
-          {/* Not `aria-modal`: the action bar above stays clickable on purpose,
-              so the Team/Sessions toggles still toggle. Focus is still trapped
-              and Escape still closes. */}
+          {/* A non-modal drawer over the board content — see the note on the
+              Escape handler for why it is neither `aria-modal` nor trapped. */}
           <div
             ref={membersRef}
             role="dialog"
             aria-label={t("Workforce.board.membersPanel", "Team panel")}
-            onKeyDown={(e) => handlePanelKeyDown(e, membersRef)}
+            data-testid="members-panel"
             className={cn(
               "absolute inset-y-0 end-0 z-40 w-80",
               "bg-card",
@@ -898,7 +897,7 @@ function WorkforceBoard() {
             ref={historyRef}
             role="dialog"
             aria-label={t("Workforce.board.sessionsPanel", "Sessions panel")}
-            onKeyDown={(e) => handlePanelKeyDown(e, historyRef)}
+            data-testid="sessions-panel"
             className={cn(
               "absolute inset-y-0 end-0 z-40 w-80",
               "bg-card",

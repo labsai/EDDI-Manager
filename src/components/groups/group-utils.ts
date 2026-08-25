@@ -287,7 +287,12 @@ export function formatMarkdownText(text: string): string {
 export interface VerdictJson {
   winner: string | null;
   scores: Record<string, number> | null;
-  /** The judge's prose. Always non-empty — it is what makes a verdict renderable. */
+  /**
+   * The judge's prose, `""` when it sent only a tally. Empty is a real answer
+   * here, not a failure to parse: the winner and the scores are the verdict
+   * card's to render, so a verdict with no prose has nothing left to say and
+   * must render as nothing rather than fall back to printing itself.
+   */
   reasoning: string;
 }
 
@@ -295,6 +300,38 @@ export interface VerdictJson {
 function stripLoneCodeFence(content: string): string {
   const match = /^\s*(?:```|~~~)[^\n]*\n([\s\S]*?)\n?(?:```|~~~)\s*$/.exec(content);
   return match?.[1] ?? content;
+}
+
+/**
+ * Whether a parsed object is a judge's verdict, and its contents if so.
+ *
+ * `winner`/`scores` are the discriminator, NOT `reasoning`. Keying off
+ * `reasoning` alone was wrong in both directions: it swallowed any other
+ * structured answer carrying that field — a `{position, reasoning}` argument
+ * would have rendered as its reasoning and lost the position — and it let a
+ * response envelope that happened to carry a top-level `reasoning` outrank the
+ * answer in its own `output` array. What actually identifies a verdict is the
+ * outcome, which is the half no other shape has.
+ */
+function verdictFields(record: Record<string, unknown>): VerdictJson | null {
+  const winner = typeof record.winner === "string" ? record.winner : null;
+
+  const rawScores = record.scores;
+  let scores: Record<string, number> | null = null;
+  if (rawScores && typeof rawScores === "object" && !Array.isArray(rawScores)) {
+    const numeric = Object.entries(rawScores).filter(
+      (entry): entry is [string, number] => typeof entry[1] === "number",
+    );
+    if (numeric.length > 0) scores = Object.fromEntries(numeric);
+  }
+
+  if (winner === null && scores === null) return null;
+
+  return {
+    winner,
+    scores,
+    reasoning: typeof record.reasoning === "string" ? record.reasoning.trim() : "",
+  };
 }
 
 /**
@@ -306,10 +343,6 @@ function stripLoneCodeFence(content: string): string {
  * the SYNTHESIS transcript entry, and every surface that shows that entry used
  * to print the JSON verbatim. A ```json fence is the usual wrapper, so it is
  * unwrapped before parsing.
- *
- * `reasoning` is the discriminator, not `winner`: it is the field that carries
- * prose, and a verdict without it has nothing to show that the verdict card is
- * not already showing better.
  */
 export function parseVerdictJson(content: string | null | undefined): VerdictJson | null {
   if (!content) return null;
@@ -324,24 +357,7 @@ export function parseVerdictJson(content: string | null | undefined): VerdictJso
   }
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
 
-  const record = parsed as Record<string, unknown>;
-  const reasoning = typeof record.reasoning === "string" ? record.reasoning.trim() : "";
-  if (!reasoning) return null;
-
-  const rawScores = record.scores;
-  let scores: Record<string, number> | null = null;
-  if (rawScores && typeof rawScores === "object" && !Array.isArray(rawScores)) {
-    const numeric = Object.entries(rawScores).filter(
-      (entry): entry is [string, number] => typeof entry[1] === "number",
-    );
-    if (numeric.length > 0) scores = Object.fromEntries(numeric);
-  }
-
-  return {
-    winner: typeof record.winner === "string" ? record.winner : null,
-    scores,
-    reasoning,
-  };
+  return verdictFields(parsed as Record<string, unknown>);
 }
 
 /**
@@ -364,20 +380,30 @@ function readableJsonObject(record: Record<string, unknown>): string {
  * 1. JSON from backend `extractResponse()` — e.g. `{"output":[{"type":"text","text":"..."}],...}`
  * 2. A judge's verdict object, fenced or bare (see {@link parseVerdictJson})
  * 3. Plain text (already extracted, or from fixed backend)
- * Returns the cleaned text string. Returns "" for a response ENVELOPE that
- * carried no text — an empty answer is empty. Any other object is somebody's
- * real answer and is rendered, never dropped and never printed as a blob.
+ *
+ * Returns the cleaned text string. Returns "" when the answer really is empty —
+ * a response envelope that carried no text, or a verdict that carried only a
+ * tally (which the verdict card renders). Anything else is somebody's real
+ * answer: it is rendered, never dropped and never printed as a raw blob.
+ *
+ * The envelope is resolved BEFORE the verdict, and the two cannot be confused
+ * anyway (a verdict needs `winner`/`scores`) — belt and braces, because getting
+ * this order wrong means discarding the answer inside `output` in favour of a
+ * sibling key.
  */
 export function parseTranscriptContent(content: string): string {
   if (!content) return "";
-
-  const verdict = parseVerdictJson(content);
-  if (verdict) return formatMarkdownText(verdict.reasoning);
 
   let extracted = content;
 
   // Quick check: does it look like JSON?
   const trimmed = content.trim();
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+    // A fenced body is never an envelope — the backend does not wrap its own
+    // JSON in markdown — so the only structured thing it can be is a verdict.
+    const fencedVerdict = parseVerdictJson(content);
+    if (fencedVerdict) return formatMarkdownText(fencedVerdict.reasoning);
+  }
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
     try {
       const parsed = JSON.parse(trimmed);
@@ -398,6 +424,10 @@ export function parseTranscriptContent(content: string): string {
             if (typeof item === "string") texts.push(item);
             else if (item?.text) texts.push(String(item.text));
           }
+        } else if (typeof parsed.output === "string" && parsed.output) {
+          // A single-string `output` is an envelope too, and reading only the
+          // array form rendered it as a blank card.
+          texts.push(parsed.output);
         }
 
         // Check flat "output:text:*" keys
@@ -421,7 +451,11 @@ export function parseTranscriptContent(content: string): string {
         } else if (isEnvelope) {
           return "";
         } else {
-          extracted = readableJsonObject(parsed as Record<string, unknown>);
+          const record = parsed as Record<string, unknown>;
+          const bareVerdict = verdictFields(record);
+          // A verdict's prose, or nothing at all when it sent only a tally —
+          // never the object itself, which is the blob this exists to stop.
+          extracted = bareVerdict ? bareVerdict.reasoning : readableJsonObject(record);
         }
       } else if (Array.isArray(parsed)) {
         // Format 2: [{ "type": "text", "text": "..." }, ...] — top-level array
@@ -432,8 +466,20 @@ export function parseTranscriptContent(content: string): string {
         }
         if (texts.length > 0) {
           extracted = texts.join("\n\n");
-        } else {
+        } else if (parsed.length === 0) {
+          // An empty list is an empty answer, the array-shaped twin of `{output: []}`.
           return "";
+        } else {
+          // Same rule as the object branch: a list of things this build has no
+          // reader for is still an answer, and rendering "" for it put a blank
+          // card on screen where the agent had said something.
+          extracted = parsed
+            .map((item) =>
+              item && typeof item === "object"
+                ? readableJsonObject(item as Record<string, unknown>)
+                : String(item),
+            )
+            .join("\n\n");
         }
       }
     } catch {

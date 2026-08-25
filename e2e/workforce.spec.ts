@@ -248,12 +248,18 @@ test.describe("Workforce board — a finished discussion stays inside the window
 
   /**
    * Elements whose box escapes the viewport, ignoring anything sitting inside a
-   * deliberate horizontal scroller.
+   * scrollable ancestor.
    *
    * That exemption is the difference between the bug and the cure: a wide code
    * block inside a `<pre overflow-x:auto>` is *supposed* to be wider than the
    * window and scroll within its own box. What must never happen is the box
    * itself — or the panel next to it — leaving the window.
+   *
+   * It is a WIDE exemption, and knowingly so. `overflow-y: auto` with no
+   * explicit `overflow-x` computes `overflow-x: auto` per CSS Overflow, so every
+   * vertical scroll box in the app — the transcript included — exempts its whole
+   * subtree here. `noSidewaysScroll` below covers what that leaves out; neither
+   * check is sufficient alone.
    */
   const escapees = (page: import("@playwright/test").Page) =>
     page.evaluate(() => {
@@ -280,6 +286,41 @@ test.describe("Workforce board — a finished discussion stays inside the window
       return out;
     });
 
+  /**
+   * Boxes that CONSTRAIN their width — anything not `overflow-x: visible` —
+   * whose content is wider than they are. For everything but a code block that
+   * means text stretched its container instead of wrapping.
+   *
+   * The viewport probe cannot see any of this, and the reason is worth stating:
+   * `overflow-y: auto` with no explicit `overflow-x` computes `overflow-x: auto`
+   * per CSS Overflow, so the transcript's own scroll box exempts its entire
+   * subtree there. A message stretched inside it never leaves the window — it
+   * either makes the transcript pan sideways (`auto`) or, worse, is silently
+   * amputated (`hidden`/`clip`), with no scrollbar and no way to reach it. A
+   * bare unbreakable token — a URL, an id, a stack frame — does exactly that
+   * once `min-w-0` has stopped it escaping outright: measured at `scrollWidth`
+   * 14,573 inside a 592px card before `break-words` was added.
+   *
+   * `<pre>` is exempt: a horizontal scrollbar on a code block is the intended
+   * containment, not a failure to wrap.
+   */
+  const clippedOrPanning = (page: import("@playwright/test").Page) =>
+    page.evaluate(() => {
+      const out: string[] = [];
+      for (const el of Array.from(document.querySelectorAll("*"))) {
+        if (el.tagName === "PRE" || el.closest("pre")) continue;
+        // Visually-hidden content clips into a 1px box on purpose — that is how
+        // `sr-only` works, and the skip-to-content link is one.
+        if (el.clientWidth <= 1 || el.clientHeight <= 1) continue;
+        if (getComputedStyle(el).overflowX === "visible") continue;
+        if (el.scrollWidth <= el.clientWidth + 1) continue;
+        out.push(
+          `<${el.tagName.toLowerCase()} class="${(el.getAttribute("class") ?? "").slice(0, 60)}"> ${el.scrollWidth}>${el.clientWidth}`,
+        );
+      }
+      return out;
+    });
+
   for (const vp of [
     { label: "desktop", width: 1280, height: 900 },
     { label: "tablet", width: 768, height: 1024 },
@@ -293,6 +334,7 @@ test.describe("Workforce board — a finished discussion stays inside the window
       await expect(page.getByTestId("decision-record")).toBeVisible();
 
       expect(await escapees(page)).toEqual([]);
+      expect(await clippedOrPanning(page)).toEqual([]);
     });
   }
 
@@ -305,15 +347,20 @@ test.describe("Workforce board — a finished discussion stays inside the window
     // `toBeInViewport` is the assertion the old `scrollWidth` probes could not
     // make: it fails on an element that is laid out but parked outside the
     // window, which is exactly how this broke.
-    await expect(page.getByRole("button", { name: "Send" })).toBeInViewport();
-    await expect(page.getByRole("button", { name: "Hide details panel" })).toBeInViewport();
+    await expect(page.getByTestId("board-send")).toBeInViewport();
+    await expect(page.getByTestId("board-config-hide")).toBeInViewport();
+    // The accessible names are what a screen-reader user navigates by, so they
+    // are asserted too rather than replaced by the ids.
+    await expect(page.getByRole("button", { name: "Send" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Hide details panel" })).toBeVisible();
   });
 
   test("the judge's verdict reads as prose, never as raw JSON", async ({ page }) => {
     await page.goto(BOARD);
     await waitForApp(page);
 
-    const synthesis = page.getByLabel("Synthesis result");
+    const synthesis = page.getByTestId("synthesis-card");
+    await expect(page.getByLabel("Synthesis result")).toBeVisible();
     await expect(synthesis).toContainText("Both sides argued substantively");
     // The winner and the tally are the verdict card's job, directly above it.
     await expect(page.getByTestId("decision-record")).toContainText("Tie");
@@ -342,13 +389,14 @@ test.describe("Workforce board — slide-overs must not cover the action bar", (
   test.beforeEach(async ({ page }) => {
     await page.goto(BOARD);
     await waitForApp(page);
-    await page.getByRole("button", { name: "Sessions" }).click();
+    await page.getByTestId("sessions-toggle").click();
+    await expect(page.getByTestId("sessions-panel")).toBeVisible();
     await expect(page.getByRole("dialog", { name: "Sessions panel" })).toBeVisible();
   });
 
   test("the panel starts below the action bar", async ({ page }) => {
     const bar = await page.getByTestId("new-discussion-btn").boundingBox();
-    const panel = await page.getByRole("dialog", { name: "Sessions panel" }).boundingBox();
+    const panel = await page.getByTestId("sessions-panel").boundingBox();
     if (!bar || !panel) throw new Error("expected both the New button and the panel to be laid out");
 
     // Not an overlap check on the whole bar — the panel is allowed to sit
@@ -372,7 +420,7 @@ test.describe("Workforce board — slide-overs must not cover the action bar", (
     // The selection is URL-backed, so a started-fresh board is one with no
     // `conversation` param and the idle placeholder on screen.
     await expect(page).toHaveURL(/\?version=1$/);
-    await expect(page.getByRole("dialog", { name: "Sessions panel" })).toBeHidden();
+    await expect(page.getByTestId("sessions-panel")).toBeHidden();
     await expect(page.getByTestId("decision-record")).toHaveCount(0);
   });
 });

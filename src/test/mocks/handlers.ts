@@ -640,6 +640,17 @@ function verdictConversation() {
       entry({
         speakerAgentId: "agent4",
         speakerDisplayName: "Growth Strategist",
+        // The same token OUTSIDE a fence. A code block brings its own
+        // horizontal scroller; bare prose has nothing but `break-words`,
+        // so this is the case that stretches the card itself — and the
+        // one the viewport probe alone cannot see, because everything in
+        // the transcript sits inside its vertical scroll box.
+        content: `Mine is at ${UNBREAKABLE_LINE} — same conclusion.`,
+        timestamp: at(300_000),
+      }),
+      entry({
+        speakerAgentId: "agent4",
+        speakerDisplayName: "Growth Strategist",
         phaseIndex: 1,
         phaseName: "Judgment",
         type: "SYNTHESIS",

@@ -120,8 +120,11 @@ describe("Workforce Pages", () => {
       renderPage("/workforce/grp1?version=1", <WorkforceBoard />, "/workforce/:boardId");
       await screen.findAllByText(/Product Review Panel/i);
 
-      await user.click(screen.getByRole("button", { name: "Sessions" }));
-      const panel = await screen.findByRole("dialog", { name: /sessions panel/i });
+      await user.click(screen.getByTestId("sessions-toggle"));
+      const panel = await screen.findByTestId("sessions-panel");
+      // Still a labelled dialog to assistive tech, not merely a div with an id.
+      expect(panel).toHaveAttribute("role", "dialog");
+      expect(panel).toHaveAccessibleName(/sessions panel/i);
 
       const newButton = screen.getByTestId("new-discussion-btn");
       // The action bar is outside whatever the panel occupies, so nothing the
@@ -141,15 +144,15 @@ describe("Workforce Pages", () => {
       renderPage("/workforce/grp1?version=1", <WorkforceBoard />, "/workforce/:boardId");
       await screen.findAllByText(/Product Review Panel/i);
 
-      await user.click(screen.getByRole("button", { name: "Sessions" }));
-      expect(await screen.findByRole("dialog", { name: /sessions panel/i })).toBeInTheDocument();
+      await user.click(screen.getByTestId("sessions-toggle"));
+      expect(await screen.findByTestId("sessions-panel")).toBeInTheDocument();
 
       await user.click(screen.getByTestId("new-discussion-btn"));
 
       // Whichever panel was open is about the discussion being left behind, so
       // a fresh board must not still be showing it.
       await waitFor(() => {
-        expect(screen.queryByRole("dialog", { name: /sessions panel/i })).not.toBeInTheDocument();
+        expect(screen.queryByTestId("sessions-panel")).not.toBeInTheDocument();
       });
     });
 

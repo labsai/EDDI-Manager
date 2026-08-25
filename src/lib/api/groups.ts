@@ -64,8 +64,20 @@ export type MemberUnavailablePolicy = "SKIP" | "FAIL";
  * API rather than through the wizard arrives without them. Everything on this
  * side treats them as set: the settings editor merges these same defaults in
  * before binding its `<select>`s, and the config panel formats them for display.
- * SKIP is what the wizard, the templates and that editor all write, so defaulting
- * to it shows what a save from this UI would actually store.
+ *
+ * SKIP is the backend's own behaviour for an absent value, not an assumption
+ * from what this UI happens to write. `ProtocolConfig`'s canonical constructor
+ * normalises only `onCostExceeded`, so Jackson leaves these two `null` — and
+ * every read of them is an equality test against a NON-skip value:
+ * `onAgentFailure() == RETRY` and `== ABORT` (`MemberTurnExecutor`,
+ * `TaskForceEngine`, `GroupConversationService`), `onMemberUnavailable() == FAIL`
+ * (`MemberTurnExecutor`). A null takes none of those branches, which is exactly
+ * what SKIP does. `GroupConversationService.resolveProtocol` substitutes the same
+ * pair when the protocol block is absent entirely.
+ *
+ * That equivalence is why filling it here is safe even though the partial
+ * editors (advanced, phases, HITL) save the whole normalised config back: the
+ * value written is the one the engine was already applying.
  */
 export const DEFAULT_MEMBER_FAILURE_POLICY: MemberFailurePolicy = "SKIP";
 export const DEFAULT_MEMBER_UNAVAILABLE_POLICY: MemberUnavailablePolicy = "SKIP";
