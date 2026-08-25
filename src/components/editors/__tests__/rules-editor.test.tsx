@@ -263,6 +263,69 @@ describe("RulesEditor", () => {
     expect(values).not.toContain("dynamicValueMatcher");
   });
 
+  /**
+   * A rule set as EDDI serialised it before the wire name was fixed: the group's
+   * list arrives as `rules`, not `behaviorRules`.
+   *
+   * This is what Karol saw. The editor typed the field as `behaviorRules` only,
+   * so `group.behaviorRules ?? []` was always empty and every group rendered as
+   * "No rules in this group" — for every rule set on the server, not just ones
+   * created over the API. Nothing in the suite caught it because the MSW
+   * handlers returned the spelling the editor wanted rather than the one the
+   * server sent.
+   */
+  const legacyShapedConfig = {
+    appendActions: true,
+    expressionsAsActions: false,
+    behaviorGroups: [
+      {
+        name: "Greeting Group",
+        executionStrategy: "executeUntilFirstSuccess",
+        rules: [
+          {
+            name: "Greet Rule",
+            actions: ["greet"],
+            conditions: [
+              {
+                type: "inputmatcher",
+                configs: { expressions: "hello", occurrence: "currentStep" },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  } as unknown as RulesConfig;
+
+  it("renders rules that arrived under the legacy 'rules' key", () => {
+    renderWithProviders(
+      <RulesEditor data={legacyShapedConfig} onChange={onChange} />
+    );
+
+    expect(screen.queryByText(/No rules in this group/i)).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue("Greet Rule")).toBeInTheDocument();
+  });
+
+  it("saves a legacy-shaped rule set back under one key, never both", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <RulesEditor data={legacyShapedConfig} onChange={onChange} />
+    );
+
+    // Any edit is enough; the point is the shape of what goes out.
+    await user.selectOptions(
+      screen.getByTestId("condition-type-select"),
+      "contentTypeMatcher"
+    );
+
+    const arg = onChange.mock.lastCall![0] as RulesConfig;
+    const group = arg.behaviorGroups[0]! as RulesConfig["behaviorGroups"][number];
+    expect(group.behaviorRules).toHaveLength(1);
+    // Both keys present would let Jackson's last-one-wins decide which list
+    // survives the save by field order — a way to lose rules silently.
+    expect(group.rules).toBeUndefined();
+  });
+
   it("emits backend-correct preset configs when switching to a new condition type", async () => {
     const user = userEvent.setup();
     renderWithProviders(

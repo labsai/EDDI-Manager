@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ChevronDown,
@@ -27,6 +27,23 @@ export interface RulesGroup {
   name: string;
   executionStrategy?: string;
   behaviorRules: Rule[];
+  /**
+   * The same list under the name EDDI used to serialise it with.
+   *
+   * `RuleGroupConfiguration`'s accessors are `getRules`/`setRules`, so Jackson
+   * emitted `rules` while every authored artefact — the shipped reference
+   * config, the ZIP fixtures, the docs, and this editor — says `behaviorRules`.
+   * The backend accepted both on write, so the mismatch only ever bit on reads:
+   * a rule set posted as `behaviorRules` came back as `rules`, and this editor
+   * rendered every group as "No rules in this group" no matter what it held.
+   * Our own MSW handlers returned `behaviorRules`, so the test suite agreed
+   * with the fiction rather than the server.
+   *
+   * EDDI now emits `behaviorRules`. This stays so a current Manager keeps
+   * working against an older EDDI; `normalizeRulesConfig` collapses it on the
+   * way in, and nothing downstream reads it.
+   */
+  rules?: Rule[];
 }
 
 export interface RulesConfig {
@@ -553,13 +570,43 @@ export interface RulesEditorProps {
   readOnly?: boolean;
 }
 
+/**
+ * Collapses a rule set onto the `behaviorRules` spelling, whichever one the
+ * server sent.
+ *
+ * The legacy key is *dropped* rather than carried alongside: a group holding
+ * both would be serialised with both, and Jackson's last-one-wins would then
+ * decide which list survives a save by field order. Losing rules to that is a
+ * far worse outcome than losing a redundant key.
+ */
+function normalizeRulesConfig(data: RulesConfig): RulesConfig {
+  const groups = data.behaviorGroups;
+  if (!groups?.some((g) => g && g.rules !== undefined)) return data;
+
+  return {
+    ...data,
+    behaviorGroups: groups.map((group) => {
+      if (!group || group.rules === undefined) return group;
+      const { rules, ...rest } = group;
+      return { ...rest, behaviorRules: group.behaviorRules ?? rules ?? [] };
+    }),
+  };
+}
+
 export function RulesEditor({
   data,
   onChange,
   readOnly,
 }: RulesEditorProps) {
   const { t } = useTranslation();
-  data = data ?? ({} as RulesConfig);
+  // Memoised, and applied before the useState below (which reads behaviorGroups
+  // to seed its expansion state) and before every read and write further down.
+  // Without the memo a legacy-shaped rule set yields a fresh object on every
+  // render, which invalidates the useCallbacks keyed on `data` every time.
+  data = useMemo(
+    () => normalizeRulesConfig(data ?? ({} as RulesConfig)),
+    [data]
+  );
   const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>(
     () =>
       Object.fromEntries((data.behaviorGroups ?? []).map((_, i) => [i, true]))
