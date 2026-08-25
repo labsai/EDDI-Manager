@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { QueryClient } from "@tanstack/react-query";
 import { screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/mocks/server";
@@ -32,6 +33,113 @@ function captureSave() {
   );
   return sent;
 }
+
+/**
+ * A save whose GET afterwards returns what was PUT.
+ *
+ * The default handlers serve a fixed fixture, so the refetch that follows a
+ * save legitimately replaces the saved text with the fixture's — which makes it
+ * impossible to tell "the page settled on the saved document" from "the page
+ * reverted". A document store echoes back what it stored, so the mock does too.
+ */
+function captureSaveWithEcho() {
+  const sent: Record<string, unknown>[] = [];
+  let stored: Record<string, unknown> | null = null;
+  server.use(
+    http.put("*/connectionstore/connections/:id", async ({ request, params }) => {
+      stored = (await request.json()) as Record<string, unknown>;
+      sent.push(stored);
+      return new HttpResponse(null, {
+        status: 200,
+        headers: { Location: `/connectionstore/connections/${params.id}?version=2` },
+      });
+    }),
+    http.get("*/connectionstore/connections/:id", ({ request }) => {
+      if (new URL(request.url).pathname.endsWith("/descriptors")) return;
+      if (stored) return HttpResponse.json(stored);
+      return undefined;
+    }),
+  );
+  return sent;
+}
+
+/**
+ * The page opened with its document ALREADY in the cache.
+ *
+ * This is the ordinary way in — the list seeds the detail key from its
+ * enrichment and links to that exact version — and it is also what a save
+ * produces. `config` is therefore defined on the very first render, which is
+ * the case the two seeding/reset effects have to survive together.
+ *
+ * Built by hand rather than through `renderPage`, because the cache has to be
+ * primed before the first render and at the app's real `staleTime`: under the
+ * shared helper's default of 0 the entry is stale immediately and a refetch
+ * papers over the bug.
+ */
+function renderPreSeeded(config: Record<string, unknown>, version = 1) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: 30_000 } },
+  });
+  queryClient.setQueryData(["connections", "conn1", version], config);
+  return renderPage(
+    `/manage/connections/conn1?version=${version}`,
+    <ConnectionDetailPage />,
+    "/manage/connections/:id",
+    queryClient,
+  );
+}
+
+const SEEDED = {
+  name: "jira",
+  description: "seeded from the list",
+  authType: "OAUTH2_AUTHORIZATION_CODE",
+  binding: "PER_USER",
+  allowUnverifiedPrincipal: false,
+  oauth: {
+    clientId: "x",
+    clientSecret: "${vault:s}",
+    authorizationEndpoint: "https://auth.example.com/a",
+    tokenEndpoint: "https://auth.example.com/t",
+    scopes: [],
+    extraAuthParams: {},
+    clientAuthMethod: "CLIENT_SECRET_BASIC",
+    discoveryUrl: null,
+  },
+  staticAuth: null,
+  baseUrlAllowlist: ["https://jira.example.com"],
+};
+
+describe("ConnectionDetailPage — opened from a primed cache", () => {
+  it("renders the form instead of hanging on the skeleton", async () => {
+    // Effects run in declaration order, so with the document already cached the
+    // seeding effect and the [id, version] reset both fire in the same pass.
+    // Seed-then-reset ends with a null draft, and nothing wakes it up again:
+    // the seeding effect only re-runs on a new `config` identity, and
+    // structural sharing hands back the *same* object when a refetch equals
+    // what is cached. The skeleton would stay until a manual reload.
+    renderPreSeeded(SEEDED);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("connection-name-input")).toBeInTheDocument(),
+    );
+    expect(screen.queryByTestId("connection-detail-loading")).not.toBeInTheDocument();
+    expect(screen.getByTestId("connection-description-input")).toHaveValue(
+      "seeded from the list",
+    );
+  });
+
+  it("keeps the form up once the settling refetch has been and gone", async () => {
+    // Guards the recovery story too: whether or not a background fetch lands,
+    // the form must still be there afterwards rather than reverting to null.
+    renderPreSeeded(SEEDED);
+    await screen.findByTestId("connection-name-input");
+
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    expect(screen.getByTestId("connection-name-input")).toBeInTheDocument();
+    expect(screen.queryByTestId("connection-detail-loading")).not.toBeInTheDocument();
+  });
+});
 
 describe("ConnectionDetailPage", () => {
   it("loads the connection into an editable draft", async () => {
@@ -342,7 +450,7 @@ describe("ConnectionDetailPage", () => {
     // query key. Unseeded, that key has no data: the page fell back to its
     // loading skeleton and re-fetched the document it had just sent.
     const user = userEvent.setup();
-    captureSave();
+    captureSaveWithEcho();
     renderDetail("conn1");
     await screen.findByTestId("connection-name-input");
 
@@ -356,7 +464,17 @@ describe("ConnectionDetailPage", () => {
         "saved copy",
       ),
     );
+
+    // The state has to SETTLE, not merely occur. `waitFor` fires on the commit
+    // that briefly shows the saved value, which can be a microtask ahead of the
+    // effect flush that clears the draft again — so this assertion in its
+    // original form passed on a frame that did not survive.
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
     expect(screen.queryByTestId("connection-detail-loading")).not.toBeInTheDocument();
+    expect(screen.getByTestId("connection-description-input")).toHaveValue(
+      "saved copy",
+    );
   });
 
   it("keeps both rows when a parameter is renamed onto an existing name", async () => {

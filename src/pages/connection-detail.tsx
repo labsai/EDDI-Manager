@@ -113,6 +113,37 @@ export function ConnectionDetailPage() {
   draftRef.current = draft;
 
   /**
+   * Reset the form wholesale when the route points at a different document.
+   *
+   * **Declared before the seeding effect, and that order is load-bearing.**
+   * React runs a pass's effects in declaration order, so when the document in
+   * the cache is already there on the first render for this `[id, version]` —
+   * the list seeds the detail key from its enrichment, and a save seeds the
+   * version it just created — both effects fire in the same pass. Seed-then-
+   * reset ends with `draft` null, and `draft` null is the loading skeleton.
+   *
+   * That is not a flash. The seeding effect only re-runs on a new `config`
+   * *identity*, and TanStack's structural sharing returns the very same object
+   * when a refetch deep-equals what is already cached — which is the normal
+   * case for a document store echoing back what it just stored. So nothing
+   * would wake the form up again: opening a connection from the list, or
+   * saving one, would leave a skeleton on screen until a manual reload.
+   *
+   * Reset-then-seed ends the same pass with the draft seeded. It also stays
+   * correct for the ordinary mount (no cache, `config` undefined, the seeding
+   * effect no-ops and runs later when the fetch lands), and it cannot resurrect
+   * the clobbering bug below, because this effect's deps are only `[id,
+   * version]` — a background refetch never runs it.
+   */
+  useEffect(() => {
+    baselineRef.current = null;
+    setDraft(null);
+    setShowErrors(false);
+    setPendingScope("");
+    setPendingOrigin("");
+  }, [id, version]);
+
+  /**
    * Seed the draft — and re-seed only when it is safe to.
    *
    * This effect used to run on every new `config` identity, which meant a
@@ -124,6 +155,11 @@ export function ConnectionDetailPage() {
    * mid-edit their draft stands, and the server's newer copy is picked up by
    * the next load — or refused by the version check on save, which is the
    * conflict signal that actually belongs to the user.
+   *
+   * When it runs in the same pass as the reset above, the dirty check is what
+   * makes the pairing safe: `baselineRef` has just been nulled, so the draft
+   * left over from the previous document cannot be mistaken for unsaved work
+   * on this one.
    */
   useEffect(() => {
     if (!config) return;
@@ -136,15 +172,6 @@ export function ConnectionDetailPage() {
     baselineRef.current = JSON.stringify(config);
     setDraft({ ...config });
   }, [config]);
-
-  /** Reset the form wholesale when the route points at a different document. */
-  useEffect(() => {
-    baselineRef.current = null;
-    setDraft(null);
-    setShowErrors(false);
-    setPendingScope("");
-    setPendingOrigin("");
-  }, [id, version]);
 
   /**
    * What a save would actually send: the draft with any uncommitted chip text

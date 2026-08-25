@@ -120,9 +120,12 @@ describe("useUpdateConnection", () => {
     expect(queryClient.getQueryData(["connections", "conn1", 7])).toBeUndefined();
   });
 
-  it("survives a Location it cannot parse", async () => {
-    // An unparseable Location is the server's business, not the cache's: the
-    // save still succeeded, and the page falls back to fetching.
+  it("refuses to guess a version the Location does not name", async () => {
+    // `parseConnectionResourceUri` defaults a missing version to 1, which would
+    // file the just-saved document as version 1 and hand it to whoever opened
+    // that version next. Asserting no key at all is written, not merely that
+    // the expected one is absent — the earlier version of this test checked
+    // only key 7 and passed while key 1 was being polluted.
     server.use(
       http.put("*/connectionstore/connections/:id", () =>
         HttpResponse.json({}, { status: 200, headers: { Location: "nonsense" } }),
@@ -131,9 +134,27 @@ describe("useUpdateConnection", () => {
     const { queryClient, Wrapper } = createWrapper();
     const { result } = renderHook(() => useUpdateConnection(), { wrapper: Wrapper });
 
-    await expect(
-      result.current.mutateAsync({ id: "conn1", version: 6, config: DRAFT }),
-    ).resolves.toBeDefined();
-    expect(queryClient.getQueryData(["connections", "conn1", 7])).toBeUndefined();
+    await result.current.mutateAsync({ id: "conn1", version: 6, config: DRAFT });
+
+    const seeded = queryClient
+      .getQueryCache()
+      .getAll()
+      .filter((q) => q.state.data !== undefined);
+    expect(seeded).toHaveLength(0);
+  });
+
+  it("does not file a new document under version 1 when the header is garbled", async () => {
+    // The concrete harm: v1 is a real version somebody can open.
+    server.use(
+      http.put("*/connectionstore/connections/:id", () =>
+        HttpResponse.json({}, { status: 200, headers: { Location: "nonsense" } }),
+      ),
+    );
+    const { queryClient, Wrapper } = createWrapper();
+    const { result } = renderHook(() => useUpdateConnection(), { wrapper: Wrapper });
+
+    await result.current.mutateAsync({ id: "conn1", version: 6, config: DRAFT });
+
+    expect(queryClient.getQueryData(["connections", "conn1", 1])).toBeUndefined();
   });
 });

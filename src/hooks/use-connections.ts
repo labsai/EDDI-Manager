@@ -10,7 +10,6 @@ import {
   listMyConnections,
   authorizeConnection,
   disconnectConnection,
-  parseConnectionResourceUri as parseResourceUri,
   type ConnectionConfiguration,
 } from "@/lib/api/connections";
 
@@ -88,6 +87,30 @@ export function useConnection(id: string, version?: number) {
   });
 }
 
+/**
+ * The version a save's `Location` names, or null when it does not name one.
+ *
+ * Deliberately stricter than `parseConnectionResourceUri`, which defaults a
+ * missing or unparseable version to 1. That default is right for reading a
+ * descriptor and wrong here: it turns "the server said something we do not
+ * understand" into "file this document as version 1", so a garbled header
+ * would overwrite v1's cache entry with a *newer* document and hand it to
+ * whoever opened that version next. Refusing to guess costs nothing — the page
+ * simply fetches, which is what it did before any of this seeding existed.
+ */
+function versionFromLocation(location: string): number | null {
+  let url: URL;
+  try {
+    url = new URL(location.replace("eddi://", "http://"), "http://dummy");
+  } catch {
+    return null;
+  }
+  const raw = url.searchParams.get("version");
+  if (raw === null) return null;
+  const version = Number.parseInt(raw, 10);
+  return Number.isNaN(version) ? null : version;
+}
+
 export function useCreateConnection() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -127,14 +150,9 @@ export function useUpdateConnection() {
       // key too: the page renders the seed immediately and the refetch that
       // reconciles it with the server happens behind that.
       const location = (result as { location?: string } | undefined)?.location;
-      if (location) {
-        try {
-          const { version } = parseResourceUri(location);
-          queryClient.setQueryData([...CONNECTIONS_KEY, id, version], config);
-        } catch {
-          // An unparseable Location is the server's business, not the cache's.
-          // The page falls back to fetching, which is what it did before.
-        }
+      const newVersion = location ? versionFromLocation(location) : null;
+      if (newVersion !== null) {
+        queryClient.setQueryData([...CONNECTIONS_KEY, id, newVersion], config);
       }
 
       queryClient.invalidateQueries({ queryKey: CONNECTIONS_KEY });
