@@ -343,10 +343,87 @@ describe("SecretKeyPicker", () => {
 
       await user.keyboard("{ArrowDown}");
 
-      expect(screen.getByTestId("vault-popup-filter")).toHaveAttribute(
-        "aria-activedescendant",
-        "vault-option-openai-key",
+      // Asserts the relationship, not a literal id: the ids are generated
+      // (`useId`), because nothing validates a vault key name and one with a
+      // space in it would produce an id no reference could resolve.
+      const active = screen
+        .getByTestId("vault-popup-filter")
+        .getAttribute("aria-activedescendant");
+      expect(active).toBeTruthy();
+      expect(document.getElementById(active!)).toBe(
+        screen.getByTestId("vault-key-openai-key"),
       );
+    });
+
+    it("still resolves the reference when a key name contains a space", async () => {
+      // Nothing validates a vault key name — the create dialog only trims it —
+      // so a key called "my key" is reachable from this very UI. Building an id
+      // out of the name would put a space in it, and an id with a space is one
+      // `aria-activedescendant` can never resolve: the arrows would move a
+      // highlight that announces nothing.
+      server.use(
+        http.get("*/secretstore/secrets/default", () =>
+          HttpResponse.json([
+            {
+              tenantId: "default",
+              keyName: "my key",
+              createdAt: "2026-06-08T12:00:00Z",
+              lastAccessedAt: null,
+              lastRotatedAt: null,
+              checksum: "abc",
+              description: "A key whose name has a space in it",
+              allowedAgents: ["*"],
+            },
+          ]),
+        ),
+      );
+      const user = await openPopup();
+
+      await user.keyboard("{ArrowDown}");
+
+      const active = screen
+        .getByTestId("vault-popup-filter")
+        .getAttribute("aria-activedescendant");
+      expect(active).toBeTruthy();
+      expect(active).not.toContain(" ");
+      expect(document.getElementById(active!)).toBe(
+        screen.getByTestId("vault-key-my key"),
+      );
+    });
+
+    it("lets the Create button activate on Enter after tabbing to it", async () => {
+      // The container handler sees Enter bubbling from every focusable thing
+      // inside the popup, not just the filter. Unguarded it calls
+      // preventDefault(), which kills the focused button's own activation —
+      // the same defect the connections review found on the cards.
+      const user = await openPopup();
+
+      screen.getByTestId("vault-popup-create").focus();
+      await user.keyboard("{Enter}");
+
+      expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    });
+
+    it("does not select a key when Enter is pressed on the Create button", async () => {
+      // The worse half: with a highlight set, the swallowed Enter selected the
+      // highlighted key instead of doing what the focused button says.
+      const user = await openPopup();
+
+      await user.keyboard("{ArrowDown}");
+      screen.getByTestId("vault-popup-create").focus();
+      await user.keyboard("{Enter}");
+
+      expect(mockOnChange).not.toHaveBeenCalled();
+    });
+
+    it("activates the option that has focus, not the one highlighted", async () => {
+      const user = await openPopup();
+
+      await user.keyboard("{ArrowDown}"); // highlights openai-key
+      screen.getByTestId("vault-key-slack-token").focus();
+      await user.keyboard("{Enter}");
+
+      expect(mockOnChange).toHaveBeenCalledWith("${vault:slack-token}");
     });
 
     it("still closes on Escape", async () => {
@@ -354,6 +431,20 @@ describe("SecretKeyPicker", () => {
       // replaced wholesale with the parent's.
       const user = await openPopup();
 
+      await user.keyboard("{Escape}");
+
+      await waitFor(() =>
+        expect(screen.queryByTestId("vault-popup")).not.toBeInTheDocument(),
+      );
+    });
+
+    it("closes on Escape from a focused button, not just from the filter", async () => {
+      // Why the handler stays on the container rather than moving onto the
+      // filter input: Escape means "close this popup" wherever focus is inside
+      // it. Only the navigation keys are scoped to the filter.
+      const user = await openPopup();
+
+      screen.getByTestId("vault-popup-create").focus();
       await user.keyboard("{Escape}");
 
       await waitFor(() =>

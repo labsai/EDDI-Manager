@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect, useId } from "react";
 import { useTranslation } from "react-i18next";
 import {
   KeyRound,
@@ -316,6 +316,19 @@ function VaultPopup({
   const filterRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  /*
+   * Ids for the listbox relationship, generated rather than spelled out.
+   *
+   * Keyed by position, not by key name: nothing validates a vault key name —
+   * the create dialog only trims it — so a key called `my key` is reachable
+   * from this very UI, and an id with a space in it is one that
+   * `aria-activedescendant` can never resolve. A generated base also keeps
+   * two pickers on the same page from claiming the same id.
+   */
+  const baseId = useId();
+  const listId = `${baseId}-list`;
+  const optionId = (index: number) => `${baseId}-option-${index}`;
+
   // Auto-focus the filter input on open
   useEffect(() => {
     // Small delay so the popup renders before focusing
@@ -350,8 +363,28 @@ function VaultPopup({
        * called `preventDefault()` on both arrows and left a comment saying the
        * parent would handle them. Nothing did: the arrows were swallowed, the
        * highlight never moved, and the list could only be used with a mouse.
+       *
+       * Scoped, because this container also sees every key bubbling from the
+       * option buttons and the create button. Passing those to the parent
+       * handler swallows their own Enter — it calls `preventDefault()` and then
+       * acts on the *highlight* instead — so tabbing to "Create new secret" and
+       * pressing Enter opened nothing and could select a key the user was not
+       * on. Same defect as the one the cards had.
+       *
+       * Escape is the exception on purpose: it means "close this popup" from
+       * anywhere inside it, including from a button.
        */
-      onKeyDown={onKeyDown}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          onKeyDown(e);
+          return;
+        }
+        // Navigation belongs to the combobox alone. That is also what
+        // `aria-activedescendant` describes: a highlight that only means
+        // anything while focus is in the filter.
+        if (e.target !== filterRef.current) return;
+        onKeyDown(e);
+      }}
       data-testid="vault-popup"
     >
       {/* Search filter */}
@@ -373,10 +406,10 @@ function VaultPopup({
            */
           role="combobox"
           aria-expanded
-          aria-controls="vault-popup-list"
+          aria-controls={listId}
           aria-activedescendant={
             highlightedIndex >= 0 && highlightedIndex < filtered.length
-              ? `vault-option-${filtered[highlightedIndex]!.keyName}`
+              ? optionId(highlightedIndex)
               : undefined
           }
           data-testid="vault-popup-filter"
@@ -386,7 +419,7 @@ function VaultPopup({
       {/* Key list */}
       <div
         ref={listRef}
-        id="vault-popup-list"
+        id={listId}
         role="listbox"
         className="max-h-48 overflow-y-auto"
       >
@@ -420,7 +453,7 @@ function VaultPopup({
               key={secret.keyName}
               type="button"
               data-vault-item
-              id={`vault-option-${secret.keyName}`}
+              id={optionId(idx)}
               role="option"
               aria-selected={idx === highlightedIndex}
               onClick={() => onSelect(secret.keyName)}
