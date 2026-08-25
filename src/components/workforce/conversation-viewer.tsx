@@ -590,23 +590,28 @@ function ConversationViewer({
         lines.push("");
       }
 
+      // The same reading the transcript on screen does. This is a second,
+      // parallel markdown export to `export-menu`'s — reachable from the
+      // history viewer's own toolbar — so it needs the same treatment or a
+      // judge's ```json verdict lands verbatim in the downloaded file.
+      const body = entry.content ? parseTranscriptContent(entry.content) : "";
       if (entry.type === "QUESTION") {
-        lines.push(`> **Question:** ${entry.content ?? ""}`);
+        lines.push(`> **Question:** ${body}`);
         lines.push("");
       } else if (entry.type === "SYNTHESIS") {
         lines.push("## Synthesis");
         lines.push("");
-        lines.push(entry.content ?? "");
+        lines.push(body);
         lines.push("");
       } else if (entry.type === "ERROR") {
         lines.push(`### ⚠️ ${entry.speakerDisplayName} (Error)`);
         if (entry.errorReason) lines.push(`> ${entry.errorReason}`);
-        if (entry.content) lines.push(entry.content);
+        if (body) lines.push(body);
         lines.push("");
       } else if (entry.type !== "SKIPPED") {
         lines.push(`### ${entry.speakerDisplayName} (${entry.type})`);
         lines.push("");
-        lines.push(entry.content ?? "");
+        lines.push(body);
         lines.push("");
       }
     }
@@ -647,15 +652,18 @@ function ConversationViewer({
     }
 
     // Final synthesized answer (if present and not already in transcript)
+    const finalAnswer = conversation.synthesizedAnswer
+      ? parseTranscriptContent(conversation.synthesizedAnswer)
+      : "";
     if (
-      conversation.synthesizedAnswer?.trim() &&
+      finalAnswer.trim() &&
       !conversation.transcript.some((e) => e.type === "SYNTHESIS")
     ) {
       lines.push("---");
       lines.push("");
       lines.push("## Final Synthesized Answer");
       lines.push("");
-      lines.push(conversation.synthesizedAnswer);
+      lines.push(finalAnswer);
       lines.push("");
     }
 

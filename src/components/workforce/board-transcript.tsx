@@ -247,6 +247,11 @@ function SynthesisCard({ content, delay }: { content: string; delay: number }) {
     }
   }, [body]);
 
+  // A verdict that was only a tally reads as nothing here — the verdict card
+  // directly above already carries the outcome. Rendering the shell anyway left
+  // a heading, a fade gradient and a Copy button that copied an empty string.
+  if (!body.trim()) return null;
+
   const handleCopy = () => {
     navigator.clipboard.writeText(body);
     setCopied(true);

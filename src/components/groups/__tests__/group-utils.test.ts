@@ -268,6 +268,20 @@ describe("parseVerdictJson", () => {
     expect(parsed!.scores).toEqual({ PRO: 7 });
   });
 
+  /**
+   * `winner` alone is not proof. A structured answer that happens to name a
+   * winner and says everything else in other fields is not a verdict, and
+   * collapsing it to `reasoning` would have rendered it as nothing at all.
+   */
+  it("does not claim an object carrying anything beyond the verdict fields", () => {
+    expect(
+      parseVerdictJson(JSON.stringify({ winner: "player1", analysis: "long form" })),
+    ).toBeNull();
+    expect(
+      parseVerdictJson(JSON.stringify({ winner: "PRO", scores: { PRO: 9 }, notes: "x" })),
+    ).toBeNull();
+  });
+
   it("is not a verdict without an outcome", () => {
     expect(parseVerdictJson(JSON.stringify({ scores: {} }))).toBeNull();
     expect(parseVerdictJson(JSON.stringify({ scores: { PRO: "nine" } }))).toBeNull();
@@ -313,6 +327,14 @@ describe("parseTranscriptContent — JSON that is somebody's answer", () => {
       reasoning: "an internal chain of thought",
     });
     expect(parseTranscriptContent(content)).toBe("THE REAL ANSWER");
+  });
+
+  it("renders a winner-plus-extras object in full rather than as nothing", () => {
+    const out = parseTranscriptContent(JSON.stringify({ winner: "player1", analysis: "detail" }));
+    expect(out).toContain("winner");
+    expect(out).toContain("player1");
+    expect(out).toContain("analysis");
+    expect(out).toContain("detail");
   });
 
   it("keeps every field of a structured answer that is not a verdict", () => {

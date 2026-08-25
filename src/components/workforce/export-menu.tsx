@@ -101,12 +101,17 @@ function generateMarkdown(
     lines.push(``);
   }
 
-  if (conversation.synthesizedAnswer?.trim()) {
+  // Read the same way as the entries above. A verdict reaches this field
+  // rather than a SYNTHESIS entry whenever the discussion carries no synthesis
+  // element, so exporting it raw put the blob back under a different heading —
+  // and a verdict that was only a tally leaves nothing to print at all.
+  const finalAnswer = readable(conversation.synthesizedAnswer);
+  if (finalAnswer.trim()) {
     lines.push(`---`);
     lines.push(``);
     lines.push(`## Final Answer`);
     lines.push(``);
-    lines.push(conversation.synthesizedAnswer);
+    lines.push(finalAnswer);
   }
 
   return lines.join("\n");

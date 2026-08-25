@@ -327,6 +327,14 @@ function verdictFields(record: Record<string, unknown>): VerdictJson | null {
 
   if (winner === null && scores === null) return null;
 
+  // A verdict is ONLY those three fields. Anything else in the object is an
+  // answer with a shape this build does not know, and collapsing it to
+  // `reasoning` would throw the rest away — `{winner, analysis}` would render
+  // as nothing at all. Better to hand it to `readableJsonObject` and show
+  // everything than to guess it is a verdict because one key matched.
+  const VERDICT_KEYS = new Set(["winner", "scores", "reasoning"]);
+  if (Object.keys(record).some((key) => !VERDICT_KEYS.has(key))) return null;
+
   return {
     winner,
     scores,

@@ -844,6 +844,36 @@ describe("Workforce Components – Coverage Batch 2", () => {
       expect(markdown).not.toContain("```json");
     });
 
+    /**
+     * The verdict reaches `synthesizedAnswer` rather than a SYNTHESIS entry
+     * whenever the discussion carries no synthesis element — a shape the board's
+     * own tests already cover — and this section built its markdown from the
+     * raw field, so the blob came back under a different heading.
+     */
+    it("reads the conversation-level synthesis too, not just the entries", async () => {
+      const conversation = makeGroupConversation({
+        transcript: [makeTranscriptEntry({ type: "OPINION", content: "A view." })],
+        synthesizedAnswer:
+          "```json" + "\n" +
+          JSON.stringify({ winner: "TIE", scores: { PRO: 7 }, reasoning: "It was close." }) +
+          "\n" + "```",
+      });
+
+      renderWithProviders(<ExportMenu conversation={conversation} groupName="Board" />);
+      const user = userEvent.setup();
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+
+      await user.click(screen.getByRole("button", { name: /export/i }));
+      await user.click(await screen.findByText("Copy to Clipboard"));
+
+      await waitFor(() => expect(writeText).toHaveBeenCalled());
+      const markdown = writeText.mock.calls[0]![0] as string;
+      expect(markdown).toContain("It was close.");
+      expect(markdown).not.toContain('"winner"');
+      expect(markdown).not.toContain("```json");
+    });
+
     it("copy to clipboard menu item is available", async () => {
       const conversation = makeGroupConversation();
 
