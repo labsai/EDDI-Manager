@@ -212,6 +212,42 @@ test.describe("workspaces enforced", () => {
     await expect(page.getByTestId("share-dialog")).toBeVisible();
   });
 
+  test("offers only what each row actually permits", async ({ page }) => {
+    // The gap this closes: before the backend reported a level, every row got
+    // every action and the user learned the truth from a 403. agent3 is shared
+    // for chatting only; agent4 is somebody else's, published, so readable but
+    // not deletable; agent1 is the caller's own.
+    await page.getByTestId("agent-menu-agent3").click();
+    await expect(page.getByText(/shared with you for chatting only/i)).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: /share/i })).toHaveCount(0);
+    await expect(page.getByRole("menuitem", { name: /delete/i })).toHaveCount(0);
+    await expect(page.getByRole("menuitem", { name: /export/i })).toHaveCount(0);
+    await page.keyboard.press("Escape");
+
+    // VIEW: read and export, but neither delete nor re-share.
+    await page.getByTestId("agent-menu-agent4").click();
+    await expect(page.getByRole("menuitem", { name: /export/i })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: /delete/i })).toHaveCount(0);
+    await expect(page.getByRole("menuitem", { name: /share/i })).toHaveCount(0);
+    await page.keyboard.press("Escape");
+
+    // OWN: everything. Asserting this is what stops the test passing because
+    // the menu is broken rather than because the gating works.
+    await page.getByTestId("agent-menu-agent1").click();
+    await expect(page.getByRole("menuitem", { name: /export/i })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: /delete/i })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: /share/i })).toBeVisible();
+  });
+
+  test("the list view gates its row actions the same way", async ({ page }) => {
+    await page.getByTestId("view-toggle-list").click();
+    await expect(page.getByTestId("agent-list")).toBeVisible();
+
+    await expect(page.getByTestId("agent-row-share-agent1")).toBeVisible();
+    await expect(page.getByTestId("agent-row-share-agent3")).toHaveCount(0);
+    await expect(page.getByTestId("agent-row-share-agent4")).toHaveCount(0);
+  });
+
   test("hides the switcher for a user with only their own space", async ({ page }) => {
     await seedWorkspaces(page, { enabled: true, spaces: [PERSONAL] });
     await page.goto("/manage/agents");

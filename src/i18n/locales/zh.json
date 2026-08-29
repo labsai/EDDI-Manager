@@ -4587,6 +4587,7 @@
     },
     "emptySpace": "此工作区中没有智能体",
     "emptySpaceDescription": "其他工作区可能有你可以查看的智能体。",
-    "showAllSpaces": "显示所有工作区"
+    "showAllSpaces": "显示所有工作区",
+    "useOnlyMenu": "仅共享给你用于对话。"
   }
 }

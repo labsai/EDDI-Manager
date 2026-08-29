@@ -9,7 +9,8 @@ const AGENTS_MOCK = [
     lastModifiedOn: Date.now() - 3600000,
     ownerId: "alice@example.com",
     spaceId: "user:alice@example.com",
-    visibility: "space"
+    visibility: "space",
+    callerLevel: "OWN"
   },
   {
     resource: "eddi://ai.labs.agent/agentstore/agents/agent2?version=2",
@@ -19,7 +20,8 @@ const AGENTS_MOCK = [
     lastModifiedOn: Date.now() - 7200000,
     ownerId: "alice@example.com",
     spaceId: "user:alice@example.com",
-    visibility: "private"
+    visibility: "private",
+    callerLevel: "OWN"
   },
   {
     resource: "eddi://ai.labs.agent/agentstore/agents/agent3?version=1",
@@ -29,7 +31,11 @@ const AGENTS_MOCK = [
     lastModifiedOn: Date.now() - 2 * 86400000,
     ownerId: "alice@example.com",
     spaceId: "team:engineering",
-    visibility: "space"
+    visibility: "space",
+    // Shared for chatting only — the case that had no way to be expressed
+    // before the backend reported a level, and where the page used to offer
+    // Delete and Share and let the server refuse.
+    callerLevel: "USE"
   },
   {
     resource: "eddi://ai.labs.agent/agentstore/agents/agent4?version=2",
@@ -39,7 +45,10 @@ const AGENTS_MOCK = [
     lastModifiedOn: Date.now() - 86400000,
     ownerId: "bob@example.com",
     spaceId: "team:engineering",
-    visibility: "published"
+    visibility: "published",
+    // A stranger reading a published resource holds VIEW: they may read and
+    // export it, but not delete it or pass it on.
+    callerLevel: "VIEW"
   },
   {
     resource: "eddi://ai.labs.agent/agentstore/agents/agent5?version=1",

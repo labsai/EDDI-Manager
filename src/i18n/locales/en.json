@@ -4587,6 +4587,7 @@
     },
     "emptySpace": "No agents in this workspace",
     "emptySpaceDescription": "Other workspaces may have agents you can see.",
-    "showAllSpaces": "Show all workspaces"
+    "showAllSpaces": "Show all workspaces",
+    "useOnlyMenu": "Shared with you for chatting only."
   }
 }

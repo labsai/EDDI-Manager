@@ -25,6 +25,16 @@ export interface AgentDescriptor {
   ownerId?: string;
   spaceId?: string;
   visibility?: "private" | "space" | "published";
+  /**
+   * What the signed-in user may do with THIS resource — `USE`, `VIEW`, `EDIT`
+   * or `OWN`.
+   *
+   * Per-request rather than per-resource: the same document carries a different
+   * value for two callers. Absent when the backend does not enforce workspaces,
+   * and on any backend that predates the field — read it through
+   * `accessFor()` in `@/lib/access`, which treats absence as unrestricted.
+   */
+  callerLevel?: string;
 }
 
 export interface Agent {

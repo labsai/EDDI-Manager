@@ -17,6 +17,7 @@ import { cn, formatRelativeTime } from "@/lib/utils";
 import { useDeploymentStatuses, useDeployAgent, useUndeployAgent } from "@/hooks/use-agents";
 import { DeploymentEnvironmentBadge } from "./deployment-environments";
 import { OwnershipBadge } from "@/components/workspaces/ownership-badge";
+import { accessFor, type ResourceAccess } from "@/lib/access";
 import { useEnvironmentLabel } from "@/hooks/use-environment-label";
 import { deployedEnvironments, isAnyEnvironmentBusy } from "@/lib/deployment-environments";
 
@@ -46,6 +47,9 @@ const statusIcons = {
 };
 
 export function AgentCard({ agent, onDuplicate, onDelete, onExport, onShare }: AgentCardProps) {
+  // What this user may actually do with THIS agent. Absent on a backend that
+  // does not enforce workspaces, which reads as unrestricted — see accessFor.
+  const access = accessFor(agent.callerLevel);
   const { data: operatorConfig } = useOperatorConfig();
   const isOperatorAgent = Boolean(operatorConfig?.agentId && operatorConfig.agentId === agent.id);
   const { t } = useTranslation();
@@ -167,13 +171,17 @@ export function AgentCard({ agent, onDuplicate, onDelete, onExport, onShare }: A
                   setMenuOpen(false);
                 }}
                 onShare={
-                  onShare
+                  // Re-sharing is an owner's decision — EDIT deliberately does
+                  // not carry it — so offering it to anyone else only produces a
+                  // 403 they cannot act on.
+                  onShare && access.canOwn
                     ? () => {
                         onShare(agent.id, agent.name || agent.id);
                         setMenuOpen(false);
                       }
                     : undefined
                 }
+                access={access}
                 onDelete={() => {
                   onDelete(agent.id, agent.version);
                   setMenuOpen(false);
@@ -300,6 +308,7 @@ function AgentCardMenu({
   onShare,
   onDelete,
   onClose,
+  access,
 }: {
   onDuplicate: () => void;
   onExport: () => void;
@@ -307,15 +316,32 @@ function AgentCardMenu({
   onShare?: () => void;
   onDelete: () => void;
   onClose: () => void;
+  /**
+   * What the caller may do with this agent.
+   *
+   * Entries are **omitted** rather than disabled. A disabled control still
+   * teaches that the action exists and invites a hunt for how to enable it; an
+   * absent one says the resource is not yours to do that with, which is the
+   * actual situation. Keyboard navigation reads the DOM, so a shorter menu
+   * stays correct without any change here.
+   */
+  access: ResourceAccess;
 }) {
   const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Auto-focus first item on mount
+  // Auto-focus first item on mount, falling back to the menu itself.
+  //
+  // The fallback is not cosmetic: a USE-only agent has no actionable entries, so
+  // there is no first item, focus stayed on the trigger, and the menu's own
+  // onKeyDown never saw Escape — leaving a keyboard user behind a full-screen
+  // backdrop with no way out. Caught by an E2E run, where the next click landed
+  // on the backdrop instead of the button it aimed at.
   useEffect(() => {
     requestAnimationFrame(() => {
       const firstItem = menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]');
-      firstItem?.focus();
+      if (firstItem) firstItem.focus();
+      else menuRef.current?.focus();
     });
   }, []);
 
@@ -360,26 +386,37 @@ function AgentCardMenu({
       className="absolute inset-e-0 z-50 mt-1 w-44 rounded-lg border bg-popover py-1 shadow-lg"
       role="menu"
       aria-label={t("common.moreActions", "More actions")}
+      // Focusable so Escape still reaches this handler when the menu has no
+      // actionable entries to take focus.
+      tabIndex={-1}
       onKeyDown={handleKeyDown}
     >
-      <button
-        onClick={onDuplicate}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-secondary focus:bg-secondary"
-        role="menuitem"
-        tabIndex={-1}
-      >
-        <Copy className="h-4 w-4" aria-hidden="true" />
-        {t("common.duplicate", "Duplicate")}
-      </button>
-      <button
-        onClick={onExport}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-secondary focus:bg-secondary disabled:opacity-50"
-        role="menuitem"
-        tabIndex={-1}
-      >
-        <Download className="h-4 w-4" aria-hidden="true" />
-        {t("agents.export", "Export")}
-      </button>
+      {/* Duplicating and exporting both READ the configuration — the whole
+          config graph, in fact — so both need VIEW. USE deliberately does not
+          carry it: being allowed to talk to an agent is not being allowed to
+          read its prompts, tools and vault references. */}
+      {access.canView && (
+        <button
+          onClick={onDuplicate}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-secondary focus:bg-secondary"
+          role="menuitem"
+          tabIndex={-1}
+        >
+          <Copy className="h-4 w-4" aria-hidden="true" />
+          {t("common.duplicate", "Duplicate")}
+        </button>
+      )}
+      {access.canView && (
+        <button
+          onClick={onExport}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-secondary focus:bg-secondary disabled:opacity-50"
+          role="menuitem"
+          tabIndex={-1}
+        >
+          <Download className="h-4 w-4" aria-hidden="true" />
+          {t("agents.export", "Export")}
+        </button>
+      )}
       {onShare && (
         <button
           onClick={onShare}
@@ -391,15 +428,30 @@ function AgentCardMenu({
           {t("workspaces.share.title", "Share")}
         </button>
       )}
-      <button
-        onClick={onDelete}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 focus:bg-destructive/10"
-        role="menuitem"
-        tabIndex={-1}
-      >
-        <Trash2 className="h-4 w-4" aria-hidden="true" />
-        {t("common.delete")}
-      </button>
+      {/* Deleting is an owner's decision. EDIT covers changing and deploying;
+          it deliberately stops short of destroying the thing. */}
+      {access.canOwn && (
+        <button
+          onClick={onDelete}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 focus:bg-destructive/10"
+          role="menuitem"
+          tabIndex={-1}
+        >
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
+          {t("common.delete")}
+        </button>
+      )}
+
+      {/* A menu with nothing in it would open empty, so say why it is empty.
+          Deliberately NOT role="menuitem": it is not actionable, and marking it
+          as one puts arrow-key navigation onto static text and makes it answer
+          to "menuitem named share" — which is how this line first showed up, as
+          a Share entry that was not there. */}
+      {!access.canView && !access.canOwn && (
+        <p className="px-3 py-2 text-xs text-muted-foreground">
+          {t("workspaces.useOnlyMenu", "Shared with you for chatting only.")}
+        </p>
+      )}
     </div>
   );
 }

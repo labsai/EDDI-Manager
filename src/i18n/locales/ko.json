@@ -4587,6 +4587,7 @@
     },
     "emptySpace": "이 작업 공간에 에이전트가 없습니다",
     "emptySpaceDescription": "다른 작업 공간에 볼 수 있는 에이전트가 있을 수 있습니다.",
-    "showAllSpaces": "모든 작업 공간 표시"
+    "showAllSpaces": "모든 작업 공간 표시",
+    "useOnlyMenu": "대화 전용으로 공유되었습니다."
   }
 }

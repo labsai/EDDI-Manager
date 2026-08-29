@@ -4626,6 +4626,7 @@
     },
     "emptySpace": "No hay agentes en este espacio",
     "emptySpaceDescription": "Otros espacios pueden tener agentes que usted puede ver.",
-    "showAllSpaces": "Mostrar todos los espacios"
+    "showAllSpaces": "Mostrar todos los espacios",
+    "useOnlyMenu": "Compartido con usted solo para chatear."
   }
 }

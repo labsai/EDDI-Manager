@@ -4587,6 +4587,7 @@
     },
     "emptySpace": "Keine Agenten in diesem Bereich",
     "emptySpaceDescription": "In anderen Bereichen gibt es möglicherweise Agenten, die Sie sehen können.",
-    "showAllSpaces": "Alle Bereiche anzeigen"
+    "showAllSpaces": "Alle Bereiche anzeigen",
+    "useOnlyMenu": "Nur zum Chatten für Sie freigegeben."
   }
 }

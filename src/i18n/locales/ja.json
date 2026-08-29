@@ -4587,6 +4587,7 @@
     },
     "emptySpace": "このワークスペースにエージェントはありません",
     "emptySpaceDescription": "他のワークスペースに閲覧可能なエージェントがある可能性があります。",
-    "showAllSpaces": "すべてのワークスペースを表示"
+    "showAllSpaces": "すべてのワークスペースを表示",
+    "useOnlyMenu": "チャット専用として共有されています。"
   }
 }

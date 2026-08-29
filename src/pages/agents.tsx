@@ -25,6 +25,7 @@ import { useOnboarding } from "@/hooks/use-onboarding";
 import { ALL_SPACES, useSpaces } from "@/hooks/use-spaces";
 import { SpaceSwitcher } from "@/components/workspaces/space-switcher";
 import { OwnershipBadge } from "@/components/workspaces/ownership-badge";
+import { accessFor } from "@/lib/access";
 import { ShareDialog } from "@/components/workspaces/share-dialog";
 
 type SortField = "name" | "version" | "modified";
@@ -352,6 +353,7 @@ export function AgentsPage() {
                       </td>
                       <td className="px-5 py-3 text-end">
                         <div className="inline-flex items-center gap-1">
+                          {accessFor(agent.callerLevel).canView && (
                           <button
                             onClick={() => handleDuplicate(agent.id, agent.version)}
                             className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
@@ -360,6 +362,8 @@ export function AgentsPage() {
                           >
                             <Copy className="h-4 w-4" aria-hidden="true" />
                           </button>
+                          )}
+                          {accessFor(agent.callerLevel).canView && (
                           <button
                             onClick={() => setExportTarget({ id: agent.id, version: agent.version })}
                             className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
@@ -368,7 +372,8 @@ export function AgentsPage() {
                           >
                             <Download className="h-4 w-4" aria-hidden="true" />
                           </button>
-                          {workspacesEnabled && (
+                          )}
+                          {workspacesEnabled && accessFor(agent.callerLevel).canOwn && (
                             <button
                               onClick={() => setShareTarget({ id: agent.id, name: agent.name || agent.id })}
                               className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
@@ -379,6 +384,7 @@ export function AgentsPage() {
                               <Share2 className="h-4 w-4" aria-hidden="true" />
                             </button>
                           )}
+                          {accessFor(agent.callerLevel).canOwn && (
                           <button
                             onClick={() => handleDelete(agent.id, agent.version)}
                             className="rounded-md p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
@@ -387,6 +393,7 @@ export function AgentsPage() {
                           >
                             <Trash2 className="h-4 w-4" aria-hidden="true" />
                           </button>
+                          )}
                         </div>
                       </td>
                     </tr>
