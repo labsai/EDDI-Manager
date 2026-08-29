@@ -704,8 +704,10 @@ function verdictConversation() {
  */
 const WORKSPACES_DISABLED = {
   enabled: false,
-  principal: null,
-  defaultSpace: null,
+  // `principal` and `defaultSpace` are deliberately ABSENT rather than null.
+  // EDDI's REST mapper serialises with NON_NULL, so that is the shape the real
+  // endpoint sends for an anonymous caller — and a mock that sent explicit
+  // nulls would let a `=== null` check pass here and fail in production.
   spaces: [] as { id: string; kind: string; label: string }[],
   seesEverything: true,
 };
@@ -743,6 +745,7 @@ function defaultShareInfo(id: string) {
     ownerId: "alice@example.com",
     spaceId: "user:alice@example.com",
     visibility: "space",
+    // Empty rather than absent: an empty list is not null, so NON_NULL keeps it.
     grants: [],
     callerLevel: "OWN",
   };
