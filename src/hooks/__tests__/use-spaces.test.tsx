@@ -142,6 +142,28 @@ describe("useSpaces", () => {
     expect(localStorage.getItem("eddi.workspace.space")).toBe(TEAM.id);
   });
 
+  it("shares the chosen space with every other consumer of the hook", async () => {
+    // The switcher lives in the top bar and the listing lives in the page —
+    // two unrelated trees, two calls to this hook. Per-hook `useState` gave
+    // each its own copy, so choosing a space updated the switcher's label and
+    // the listing never heard: the request went out with no `?space=` and the
+    // filter appeared to do nothing at all. Rendering two consumers is the
+    // whole point of this test; one consumer cannot fail it.
+    vi.spyOn(workspacesApi, "getWorkspaceInfo").mockResolvedValue(info());
+
+    const wrapper = createWrapper();
+    const switcher = renderHook(() => useSpaces(), { wrapper });
+    const listing = renderHook(() => useSpaces(), { wrapper });
+
+    await waitFor(() => expect(switcher.result.current.spaces).toHaveLength(2));
+    await waitFor(() => expect(listing.result.current.spaces).toHaveLength(2));
+
+    act(() => switcher.result.current.setActiveSpace(TEAM.id));
+
+    expect(switcher.result.current.activeSpace).toBe(TEAM.id);
+    expect(listing.result.current.activeSpace).toBe(TEAM.id);
+  });
+
   it("degrades to no workspaces when the endpoint is unreachable", async () => {
     // An older backend 404s, which getWorkspaceInfo resolves rather than
     // rejects; anything else rejects and lands here. Either way the rest of the

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getWorkspaceInfo,
@@ -37,6 +37,59 @@ function writeStored(spaceId: string) {
     // Ignore: the switcher still works for this session.
   }
 }
+
+/**
+ * The chosen space, shared by every component that asks.
+ *
+ * <h3>Why this is not `useState`</h3> The switcher lives in the top bar and the
+ * listing lives in the page — two unrelated trees, two calls to this hook. With
+ * per-hook state each got its own copy, so choosing a space updated the
+ * switcher's label and the listing never heard about it: the request went out
+ * without `?space=` and the filter appeared to do nothing. An E2E run caught
+ * that by watching the actual request; no unit test could, because each renders
+ * one consumer.
+ *
+ * A module-level store read through `useSyncExternalStore` fixes it without a
+ * provider, which matters because `useSpaces` is called from components that
+ * share no common ancestor below the app root.
+ */
+const spaceStore = {
+  listeners: new Set<() => void>(),
+
+  subscribe(listener: () => void) {
+    spaceStore.listeners.add(listener);
+    // Another tab of the same app is another consumer of the same preference.
+    window.addEventListener("storage", spaceStore.onStorage);
+    return () => {
+      spaceStore.listeners.delete(listener);
+      if (spaceStore.listeners.size === 0) {
+        window.removeEventListener("storage", spaceStore.onStorage);
+      }
+    };
+  },
+
+  // Reads through to storage rather than caching a copy at module load. The
+  // snapshot is a string, so React compares it by value and re-renders only on
+  // a real change — and a test that clears localStorage gets a store that
+  // actually forgot, instead of one still holding the previous test's choice.
+  getSnapshot() {
+    return readStored();
+  },
+
+  set(spaceId: string) {
+    if (readStored() === spaceId) return;
+    writeStored(spaceId);
+    spaceStore.notify();
+  },
+
+  onStorage(event: StorageEvent) {
+    if (event.key === null || event.key === STORAGE_KEY) spaceStore.notify();
+  },
+
+  notify() {
+    spaceStore.listeners.forEach((listener) => listener());
+  },
+};
 
 export interface UseSpacesResult {
   /**
@@ -103,7 +156,7 @@ export function useSpaces(): UseSpacesResult {
   const info = data ?? WORKSPACES_UNAVAILABLE;
   const spaces = useMemo(() => info.spaces, [info]);
 
-  const [activeSpace, setActive] = useState<string>(readStored);
+  const activeSpace = useSyncExternalStore(spaceStore.subscribe, spaceStore.getSnapshot);
 
   // A remembered space the user can no longer reach — they left the group, or
   // the deployment turned workspaces off — would filter everything away with no
@@ -112,14 +165,10 @@ export function useSpaces(): UseSpacesResult {
     if (activeSpace === ALL_SPACES) return;
     if (isLoading) return;
     if (spaces.some((s) => s.id === activeSpace)) return;
-    setActive(ALL_SPACES);
-    writeStored(ALL_SPACES);
+    spaceStore.set(ALL_SPACES);
   }, [spaces, activeSpace, isLoading]);
 
-  const setActiveSpace = useCallback((spaceId: string) => {
-    setActive(spaceId);
-    writeStored(spaceId);
-  }, []);
+  const setActiveSpace = useCallback((spaceId: string) => spaceStore.set(spaceId), []);
 
   const active = useMemo(
     () => spaces.find((s) => s.id === activeSpace) ?? null,
