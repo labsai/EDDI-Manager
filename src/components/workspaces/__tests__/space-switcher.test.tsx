@@ -1,13 +1,32 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { renderWithProviders, userEvent } from "@/test/test-utils";
 import { SpaceSwitcher } from "@/components/workspaces/space-switcher";
+import { useSpaces } from "@/hooks/use-spaces";
 import * as workspacesApi from "@/lib/api/workspaces";
 import type { WorkspaceInfo } from "@/lib/api/workspaces";
 
 const ALICE = "alice@example.com";
 const PERSONAL = { id: `user:${ALICE}`, kind: "personal" as const, label: ALICE };
 const TEAM = { id: "team:engineering", kind: "team" as const, label: "engineering" };
+
+/**
+ * Renders once the workspace query has actually settled.
+ *
+ * <h3>Why a probe and not a `waitFor`</h3> Both components under test render
+ * *nothing* in the cases below, so there is no positive observable to settle on
+ * — and `waitFor(() => expect(queryByTestId(x)).not.toBeInTheDocument())`
+ * resolves on its FIRST poll, which happens before the query has resolved. Every
+ * such assertion therefore passed against a component that had not rendered yet,
+ * and would have passed just as happily if the thing appeared a tick later.
+ *
+ * Awaiting this probe makes "not rendered" mean "not rendered once the answer
+ * was in", which is the actual claim.
+ */
+function SpacesReady() {
+  const { isLoading } = useSpaces();
+  return isLoading ? null : <div data-testid="spaces-ready" />;
+}
 
 function info(overrides: Partial<WorkspaceInfo> = {}): WorkspaceInfo {
   return {
@@ -40,8 +59,14 @@ describe("SpaceSwitcher", () => {
 
   async function render(ws = info()) {
     vi.spyOn(workspacesApi, "getWorkspaceInfo").mockResolvedValue(ws);
-    const result = renderWithProviders(<SpaceSwitcher />);
-    await waitFor(() => expect(workspacesApi.getWorkspaceInfo).toHaveBeenCalled());
+    const result = renderWithProviders(
+      <>
+        <SpaceSwitcher />
+        <SpacesReady />
+      </>
+    );
+    // Settle the query, not merely the fetch call — see SpacesReady.
+    await screen.findByTestId("spaces-ready");
     return result;
   }
 
@@ -60,13 +85,13 @@ describe("SpaceSwitcher", () => {
     // to a filter the server will not apply.
     await render(info({ enabled: false, seesEverything: true }));
 
-    await waitFor(() => expect(screen.queryByTestId("space-switcher")).not.toBeInTheDocument());
+    expect(screen.queryByTestId("space-switcher")).not.toBeInTheDocument();
   });
 
   it("hides itself when there is only one space to choose", async () => {
     await render(info({ spaces: [PERSONAL] }));
 
-    await waitFor(() => expect(screen.queryByTestId("space-switcher")).not.toBeInTheDocument());
+    expect(screen.queryByTestId("space-switcher")).not.toBeInTheDocument();
   });
 
   it("calls the personal space the same thing in the trigger as in the menu", async () => {

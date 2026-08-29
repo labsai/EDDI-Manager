@@ -1,11 +1,30 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { renderWithProviders } from "@/test/test-utils";
 import { OwnershipBadge } from "@/components/workspaces/ownership-badge";
+import { useSpaces } from "@/hooks/use-spaces";
 import * as workspacesApi from "@/lib/api/workspaces";
 import type { WorkspaceInfo } from "@/lib/api/workspaces";
 
 const ALICE = "alice@example.com";
+
+/**
+ * Renders once the workspace query has actually settled.
+ *
+ * <h3>Why a probe and not a `waitFor`</h3> Both components under test render
+ * *nothing* in the cases below, so there is no positive observable to settle on
+ * — and `waitFor(() => expect(queryByTestId(x)).not.toBeInTheDocument())`
+ * resolves on its FIRST poll, which happens before the query has resolved. Every
+ * such assertion therefore passed against a component that had not rendered yet,
+ * and would have passed just as happily if the thing appeared a tick later.
+ *
+ * Awaiting this probe makes "not rendered" mean "not rendered once the answer
+ * was in", which is the actual claim.
+ */
+function SpacesReady() {
+  const { isLoading } = useSpaces();
+  return isLoading ? null : <div data-testid="spaces-ready" />;
+}
 
 function info(overrides: Partial<WorkspaceInfo> = {}): WorkspaceInfo {
   return {
@@ -37,10 +56,16 @@ describe("OwnershipBadge", () => {
 
   async function render(props: Parameters<typeof OwnershipBadge>[0], ws = info()) {
     vi.spyOn(workspacesApi, "getWorkspaceInfo").mockResolvedValue(ws);
-    const result = renderWithProviders(<OwnershipBadge {...props} />);
-    // The gate is async; without settling it every assertion below would be
-    // reading the pre-answer render, where nothing is drawn regardless.
-    await waitFor(() => expect(workspacesApi.getWorkspaceInfo).toHaveBeenCalled());
+    const result = renderWithProviders(
+      <>
+        <OwnershipBadge {...props} />
+        <SpacesReady />
+      </>
+    );
+    // Settling the FETCH CALL is not settling the query: every "renders
+    // nothing" assertion below would otherwise read the pre-answer render,
+    // where nothing is drawn regardless of whether the gate works.
+    await screen.findByTestId("spaces-ready");
     return result;
   }
 
@@ -54,9 +79,7 @@ describe("OwnershipBadge", () => {
       info({ enabled: false, seesEverything: true })
     );
 
-    await waitFor(() => {
-      expect(screen.queryByTestId("ownership-badge-published")).not.toBeInTheDocument();
-    });
+    expect(screen.queryByTestId("ownership-badge-published")).not.toBeInTheDocument();
     expect(screen.queryByTestId("ownership-badge-shared")).not.toBeInTheDocument();
   });
 
@@ -69,9 +92,7 @@ describe("OwnershipBadge", () => {
   it("stays silent on your own resource in your own workspace", async () => {
     await render({ ownerId: ALICE, spaceId: `user:${ALICE}`, visibility: "space" });
 
-    await waitFor(() => {
-      expect(screen.queryByTestId("ownership-badge-shared")).not.toBeInTheDocument();
-    });
+    expect(screen.queryByTestId("ownership-badge-shared")).not.toBeInTheDocument();
     expect(screen.queryByTestId("ownership-badge-published")).not.toBeInTheDocument();
   });
 
@@ -97,9 +118,7 @@ describe("OwnershipBadge", () => {
     // saying "unowned" would name a status the UI has no concept of.
     await render({});
 
-    await waitFor(() => {
-      expect(screen.queryByTestId("ownership-badge-shared")).not.toBeInTheDocument();
-    });
+    expect(screen.queryByTestId("ownership-badge-shared")).not.toBeInTheDocument();
     expect(screen.queryByTestId("ownership-badge-published")).not.toBeInTheDocument();
   });
 
