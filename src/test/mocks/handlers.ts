@@ -9,8 +9,7 @@ const AGENTS_MOCK = [
     lastModifiedOn: Date.now() - 3600000,
     ownerId: "alice@example.com",
     spaceId: "user:alice@example.com",
-    visibility: "space",
-    callerLevel: "OWN"
+    visibility: "space"
   },
   {
     resource: "eddi://ai.labs.agent/agentstore/agents/agent2?version=2",
@@ -20,8 +19,7 @@ const AGENTS_MOCK = [
     lastModifiedOn: Date.now() - 7200000,
     ownerId: "alice@example.com",
     spaceId: "user:alice@example.com",
-    visibility: "private",
-    callerLevel: "OWN"
+    visibility: "private"
   },
   {
     resource: "eddi://ai.labs.agent/agentstore/agents/agent3?version=1",
@@ -31,11 +29,7 @@ const AGENTS_MOCK = [
     lastModifiedOn: Date.now() - 2 * 86400000,
     ownerId: "alice@example.com",
     spaceId: "team:engineering",
-    visibility: "space",
-    // Shared for chatting only — the case that had no way to be expressed
-    // before the backend reported a level, and where the page used to offer
-    // Delete and Share and let the server refuse.
-    callerLevel: "USE"
+    visibility: "space"
   },
   {
     resource: "eddi://ai.labs.agent/agentstore/agents/agent4?version=2",
@@ -45,10 +39,7 @@ const AGENTS_MOCK = [
     lastModifiedOn: Date.now() - 86400000,
     ownerId: "bob@example.com",
     spaceId: "team:engineering",
-    visibility: "published",
-    // A stranger reading a published resource holds VIEW: they may read and
-    // export it, but not delete it or pass it on.
-    callerLevel: "VIEW"
+    visibility: "published"
   },
   {
     resource: "eddi://ai.labs.agent/agentstore/agents/agent5?version=1",
@@ -748,6 +739,31 @@ function readShareSeed(id: string) {
   return all?.[id] ?? null;
 }
 
+/**
+ * What each fixture agent grants the signed-in user once enforcement is on.
+ *
+ * agent1/agent2 are alice's own; agent3 is shared with her team for chatting
+ * only; agent4 is bob's, published, so readable but not hers to delete.
+ */
+const CALLER_LEVELS: Record<string, string> = {
+  agent1: "OWN",
+  agent2: "OWN",
+  agent3: "USE",
+  agent4: "VIEW",
+};
+
+function withCallerLevel<T extends { resource: string }>(agent: T): T & { callerLevel?: string } {
+  const id = /agents\/([^?]+)/.exec(agent.resource)?.[1];
+  const level = id ? CALLER_LEVELS[id] : undefined;
+  return level ? { ...agent, callerLevel: level } : agent;
+}
+
+function stripCallerLevel<T extends object>(agent: T): T {
+  const rest = { ...(agent as T & { callerLevel?: string }) };
+  delete rest.callerLevel;
+  return rest as T;
+}
+
 function defaultShareInfo(id: string) {
   return {
     resourceId: id,
@@ -756,6 +772,9 @@ function defaultShareInfo(id: string) {
     visibility: "space",
     // Empty rather than absent: an empty list is not null, so NON_NULL keeps it.
     grants: [],
+    // The SHARING endpoint's own level, which is a different field from the one
+    // on a listed descriptor: `describe()` refuses below VIEW, so this is always
+    // present and always at least VIEW. It is what gates the dialog's controls.
     callerLevel: "OWN",
   };
 }
@@ -940,13 +959,21 @@ export const handlers = [
       ? matched.filter((a) => "spaceId" in a && a.spaceId === space)
       : matched;
 
+    // `callerLevel` is stamped by the server ONLY while enforcement is on —
+    // ResourceAccessGuard omits it otherwise, and NON_NULL keeps it off the
+    // wire. Carrying it on the static fixtures produced a pairing the backend
+    // cannot produce (levels present, `enabled: false`), which would let a test
+    // encode "USE gating applies with the feature off" as expected behaviour.
+    const enforced = readWorkspaceSeed()?.enabled === true;
+    const answered = enforced ? scoped.map(withCallerLevel) : scoped.map(stripCallerLevel);
+
     // Most-recent-first, because the backend orders them that way — verified
     // against a live EDDI 6.3.0. This matters as soon as `limit` is honoured:
     // the dashboard's "recent agents" asks for exactly 4, so returning them in
     // array order hands it the four OLDEST and quietly makes the section a lie.
     // The E2E expectation encoded the correct four all along; it only passed
     // before because the handler returned all eight and let the page sort.
-    const ordered = [...scoped].sort(
+    const ordered = [...answered].sort(
       (a, b) => b.lastModifiedOn - a.lastModifiedOn,
     );
 

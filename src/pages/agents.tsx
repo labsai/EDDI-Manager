@@ -316,15 +316,22 @@ export function AgentsPage() {
                     <tr
                       key={agent.id}
                       className="hover:bg-secondary/30 transition-colors"
+                      data-testid={`agent-row-${agent.id}`}
                     >
                       <td className="px-5 py-3">
-                        <Link
-                          to={`/manage/agentview/${agent.id}`}
-                          className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                        >
-                          {agent.name || t("agents.unnamed", "Unnamed Agent")}
-                          <ExternalLink className="ms-1 inline h-3 w-3 opacity-40" />
-                        </Link>
+                        {accessFor(agent.callerLevel).canView ? (
+                          <Link
+                            to={`/manage/agentview/${agent.id}`}
+                            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                          >
+                            {agent.name || t("agents.unnamed", "Unnamed Agent")}
+                            <ExternalLink className="ms-1 inline h-3 w-3 opacity-40" />
+                          </Link>
+                        ) : (
+                          <span className="text-sm font-medium text-foreground">
+                            {agent.name || t("agents.unnamed", "Unnamed Agent")}
+                          </span>
+                        )}
                         {/* A user whose stored view mode is "list" could
                             otherwise neither see who owns a resource nor share
                             one — the feature was reachable from card view

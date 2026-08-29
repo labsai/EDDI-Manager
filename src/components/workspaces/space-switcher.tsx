@@ -50,7 +50,12 @@ export function SpaceSwitcher({ className }: { className?: string }) {
           className
         )}
         data-testid="space-switcher"
-        aria-label={t("workspaces.switcherLabel", "Switch workspace")}
+        // The label INCLUDES the active space. An `aria-label` replaces the
+        // element's text as its accessible name, so labelling this "Switch
+        // workspace" alone meant a screen-reader user heard the same thing
+        // whichever workspace was selected — the one fact the control exists to
+        // convey was the one fact it did not convey.
+        aria-label={t("workspaces.switcherCurrent", "Switch workspace — currently {{space}}", { space: label })}
       >
         <ActiveIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <span className="max-w-[10rem] truncate">{label}</span>
@@ -63,6 +68,7 @@ export function SpaceSwitcher({ className }: { className?: string }) {
         <DropdownMenuItem
           onClick={() => setActiveSpace(ALL_SPACES)}
           data-testid="space-option-all"
+          aria-current={activeSpace === ALL_SPACES ? "true" : undefined}
         >
           <Layers className="me-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <span className="flex-1">{t("workspaces.allSpaces", "All workspaces")}</span>
@@ -78,6 +84,9 @@ export function SpaceSwitcher({ className }: { className?: string }) {
               key={space.id}
               onClick={() => setActiveSpace(space.id)}
               data-testid={`space-option-${space.id}`}
+              // The tick beside the active entry is aria-hidden, so without this
+              // the selection is invisible to assistive tech in the menu too.
+              aria-current={activeSpace === space.id ? "true" : undefined}
             >
               <Icon className="me-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <span className="flex-1 truncate">

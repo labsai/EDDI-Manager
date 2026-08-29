@@ -372,8 +372,13 @@ describe("ShareDialog", () => {
     await userEvent.type(screen.getByTestId("share-subject-input"), "bob");
     await userEvent.click(screen.getByTestId("share-submit"));
 
-    // No summary means no claim that anything was applied.
-    await waitFor(() => expect(screen.queryByTestId("share-cascade-summary")).not.toBeInTheDocument());
+    // Wait for the failure to be REPORTED, then assert the absence. Wrapping a
+    // negative in `waitFor` asserts "not yet" — it resolves on the first poll,
+    // and would pass just as happily against a summary rendered one tick later.
+    // (Exactly the trap fixed twice already in this file; it came back with the
+    // test that was added last.)
+    await waitFor(() => expect(errorToast).toHaveBeenCalled());
+    expect(screen.queryByTestId("share-cascade-summary")).not.toBeInTheDocument();
     expect(screen.getByTestId("share-subject-input")).toHaveValue("bob");
   });
 });

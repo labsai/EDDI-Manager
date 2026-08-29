@@ -4575,8 +4575,8 @@
       "cascadeSkipped_one": "{{count}} resource left unchanged — you do not own it",
       "cascadeApplied_other": "Applied to {{count}} resources",
       "cascadeSkipped_other": "{{count}} resources left unchanged — you do not own them",
-      "confirmOwner": "Confirm transfer",
-      "ownerWarning": "They will be able to delete this and share it with anyone. You cannot take that back on your own.",
+      "confirmOwner": "Confirm owner access",
+      "ownerWarning": "They become a co-owner: they can delete this and share it with anyone. You can remove their access later, but not undo what they do with it.",
       "subjectIsPerson": "Person",
       "subjectIsTeam": "Team",
       "useOnly": "You can chat with this, but its configuration has not been shared with you — so there is nothing here to manage.",
@@ -4588,6 +4588,7 @@
     "emptySpace": "No agents in this workspace",
     "emptySpaceDescription": "Other workspaces may have agents you can see.",
     "showAllSpaces": "Show all workspaces",
-    "useOnlyMenu": "Shared with you for chatting only."
+    "useOnlyMenu": "Shared with you for chatting only.",
+    "switcherCurrent": "Switch workspace — currently {{space}}"
   }
 }

@@ -4573,13 +4573,13 @@
       "unknownPrefix": "「user:」または「team:」を使うか、人物名のみを入力してください。",
       "cascadeApplied_other": "{{count}} 件のリソースに適用しました",
       "cascadeSkipped_other": "{{count}} 件のリソースは変更されていません — あなたの所有物ではありません",
-      "confirmOwner": "譲渡を確定",
-      "ownerWarning": "相手はこれを削除し、誰とでも共有できるようになります。ご自身だけでは取り消せません。",
+      "confirmOwner": "オーナー権限の付与を確定",
+      "ownerWarning": "相手は共同オーナーになります。これを削除したり、誰とでも共有したりできます。あとでアクセス権を取り消すことはできますが、相手が行った操作は取り消せません。",
       "cascadeApplied_one": "{{count}} 件のリソースに適用しました",
       "cascadeSkipped_one": "{{count}} 件のリソースは変更されていません — あなたの所有物ではありません",
       "subjectIsPerson": "個人",
       "subjectIsTeam": "チーム",
-      "useOnly": "これとチャットはできますが、設定は共有されていないため、ここで管理できるものはありません。",
+      "useOnly": "これと会話はできますが、設定は共有されていないため、ここで管理できるものはありません。",
       "cascadeRevoked_other": "{{count}} 件のリソースから削除しました",
       "andMore_other": "ほか {{count}} 件",
       "cascadeRevoked_one": "{{count}} 件のリソースから削除しました",
@@ -4588,6 +4588,7 @@
     "emptySpace": "このワークスペースにエージェントはありません",
     "emptySpaceDescription": "他のワークスペースに閲覧可能なエージェントがある可能性があります。",
     "showAllSpaces": "すべてのワークスペースを表示",
-    "useOnlyMenu": "チャット専用として共有されています。"
+    "useOnlyMenu": "会話専用として共有されています。",
+    "switcherCurrent": "ワークスペースを切り替え — 現在は {{space}}"
   }
 }

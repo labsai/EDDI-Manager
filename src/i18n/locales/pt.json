@@ -4612,8 +4612,8 @@
       "cascadeSkipped_one": "{{count}} recurso inalterado — ele não pertence a você",
       "cascadeApplied_other": "Aplicado a {{count}} recursos",
       "cascadeSkipped_other": "{{count}} recursos inalterados — eles não pertencem a você",
-      "confirmOwner": "Confirmar transferência",
-      "ownerWarning": "Essa pessoa poderá excluí-lo e compartilhá-lo com qualquer um. Você não poderá desfazer isso sozinho.",
+      "confirmOwner": "Confirmar acesso de proprietário",
+      "ownerWarning": "Essa pessoa passa a ser coproprietária: poderá excluir isto e compartilhá-lo com qualquer um. Você poderá remover o acesso dela depois, mas não desfazer o que ela fizer.",
       "subjectIsPerson": "Pessoa",
       "subjectIsTeam": "Equipe",
       "useOnly": "Você pode conversar com isto, mas a configuração não foi compartilhada com você — então não há nada para gerenciar aqui.",
@@ -4627,6 +4627,7 @@
     "emptySpace": "Nenhum agente neste espaço",
     "emptySpaceDescription": "Outros espaços podem ter agentes que você pode ver.",
     "showAllSpaces": "Mostrar todos os espaços",
-    "useOnlyMenu": "Compartilhado com você apenas para conversar."
+    "useOnlyMenu": "Compartilhado com você apenas para conversar.",
+    "switcherCurrent": "Trocar de espaço de trabalho — atualmente {{space}}"
   }
 }

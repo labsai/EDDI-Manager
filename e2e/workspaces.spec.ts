@@ -239,13 +239,42 @@ test.describe("workspaces enforced", () => {
     await expect(page.getByRole("menuitem", { name: /share/i })).toBeVisible();
   });
 
+  test("gates the controls that sit outside the menu too", async ({ page }) => {
+    // Deploying is EDIT and the config view is VIEW, and both live outside the
+    // ⋯ menu — which is exactly how they were missed the first time. A USE
+    // holder offered "Undeploy from production" gets a 403, which is the same
+    // broken-looking outcome the row gating exists to remove.
+    await expect(page.getByTestId("agent-deploy-toggle-agent1")).toBeVisible();
+    await expect(page.getByTestId("agent-deploy-toggle-agent3")).toHaveCount(0);
+
+    // And the name stops being a link into a page that would refuse every panel,
+    // while the agent itself stays listed — they may still converse with it.
+    await expect(page.getByTestId("agent-open-agent1")).toBeVisible();
+    await expect(page.getByTestId("agent-open-agent3")).toHaveCount(0);
+    await expect(page.getByTestId("agent-card-agent3")).toBeVisible();
+  });
+
   test("the list view gates its row actions the same way", async ({ page }) => {
     await page.getByTestId("view-toggle-list").click();
     await expect(page.getByTestId("agent-list")).toBeVisible();
 
+    // Positive first: the row rendered at all, so the absences below are
+    // absences rather than an unrendered table.
     await expect(page.getByTestId("agent-row-share-agent1")).toBeVisible();
     await expect(page.getByTestId("agent-row-share-agent3")).toHaveCount(0);
     await expect(page.getByTestId("agent-row-share-agent4")).toHaveCount(0);
+
+    // The other three row actions carry the same gates and had no assertion of
+    // their own — deleting any one of them left this test green.
+    const row3 = page.getByTestId("agent-row-agent3");
+    await expect(row3).toBeVisible();
+    await expect(row3.getByRole("button", { name: /duplicate/i })).toHaveCount(0);
+    await expect(row3.getByRole("button", { name: /export/i })).toHaveCount(0);
+    await expect(row3.getByRole("button", { name: /delete/i })).toHaveCount(0);
+
+    const row4 = page.getByTestId("agent-row-agent4");
+    await expect(row4.getByRole("button", { name: /export/i })).toBeVisible();
+    await expect(row4.getByRole("button", { name: /delete/i })).toHaveCount(0);
   });
 
   test("hides the switcher for a user with only their own space", async ({ page }) => {

@@ -65,7 +65,19 @@ export interface ShareInfo {
    * principal and team names.
    */
   grants: ResourceGrant[];
-  /** What this user may do. Absent means no access at all. */
+  /**
+   * What this user may do with the resource.
+   *
+   * **Not the same field as `AgentDescriptor.callerLevel`, despite the name.**
+   * This one comes from the sharing endpoint, which refuses the whole request
+   * below `VIEW` — so in practice it is always present and always at least
+   * `VIEW`. The descriptor field is stamped on every listed row instead, and is
+   * *absent* when the deployment does not enforce workspaces, which
+   * `accessFor()` reads as unrestricted.
+   *
+   * Reading absence here the way `accessFor` reads it there would be wrong in
+   * both directions, so neither should be substituted for the other.
+   */
   callerLevel?: AccessLevel | null;
 }
 

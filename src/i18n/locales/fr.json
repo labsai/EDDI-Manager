@@ -4612,8 +4612,8 @@
       "cascadeSkipped_one": "{{count}} ressource inchangée — elle ne vous appartient pas",
       "cascadeApplied_other": "Appliqué à {{count}} ressources",
       "cascadeSkipped_other": "{{count}} ressources inchangées — elles ne vous appartiennent pas",
-      "confirmOwner": "Confirmer le transfert",
-      "ownerWarning": "Cette personne pourra le supprimer et le partager avec n'importe qui. Vous ne pourrez pas revenir en arrière seul.",
+      "confirmOwner": "Confirmer l'accès propriétaire",
+      "ownerWarning": "Cette personne devient copropriétaire : elle pourra supprimer cet élément et le partager avec n'importe qui. Vous pourrez lui retirer l'accès plus tard, mais pas annuler ce qu'elle en aura fait.",
       "subjectIsPerson": "Personne",
       "subjectIsTeam": "Équipe",
       "useOnly": "Vous pouvez discuter avec cet élément, mais sa configuration ne vous a pas été partagée — il n'y a donc rien à gérer ici.",
@@ -4627,6 +4627,7 @@
     "emptySpace": "Aucun agent dans cet espace",
     "emptySpaceDescription": "D'autres espaces contiennent peut-être des agents accessibles.",
     "showAllSpaces": "Afficher tous les espaces",
-    "useOnlyMenu": "Partagé avec vous pour la discussion uniquement."
+    "useOnlyMenu": "Partagé avec vous pour la discussion uniquement.",
+    "switcherCurrent": "Changer d'espace de travail — actuellement {{space}}"
   }
 }

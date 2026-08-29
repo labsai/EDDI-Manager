@@ -4568,15 +4568,15 @@
       "notOwner": "Nur der Eigentümer kann den Zugriff ändern. Fragen Sie ihn, wenn dies weiter geteilt werden soll.",
       "ownedBy": "Gehört {{owner}}",
       "unowned": "Kein Eigentümer hinterlegt",
-      "inSpace": "im Bereich {{space}}",
+      "inSpace": "im Arbeitsbereich {{space}}",
       "subjectRequired": "Geben Sie eine Person oder ein Team zum Teilen an.",
       "unknownPrefix": "Verwenden Sie „user:“ oder „team:“ — oder einfach einen Namen für eine Person.",
       "cascadeApplied_one": "Auf {{count}} Ressource angewendet",
       "cascadeSkipped_one": "{{count}} Ressource unverändert — sie gehört Ihnen nicht",
       "cascadeApplied_other": "Auf {{count}} Ressourcen angewendet",
       "cascadeSkipped_other": "{{count}} Ressourcen unverändert — sie gehören Ihnen nicht",
-      "confirmOwner": "Übertragung bestätigen",
-      "ownerWarning": "Sie können dies löschen und mit beliebigen Personen teilen. Das können Sie nicht allein rückgängig machen.",
+      "confirmOwner": "Eigentümerzugriff bestätigen",
+      "ownerWarning": "Diese Person wird Mit-Eigentümer: Sie kann dies löschen und mit beliebigen Personen teilen. Sie können den Zugriff später entziehen, aber nicht rückgängig machen, was sie damit getan hat.",
       "subjectIsPerson": "Person",
       "subjectIsTeam": "Team",
       "useOnly": "Sie können hiermit chatten, aber die Konfiguration wurde nicht mit Ihnen geteilt — es gibt hier also nichts zu verwalten.",
@@ -4585,9 +4585,10 @@
       "cascadeRevoked_other": "Aus {{count}} Ressourcen entfernt",
       "andMore_other": "und {{count}} weitere"
     },
-    "emptySpace": "Keine Agenten in diesem Bereich",
-    "emptySpaceDescription": "In anderen Bereichen gibt es möglicherweise Agenten, die Sie sehen können.",
-    "showAllSpaces": "Alle Bereiche anzeigen",
-    "useOnlyMenu": "Nur zum Chatten für Sie freigegeben."
+    "emptySpace": "Keine Agenten in diesem Arbeitsbereich",
+    "emptySpaceDescription": "In anderen Arbeitsbereichen gibt es möglicherweise Agenten, die Sie sehen können.",
+    "showAllSpaces": "Alle Arbeitsbereiche anzeigen",
+    "useOnlyMenu": "Nur zum Chatten mit Ihnen geteilt.",
+    "switcherCurrent": "Arbeitsbereich wechseln — aktuell {{space}}"
   }
 }

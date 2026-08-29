@@ -26,7 +26,7 @@ import { useChatStore, useStartConversation } from "@/hooks/use-chat";
 import { useOperatorConfig } from "@/hooks/use-operator";
 import { getErrorMessage } from "@/lib/api-client";
 import type { AgentDescriptor } from "@/lib/api/agents";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useId, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -195,13 +195,24 @@ export function AgentCard({ agent, onDuplicate, onDelete, onExport, onShare }: A
 
       {/* Agent info */}
       <div className="mt-4 flex-1">
-        <Link
-          to={`/manage/agentview/${agent.id}`}
-          className="text-lg font-semibold text-foreground hover:text-primary transition-colors"
-        >
-          {agent.name || t("agents.unnamed", "Unnamed Agent")}
-          <ExternalLink className="ms-1 inline h-3.5 w-3.5 opacity-0 group-hover:opacity-50" />
-        </Link>
+        {/* The name links to the CONFIGURATION view, which is a VIEW act — so a
+            USE holder gets the name as plain text rather than a link into a page
+            that would 403 on every panel. They can still converse: the chat
+            buttons below need USE, which is exactly what they hold. */}
+        {access.canView ? (
+          <Link
+            to={`/manage/agentview/${agent.id}`}
+            className="text-lg font-semibold text-foreground hover:text-primary transition-colors"
+            data-testid={`agent-open-${agent.id}`}
+          >
+            {agent.name || t("agents.unnamed", "Unnamed Agent")}
+            <ExternalLink className="ms-1 inline h-3.5 w-3.5 opacity-0 group-hover:opacity-50" />
+          </Link>
+        ) : (
+          <span className="text-lg font-semibold text-foreground">
+            {agent.name || t("agents.unnamed", "Unnamed Agent")}
+          </span>
+        )}
         <p className="mt-0.5 font-mono text-xs text-muted-foreground/70 truncate" title={agent.id}>
           {agent.id}
         </p>
@@ -272,6 +283,12 @@ export function AgentCard({ agent, onDuplicate, onDelete, onExport, onShare }: A
             </div>
           ))}
 
+          {/* Deploying and undeploying are EDIT, and the gates below the menu
+              missed this one because it sits outside it. A VIEW holder could
+              still undeploy somebody else's agent from production — or rather,
+              could still be OFFERED that and get a 403, which is the same
+              broken-looking outcome the row gating exists to remove. */}
+          {access.canEdit && (
           <button
             onClick={isProductionDeployed ? handleUndeploy : handleDeploy}
             disabled={isBusy}
@@ -294,6 +311,7 @@ export function AgentCard({ agent, onDuplicate, onDelete, onExport, onShare }: A
                 ? t("agents.undeployFromProduction", "Undeploy from production")
                 : t("agents.deployToProduction", "Deploy to production")}
           </button>
+          )}
         </div>
       </div>
     </div>
@@ -329,6 +347,8 @@ function AgentCardMenu({
 }) {
   const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
+  const emptyNoticeId = useId();
+  const hasNoActions = !access.canView && !access.canOwn;
 
   // Auto-focus first item on mount, falling back to the menu itself.
   //
@@ -386,6 +406,7 @@ function AgentCardMenu({
       className="absolute inset-e-0 z-50 mt-1 w-44 rounded-lg border bg-popover py-1 shadow-lg"
       role="menu"
       aria-label={t("common.moreActions", "More actions")}
+      aria-describedby={hasNoActions ? emptyNoticeId : undefined}
       // Focusable so Escape still reaches this handler when the menu has no
       // actionable entries to take focus.
       tabIndex={-1}
@@ -448,7 +469,12 @@ function AgentCardMenu({
           to "menuitem named share" — which is how this line first showed up, as
           a Share entry that was not there. */}
       {!access.canView && !access.canOwn && (
-        <p className="px-3 py-2 text-xs text-muted-foreground">
+        // Described by, not contained as a menuitem: `role="menu"` requires
+        // menuitem children, and most screen readers announce only the
+        // container's name on focus — so a bare <p> in here is both invalid and
+        // silent. `aria-describedby` on the container reads it out instead,
+        // while keeping the line non-actionable.
+        <p id={emptyNoticeId} className="px-3 py-2 text-xs text-muted-foreground">
           {t("workspaces.useOnlyMenu", "Shared with you for chatting only.")}
         </p>
       )}
