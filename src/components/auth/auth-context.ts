@@ -18,6 +18,15 @@ export interface AuthContextValue {
   user: AuthUser | null;
   /** Realm roles the user has */
   roles: string[];
+  /**
+   * Keycloak group paths the user belongs to, e.g. `/engineering`.
+   *
+   * Roles say what you may *do*; groups say what you may *see*. Workspaces map
+   * each group to a team space, so this is what the space switcher offers
+   * beyond the user's own personal space. Empty when the realm has no
+   * group-membership mapper on the client — a correct answer, not a failure.
+   */
+  groups: string[];
   /** The auth method in use */
   method: AuthConfig["method"];
   /** Trigger login (no-op when auth disabled) */
@@ -31,6 +40,7 @@ export const GUEST_CONTEXT: AuthContextValue = {
   loading: false,
   user: null,
   roles: [],
+  groups: [],
   method: "none",
   login: () => {},
   logout: () => {},

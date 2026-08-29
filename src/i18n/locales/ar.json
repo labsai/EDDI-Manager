@@ -4662,5 +4662,57 @@
     "workflow": "سير العمل",
     "dictionary": "القاموس",
     "rag": "RAG"
+  },
+  "workspaces": {
+    "allSpaces": "جميع مساحات العمل",
+    "personalSpace": "مساحتي",
+    "switcherLabel": "تبديل مساحة العمل",
+    "badge": {
+      "published": "منشور",
+      "shared": "مشترك",
+      "sharedTitle": "ملك لـ {{owner}} · في {{space}}",
+      "ownedBy": "ملك لـ {{owner}}"
+    },
+    "level": {
+      "use": "يمكنه المحادثة",
+      "useHint": "يمكنه التحدث إلى الوكيل دون رؤية كيفية بنائه — لا التعليمات ولا الأدوات ولا بيانات الاعتماد.",
+      "view": "يمكنه العرض",
+      "viewHint": "يمكنه قراءة الإعداد وتصديره، لكن لا يمكنه تغييره.",
+      "edit": "يمكنه التحرير",
+      "editHint": "يمكنه التغيير والنشر، لكن لا يمكنه الحذف أو إعادة المشاركة.",
+      "own": "المالك",
+      "ownHint": "تحكم كامل، بما في ذلك الحذف والمشاركة مع الآخرين."
+    },
+    "visibility": {
+      "private": "خاص",
+      "privateHint": "أنت فقط ومن تشاركه معهم.",
+      "space": "مساحة العمل",
+      "spaceHint": "كل من في مساحة عمل هذا المورد.",
+      "published": "منشور",
+      "publishedHint": "كل من لديه وصول إلى هذا التثبيت."
+    },
+    "share": {
+      "title": "مشاركة",
+      "titleNamed": "مشاركة «{{name}}»",
+      "visibility": "الظهور",
+      "peopleAndTeams": "الأشخاص والفِرق",
+      "subjectLabel": "شخص أو فريق",
+      "subjectPlaceholder": "name@example.com أو team:engineering",
+      "levelLabel": "مستوى الوصول",
+      "add": "مشاركة",
+      "shared": "تمت المشاركة",
+      "revoked": "تمت إزالة الوصول",
+      "revokeFor": "إيقاف المشاركة مع {{subject}}",
+      "visibilityUpdated": "تم تحديث الظهور",
+      "noGrants": "لم تتم المشاركة مع أحد بعد.",
+      "notOwner": "المالك وحده يمكنه تغيير الوصول. اطلب منه ذلك إذا احتجت مشاركة أوسع.",
+      "ownedBy": "ملك لـ {{owner}}",
+      "unowned": "لا يوجد مالك مسجل",
+      "inSpace": "في {{space}}",
+      "subjectRequired": "أدخل شخصًا أو فريقًا للمشاركة معه.",
+      "unknownPrefix": "استخدم «user:» أو «team:» — أو اكتب اسم شخص فقط.",
+      "cascadeApplied": "طُبِّق على {{count}} مورد",
+      "cascadeSkipped": "{{count}} مورد دون تغيير — فهو ليس ملكك"
+    }
   }
 }

@@ -42,6 +42,7 @@ const keycloakAuth: AuthContextValue = {
     fullName: "John Doe",
   },
   roles: ["admin"],
+  groups: [],
   method: "keycloak",
   login: vi.fn(),
   logout: vi.fn(),

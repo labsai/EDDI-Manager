@@ -22,18 +22,22 @@ import {
 } from "@/components/shared/view-toggle";
 import { getStoredViewMode, setStoredViewMode } from "@/components/shared/view-mode";
 import { useOnboarding } from "@/hooks/use-onboarding";
+import { useSpaces } from "@/hooks/use-spaces";
+import { ShareDialog } from "@/components/workspaces/share-dialog";
 
 type SortField = "name" | "version" | "modified";
 type SortDir = "asc" | "desc";
 
 export function AgentsPage() {
   const { t } = useTranslation();
+  const { activeSpace } = useSpaces();
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; version: number } | null>(null);
   const [exportTarget, setExportTarget] = useState<{ id: string; version: number } | null>(null);
+  const [shareTarget, setShareTarget] = useState<{ id: string; name: string } | null>(null);
   const [view, setView] = useState<ViewMode>(() => getStoredViewMode("agents"));
   const [sortField, setSortField] = useState<SortField>("modified");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -53,7 +57,7 @@ export function AgentsPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteAgentDescriptors(search);
+  } = useInfiniteAgentDescriptors(search, activeSpace);
 
   const deleteMutation = useDeleteAgent();
   const duplicateMutation = useDuplicateAgent();
@@ -218,6 +222,7 @@ export function AgentsPage() {
                   onDuplicate={handleDuplicate}
                   onDelete={handleDelete}
                   onExport={(id, version) => setExportTarget({ id, version })}
+                  onShare={(id, name) => setShareTarget({ id, name })}
                 />
               ))}
             </div>
@@ -393,6 +398,16 @@ export function AgentsPage() {
           onClose={() => setExportTarget(null)}
           agentId={exportTarget.id}
           agentVersion={exportTarget.version}
+        />
+      )}
+
+      {/* Share dialog */}
+      {shareTarget && (
+        <ShareDialog
+          open
+          onClose={() => setShareTarget(null)}
+          resourceId={shareTarget.id}
+          resourceName={shareTarget.name}
         />
       )}
     </div>

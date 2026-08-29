@@ -4557,5 +4557,57 @@
     "workflow": "Fluxo de trabalho",
     "dictionary": "Dicionário",
     "rag": "RAG"
+  },
+  "workspaces": {
+    "allSpaces": "Todos os espaços",
+    "personalSpace": "Meu espaço",
+    "switcherLabel": "Mudar de espaço",
+    "badge": {
+      "published": "Publicado",
+      "shared": "Compartilhado",
+      "sharedTitle": "Pertence a {{owner}} · em {{space}}",
+      "ownedBy": "Pertence a {{owner}}"
+    },
+    "level": {
+      "use": "Pode conversar",
+      "useHint": "Pode falar com o agente, mas não vê como ele foi construído — sem prompts, ferramentas ou credenciais.",
+      "view": "Pode visualizar",
+      "viewHint": "Pode ler a configuração e exportar uma cópia, mas não alterá-la.",
+      "edit": "Pode editar",
+      "editHint": "Pode alterar e implantar, mas não excluir nem compartilhar novamente.",
+      "own": "Proprietário",
+      "ownHint": "Controle total, incluindo excluir e compartilhar com outras pessoas."
+    },
+    "visibility": {
+      "private": "Privado",
+      "privateHint": "Apenas você e as pessoas com quem compartilhar.",
+      "space": "Espaço",
+      "spaceHint": "Todos no espaço deste recurso.",
+      "published": "Publicado",
+      "publishedHint": "Qualquer pessoa com acesso a esta instalação."
+    },
+    "share": {
+      "title": "Compartilhar",
+      "titleNamed": "Compartilhar “{{name}}”",
+      "visibility": "Visibilidade",
+      "peopleAndTeams": "Pessoas e equipes",
+      "subjectLabel": "Pessoa ou equipe",
+      "subjectPlaceholder": "nome@example.com ou team:engineering",
+      "levelLabel": "Nível de acesso",
+      "add": "Compartilhar",
+      "shared": "Compartilhado",
+      "revoked": "Acesso removido",
+      "revokeFor": "Parar de compartilhar com {{subject}}",
+      "visibilityUpdated": "Visibilidade atualizada",
+      "noGrants": "Ainda não compartilhado com ninguém.",
+      "notOwner": "Apenas o proprietário pode alterar os acessos. Peça a ele se precisar compartilhar mais amplamente.",
+      "ownedBy": "Pertence a {{owner}}",
+      "unowned": "Nenhum proprietário registrado",
+      "inSpace": "em {{space}}",
+      "subjectRequired": "Informe uma pessoa ou equipe.",
+      "unknownPrefix": "Use “user:” ou “team:” — ou apenas um nome para uma pessoa.",
+      "cascadeApplied": "Aplicado a {{count}} recurso",
+      "cascadeSkipped": "{{count}} recurso inalterado — ele não pertence a você"
+    }
   }
 }

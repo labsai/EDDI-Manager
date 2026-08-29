@@ -4522,5 +4522,57 @@
     "workflow": "워크플로",
     "dictionary": "사전",
     "rag": "RAG"
+  },
+  "workspaces": {
+    "allSpaces": "모든 작업 공간",
+    "personalSpace": "내 작업 공간",
+    "switcherLabel": "작업 공간 전환",
+    "badge": {
+      "published": "게시됨",
+      "shared": "공유됨",
+      "sharedTitle": "{{owner}} 소유 · {{space}} 내",
+      "ownedBy": "{{owner}} 소유"
+    },
+    "level": {
+      "use": "대화 가능",
+      "useHint": "에이전트와 대화할 수 있지만 구성 방식은 볼 수 없습니다 — 프롬프트, 도구, 자격 증명 모두 비공개입니다.",
+      "view": "보기 가능",
+      "viewHint": "구성을 읽고 내보낼 수 있지만 변경할 수는 없습니다.",
+      "edit": "편집 가능",
+      "editHint": "수정과 배포는 가능하지만 삭제하거나 다시 공유할 수는 없습니다.",
+      "own": "소유자",
+      "ownHint": "삭제 및 타인과의 공유를 포함한 전체 권한."
+    },
+    "visibility": {
+      "private": "비공개",
+      "privateHint": "본인과 공유한 사람만.",
+      "space": "작업 공간",
+      "spaceHint": "이 리소스의 작업 공간에 속한 모든 사람.",
+      "published": "게시됨",
+      "publishedHint": "이 배포에 접근할 수 있는 모든 사람."
+    },
+    "share": {
+      "title": "공유",
+      "titleNamed": "“{{name}}” 공유",
+      "visibility": "공개 범위",
+      "peopleAndTeams": "사용자 및 팀",
+      "subjectLabel": "사용자 또는 팀",
+      "subjectPlaceholder": "name@example.com 또는 team:engineering",
+      "levelLabel": "접근 수준",
+      "add": "공유",
+      "shared": "공유했습니다",
+      "revoked": "접근 권한을 제거했습니다",
+      "revokeFor": "{{subject}}와의 공유 중지",
+      "visibilityUpdated": "공개 범위를 업데이트했습니다",
+      "noGrants": "아직 아무와도 공유하지 않았습니다.",
+      "notOwner": "접근 권한은 소유자만 변경할 수 있습니다. 더 넓게 공유하려면 소유자에게 요청하세요.",
+      "ownedBy": "{{owner}} 소유",
+      "unowned": "기록된 소유자 없음",
+      "inSpace": "{{space}} 내",
+      "subjectRequired": "공유할 사용자 또는 팀을 입력하세요.",
+      "unknownPrefix": "“user:” 또는 “team:”을 사용하거나 사람 이름만 입력하세요.",
+      "cascadeApplied": "리소스 {{count}}개에 적용했습니다",
+      "cascadeSkipped": "리소스 {{count}}개는 변경하지 않았습니다 — 소유자가 아닙니다"
+    }
   }
 }

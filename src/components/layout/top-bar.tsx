@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { PlatformStatus } from "./platform-status";
 import { OperatorDrawer } from "@/components/operator/operator-drawer";
+import { SpaceSwitcher } from "@/components/workspaces/space-switcher";
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -262,7 +263,8 @@ export function TopBar({ onMenuClick, sidebarVisible }: TopBarProps) {
           launcher and personalization controls the 16px-high bar simply has
           no room for it, and it used to push the bar into horizontal
           overflow. */}
-      <div className="hidden md:block">
+      <div className="hidden items-center gap-2 md:flex">
+        <SpaceSwitcher />
         <PlatformStatus />
       </div>
 

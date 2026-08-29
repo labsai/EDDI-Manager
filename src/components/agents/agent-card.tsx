@@ -9,12 +9,14 @@ import {
   MoreVertical,
   ExternalLink,
   Download,
+  Share2,
   MessageSquare,
   Sparkles,
 } from "lucide-react";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { useDeploymentStatuses, useDeployAgent, useUndeployAgent } from "@/hooks/use-agents";
 import { DeploymentEnvironmentBadge } from "./deployment-environments";
+import { OwnershipBadge } from "@/components/workspaces/ownership-badge";
 import { useEnvironmentLabel } from "@/hooks/use-environment-label";
 import { deployedEnvironments, isAnyEnvironmentBusy } from "@/lib/deployment-environments";
 
@@ -32,6 +34,7 @@ interface AgentCardProps {
   onDuplicate: (id: string, version: number) => void;
   onDelete: (id: string, version: number) => void;
   onExport?: (id: string, version: number) => void;
+  onShare?: (id: string, name: string) => void;
 }
 
 // Status labels use i18n keys — resolved in component body
@@ -42,7 +45,7 @@ const statusIcons = {
   NOT_FOUND: { icon: Square, color: "text-muted-foreground", bg: "bg-muted", ring: "ring-border" },
 };
 
-export function AgentCard({ agent, onDuplicate, onDelete, onExport }: AgentCardProps) {
+export function AgentCard({ agent, onDuplicate, onDelete, onExport, onShare }: AgentCardProps) {
   const { data: operatorConfig } = useOperatorConfig();
   const isOperatorAgent = Boolean(operatorConfig?.agentId && operatorConfig.agentId === agent.id);
   const { t } = useTranslation();
@@ -117,6 +120,12 @@ export function AgentCard({ agent, onDuplicate, onDelete, onExport }: AgentCardP
         {/* The Platform Operator agent is provisioned and owned by the operator
             screen. Editing or deleting it here leaves that screen pointing at
             nothing, so say who owns it. */}
+        <OwnershipBadge
+          ownerId={agent.ownerId}
+          spaceId={agent.spaceId}
+          visibility={agent.visibility}
+        />
+
         {isOperatorAgent && (
           <span
             className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
@@ -157,6 +166,14 @@ export function AgentCard({ agent, onDuplicate, onDelete, onExport }: AgentCardP
                   onExport?.(agent.id, agent.version);
                   setMenuOpen(false);
                 }}
+                onShare={
+                  onShare
+                    ? () => {
+                        onShare(agent.id, agent.name || agent.id);
+                        setMenuOpen(false);
+                      }
+                    : undefined
+                }
                 onDelete={() => {
                   onDelete(agent.id, agent.version);
                   setMenuOpen(false);
@@ -280,11 +297,14 @@ export function AgentCard({ agent, onDuplicate, onDelete, onExport }: AgentCardP
 function AgentCardMenu({
   onDuplicate,
   onExport,
+  onShare,
   onDelete,
   onClose,
 }: {
   onDuplicate: () => void;
   onExport: () => void;
+  /** Omitted on a backend without workspaces, which hides the entry entirely. */
+  onShare?: () => void;
   onDelete: () => void;
   onClose: () => void;
 }) {
@@ -360,6 +380,17 @@ function AgentCardMenu({
         <Download className="h-4 w-4" aria-hidden="true" />
         {t("agents.export", "Export")}
       </button>
+      {onShare && (
+        <button
+          onClick={onShare}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-secondary focus:bg-secondary"
+          role="menuitem"
+          tabIndex={-1}
+        >
+          <Share2 className="h-4 w-4" aria-hidden="true" />
+          {t("workspaces.share.title", "Share")}
+        </button>
+      )}
       <button
         onClick={onDelete}
         className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 focus:bg-destructive/10"
