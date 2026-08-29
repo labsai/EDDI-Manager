@@ -77,6 +77,9 @@ const EXEMPT: Record<string, string> = {
 
   "GET */logs/recent":
     "Dead mock: production reads /administration/logs (logs.ts BASE + query string), which the snapshot does contain. Nothing calls this.",
+
+  "GET */workspaces":
+    "Ahead of the snapshot, not drift: labsai/EDDI#723 adds this endpoint and the spec here is pinned at 6.3.0. Remove this entry after that merges and `npm run openapi:refresh` runs — the 'keeps every exemption still needed' test below will say so.",
 };
 
 /**

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/api-client";
+import { agentKeys } from "@/lib/query-keys";
 import {
   ACCESS_LEVELS,
   getShareInfo,
@@ -48,6 +49,7 @@ export function ShareDialog({ open, onClose, resourceId, resourceName }: ShareDi
   const [subjectInput, setSubjectInput] = useState("");
   const [level, setLevel] = useState<AccessLevel>("USE");
   const [busy, setBusy] = useState(false);
+  const [confirmingOwner, setConfirmingOwner] = useState(false);
   const [lastResult, setLastResult] = useState<ShareResult | null>(null);
 
   const {
@@ -67,15 +69,27 @@ export function ShareDialog({ open, onClose, resourceId, resourceName }: ShareDi
     async (result: ShareResult) => {
       setLastResult(result);
       await refetch();
-      // Owner and visibility ride on the descriptor, so any listing showing a
-      // badge for this resource is now stale.
-      await queryClient.invalidateQueries({ queryKey: ["agents"] });
-      await queryClient.invalidateQueries({ queryKey: ["descriptors"] });
+      // Owner and visibility ride on the descriptor, so anything showing a badge
+      // for this resource is now stale. `agentKeys.all` prefix-matches both
+      // descriptor listings; the detail query is rooted at "agent" (singular)
+      // and is NOT covered by it — invalidating only the plural key was a no-op
+      // for the page a user lands on straight after sharing.
+      await queryClient.invalidateQueries({ queryKey: agentKeys.all });
+      await queryClient.invalidateQueries({ queryKey: agentKeys.detail(resourceId) });
+      await queryClient.invalidateQueries({ queryKey: agentKeys.descriptor(resourceId) });
     },
-    [refetch, queryClient]
+    [refetch, queryClient, resourceId]
   );
 
   const handleShare = useCallback(async () => {
+    // Handing someone OWN lets them delete the resource and re-share it to
+    // anyone, and there is no "undo" that does not depend on them cooperating.
+    // Every other level is reversible by the owner alone, so this is the one
+    // that gets a second look.
+    if (level === "OWN" && !confirmingOwner) {
+      setConfirmingOwner(true);
+      return;
+    }
     const parsed = parseSubjectInput(subjectInput);
     if ("error" in parsed) {
       toast.error(
@@ -90,13 +104,14 @@ export function ShareDialog({ open, onClose, resourceId, resourceName }: ShareDi
       const result = await shareResource(resourceId, parsed.subject, level);
       await afterChange(result);
       setSubjectInput("");
+      setConfirmingOwner(false);
       toast.success(t("workspaces.share.shared", "Shared"));
     } catch (e) {
       toast.error(getErrorMessage(e));
     } finally {
       setBusy(false);
     }
-  }, [subjectInput, level, resourceId, afterChange, t]);
+  }, [subjectInput, level, confirmingOwner, resourceId, afterChange, t]);
 
   const handleRevoke = useCallback(
     async (subject: string) => {
@@ -189,7 +204,10 @@ export function ShareDialog({ open, onClose, resourceId, resourceName }: ShareDi
                   />
                   <select
                     value={level}
-                    onChange={(e) => setLevel(e.target.value as AccessLevel)}
+                    onChange={(e) => {
+                      setLevel(e.target.value as AccessLevel);
+                      setConfirmingOwner(false);
+                    }}
                     aria-label={t("workspaces.share.levelLabel", "Access level")}
                     data-testid="share-level-select"
                     className="h-9 rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -200,13 +218,29 @@ export function ShareDialog({ open, onClose, resourceId, resourceName }: ShareDi
                       </option>
                     ))}
                   </select>
-                  <Button onClick={() => void handleShare()} disabled={busy} data-testid="share-submit">
+                  <Button
+                    onClick={() => void handleShare()}
+                    disabled={busy}
+                    variant={confirmingOwner ? "destructive" : "primary"}
+                    data-testid="share-submit"
+                  >
                     <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
-                    {t("workspaces.share.add", "Share")}
+                    {confirmingOwner
+                      ? t("workspaces.share.confirmOwner", "Confirm transfer")
+                      : t("workspaces.share.add", "Share")}
                   </Button>
                 </div>
 
                 <p className="text-xs text-muted-foreground">{levelHint(t, level)}</p>
+
+                {confirmingOwner && (
+                  <p className="text-xs text-destructive" role="alert" data-testid="share-owner-warning">
+                    {t(
+                      "workspaces.share.ownerWarning",
+                      "They will be able to delete this and share it with anyone. You cannot take that back on your own."
+                    )}
+                  </p>
+                )}
 
                 {grants.length === 0 ? (
                   <p className="py-2 text-sm text-muted-foreground">
@@ -367,6 +401,14 @@ function CascadeSummary({ result }: { result: ShareResult }) {
   );
 }
 
+/**
+ * The level as a human reads it.
+ *
+ * Falls through to the raw value rather than returning nothing. `level` is
+ * typed, but it arrives over the wire — a backend that grows a fifth level
+ * would otherwise render an empty badge next to somebody's name, which reads as
+ * "no access" rather than as "a level this UI does not know yet".
+ */
 function levelLabel(t: (k: string, d: string) => string, level: AccessLevel): string {
   switch (level) {
     case "USE":
@@ -377,6 +419,8 @@ function levelLabel(t: (k: string, d: string) => string, level: AccessLevel): st
       return t("workspaces.level.edit", "Can edit");
     case "OWN":
       return t("workspaces.level.own", "Owner");
+    default:
+      return String(level);
   }
 }
 
@@ -393,5 +437,7 @@ function levelHint(t: (k: string, d: string) => string, level: AccessLevel): str
       return t("workspaces.level.editHint", "They can change and deploy it, but not delete it or share it further.");
     case "OWN":
       return t("workspaces.level.ownHint", "Full control, including deleting it and sharing it with others.");
+    default:
+      return "";
   }
 }

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Globe, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/use-auth";
+import { useSpaces } from "@/hooks/use-spaces";
 import { describeSpace } from "@/lib/spaces";
 
 interface OwnershipBadgeProps {
@@ -25,11 +25,18 @@ interface OwnershipBadgeProps {
  */
 export function OwnershipBadge({ ownerId, spaceId, visibility, className }: OwnershipBadgeProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { enabled, principal } = useSpaces();
 
-  // No workspace fields at all: a backend without workspaces, or data that
-  // predates them. Saying "unowned" there would invent a concept the deployment
-  // does not have.
+  // A deployment that does not enforce workspaces has no ownership story to
+  // tell: everyone already sees everything, so a "Shared" badge would label a
+  // distinction that does not exist. Ownership is still *recorded* in that
+  // state — deliberately, so an operator can let attribution accumulate before
+  // switching enforcement on — which is exactly why the fields being present is
+  // not enough on its own.
+  if (!enabled) return null;
+
+  // No workspace fields at all: data that predates ownership being recorded.
+  // Saying "unowned" would invent a status the deployment does not use.
   if (!ownerId && !spaceId && !visibility) return null;
 
   if (visibility === "published") {
@@ -41,7 +48,10 @@ export function OwnershipBadge({ ownerId, spaceId, visibility, className }: Owne
     );
   }
 
-  const isMine = !!ownerId && !!user?.username && ownerId === user.username;
+  // Compared against the principal the BACKEND reports, not a display name from
+  // the token. It is the value stamped as ownerId, and the two are not
+  // guaranteed to be the same string.
+  const isMine = !!ownerId && !!principal && ownerId === principal;
   if (isMine) return null;
 
   if (!ownerId) return null;

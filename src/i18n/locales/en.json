@@ -4571,8 +4571,12 @@
       "inSpace": "in {{space}}",
       "subjectRequired": "Enter a person or team to share with.",
       "unknownPrefix": "Use 'user:' or 'team:' — or just a name for a person.",
-      "cascadeApplied": "Applied to {{count}} resource",
-      "cascadeSkipped": "{{count}} resource left unchanged — you do not own it"
+      "cascadeApplied_one": "Applied to {{count}} resource",
+      "cascadeSkipped_one": "{{count}} resource left unchanged — you do not own it",
+      "cascadeApplied_other": "Applied to {{count}} resources",
+      "cascadeSkipped_other": "{{count}} resources left unchanged — you do not own them",
+      "confirmOwner": "Confirm transfer",
+      "ownerWarning": "They will be able to delete this and share it with anyone. You cannot take that back on your own."
     }
   }
 }

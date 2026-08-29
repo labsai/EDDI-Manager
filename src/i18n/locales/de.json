@@ -4571,8 +4571,12 @@
       "inSpace": "im Bereich {{space}}",
       "subjectRequired": "Geben Sie eine Person oder ein Team zum Teilen an.",
       "unknownPrefix": "Verwenden Sie „user:“ oder „team:“ — oder einfach einen Namen für eine Person.",
-      "cascadeApplied": "Auf {{count}} Ressource angewendet",
-      "cascadeSkipped": "{{count}} Ressource unverändert — sie gehört Ihnen nicht"
+      "cascadeApplied_one": "Auf {{count}} Ressource angewendet",
+      "cascadeSkipped_one": "{{count}} Ressource unverändert — sie gehört Ihnen nicht",
+      "cascadeApplied_other": "Auf {{count}} Ressourcen angewendet",
+      "cascadeSkipped_other": "{{count}} Ressourcen unverändert — sie gehören Ihnen nicht",
+      "confirmOwner": "Übertragung bestätigen",
+      "ownerWarning": "Sie können dies löschen und mit beliebigen Personen teilen. Das können Sie nicht allein rückgängig machen."
     }
   }
 }

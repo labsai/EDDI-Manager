@@ -70,7 +70,7 @@ export function SpaceSwitcher({ className }: { className?: string }) {
             <DropdownMenuItem
               key={space.id}
               onClick={() => setActiveSpace(space.id)}
-              data-testid={`space-option-${space.kind}`}
+              data-testid={`space-option-${space.id}`}
             >
               <Icon className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <span className="flex-1 truncate">

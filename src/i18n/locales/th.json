@@ -4571,8 +4571,12 @@
       "inSpace": "ใน {{space}}",
       "subjectRequired": "ระบุบุคคลหรือทีมที่จะแชร์ด้วย",
       "unknownPrefix": "ใช้ “user:” หรือ “team:” — หรือใส่เพียงชื่อบุคคล",
-      "cascadeApplied": "ใช้กับทรัพยากร {{count}} รายการ",
-      "cascadeSkipped": "ทรัพยากร {{count}} รายการไม่เปลี่ยนแปลง — คุณไม่ได้เป็นเจ้าของ"
+      "cascadeApplied_other": "ใช้กับ {{count}} ทรัพยากร",
+      "cascadeSkipped_other": "{{count}} ทรัพยากรไม่ถูกเปลี่ยนแปลง — คุณไม่ได้เป็นเจ้าของ",
+      "confirmOwner": "ยืนยันการโอน",
+      "ownerWarning": "พวกเขาจะลบสิ่งนี้และแชร์กับใครก็ได้ คุณไม่สามารถย้อนกลับได้ด้วยตัวเอง",
+      "cascadeApplied_one": "ใช้กับ {{count}} ทรัพยากร",
+      "cascadeSkipped_one": "{{count}} ทรัพยากรไม่ถูกเปลี่ยนแปลง — คุณไม่ได้เป็นเจ้าของ"
     }
   }
 }

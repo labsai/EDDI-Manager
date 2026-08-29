@@ -4571,8 +4571,12 @@
       "inSpace": "{{space}} 내",
       "subjectRequired": "공유할 사용자 또는 팀을 입력하세요.",
       "unknownPrefix": "“user:” 또는 “team:”을 사용하거나 사람 이름만 입력하세요.",
-      "cascadeApplied": "리소스 {{count}}개에 적용했습니다",
-      "cascadeSkipped": "리소스 {{count}}개는 변경하지 않았습니다 — 소유자가 아닙니다"
+      "cascadeApplied_other": "{{count}}개 리소스에 적용됨",
+      "cascadeSkipped_other": "{{count}}개 리소스는 변경되지 않음 — 소유자가 아닙니다",
+      "confirmOwner": "이전 확인",
+      "ownerWarning": "상대방이 이것을 삭제하고 누구와도 공유할 수 있게 됩니다. 혼자서는 되돌릴 수 없습니다.",
+      "cascadeApplied_one": "{{count}}개 리소스에 적용됨",
+      "cascadeSkipped_one": "{{count}}개 리소스는 변경되지 않음 — 소유자가 아닙니다"
     }
   }
 }

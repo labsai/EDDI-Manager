@@ -4571,8 +4571,12 @@
       "inSpace": "{{space}} में",
       "subjectRequired": "साझा करने के लिए व्यक्ति या टीम दर्ज करें।",
       "unknownPrefix": "“user:” या “team:” का उपयोग करें — या केवल व्यक्ति का नाम लिखें।",
-      "cascadeApplied": "{{count}} संसाधन पर लागू",
-      "cascadeSkipped": "{{count}} संसाधन अपरिवर्तित — वह आपका नहीं है"
+      "cascadeApplied_one": "{{count}} संसाधन पर लागू किया गया",
+      "cascadeSkipped_one": "{{count}} संसाधन अपरिवर्तित — वह आपका नहीं है",
+      "cascadeApplied_other": "{{count}} संसाधनों पर लागू किया गया",
+      "cascadeSkipped_other": "{{count}} संसाधन अपरिवर्तित — वे आपके नहीं हैं",
+      "confirmOwner": "स्थानांतरण की पुष्टि करें",
+      "ownerWarning": "वे इसे हटा सकेंगे और किसी के साथ भी साझा कर सकेंगे। आप इसे अकेले वापस नहीं ले सकते।"
     }
   }
 }

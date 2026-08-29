@@ -7,15 +7,19 @@ import {
   isUserSubject,
   normalizeGroupPath,
   parseSubjectInput,
-  spacesFor,
   teamSubject,
   userSubject,
 } from "../spaces";
 
 /**
- * These mirror `Subjects.java`. A mismatch does not throw — it builds a space id
- * that matches nothing, which the UI renders as "you have no agents". So the
- * encoding is pinned here rather than left to look obviously right.
+ * These mirror `Subjects.java`.
+ *
+ * The space *list* is served by the backend, precisely so this file is not a
+ * second implementation of the encoding. What remains here is the other
+ * direction — decoding an id the server sent for display, and encoding what a
+ * person typed into a share box — and a mismatch there does not throw either:
+ * it shares with a subject nobody holds, which looks exactly like success. So
+ * the encoding is pinned rather than left to look obviously right.
  */
 describe("subject encoding", () => {
   it("escapes the delimiter so a name cannot forge an extra index token", () => {
@@ -48,32 +52,6 @@ describe("subject encoding", () => {
     expect(userSubject("")).toBeNull();
     expect(userSubject("   ")).toBeNull();
     expect(teamSubject("///")).toBeNull();
-  });
-});
-
-describe("spacesFor", () => {
-  it("puts the personal space first", () => {
-    const spaces = spacesFor("alice", ["/engineering"]);
-    expect(spaces.map((s) => s.kind)).toEqual(["personal", "team"]);
-    expect(spaces[0]?.id).toBe("user:alice");
-    expect(spaces[1]?.id).toBe("team:engineering");
-  });
-
-  it("is empty without a principal", () => {
-    expect(spacesFor(null, ["/engineering"])).toEqual([]);
-  });
-
-  it("has just the personal space when no group claim is present", () => {
-    // A realm without a group-membership mapper. A correct answer, not a failure.
-    expect(spacesFor("alice", [])).toHaveLength(1);
-  });
-
-  it("does not list the same team twice", () => {
-    expect(spacesFor("alice", ["/engineering", "engineering"])).toHaveLength(2);
-  });
-
-  it("labels a team by its normalised path", () => {
-    expect(spacesFor("alice", ["/engineering"])[1]?.label).toBe("engineering");
   });
 });
 

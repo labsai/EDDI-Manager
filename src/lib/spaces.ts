@@ -53,42 +53,6 @@ export function teamSubject(groupPath: string): string | null {
   return TEAM_PREFIX + encodeSubjectPart(normalized);
 }
 
-/** A space a user can file resources in and switch the UI to. */
-export interface Space {
-  /** The wire id, e.g. `user:alice` or `team:engineering`. */
-  id: string;
-  kind: "personal" | "team";
-  /** What to show a human: their own name, or the group's path. */
-  label: string;
-}
-
-/**
- * Every space the given identity can reach, personal space first.
- *
- * Deliberately derived from the token rather than fetched: the backend scopes
- * every listing to exactly these spaces anyway, so a second source of truth
- * could only ever disagree with the one that is enforced.
- */
-export function spacesFor(principal: string | null | undefined, groups: readonly string[]): Space[] {
-  const personal = principal ? userSubject(principal) : null;
-  // No authenticated principal means no spaces at all — the backend resolves an
-  // anonymous caller to none, so offering team spaces here would present a
-  // filter the server will not honour.
-  if (!personal || !principal) return [];
-
-  const spaces: Space[] = [{ id: personal, kind: "personal", label: principal }];
-
-  const seen = new Set(spaces.map((s) => s.id));
-  for (const group of groups ?? []) {
-    const id = teamSubject(group);
-    if (!id || seen.has(id)) continue;
-    seen.add(id);
-    spaces.push({ id, kind: "team", label: normalizeGroupPath(group) });
-  }
-
-  return spaces;
-}
-
 /**
  * A space id rendered for a human.
  *

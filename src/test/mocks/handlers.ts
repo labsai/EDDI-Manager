@@ -687,6 +687,20 @@ function verdictConversation() {
 }
 
 export const handlers = [
+  // Workspace context. Disabled by default, matching the backend's own default
+  // and today's behaviour — a test that wants workspaces on overrides this with
+  // server.use(), so no existing test suddenly grows a sharing UI it never
+  // asked for.
+  http.get("*/workspaces", () =>
+    HttpResponse.json({
+      enabled: false,
+      principal: null,
+      defaultSpace: null,
+      spaces: [],
+      seesEverything: true,
+    })
+  ),
+
   // Template preview — resolves Qute templates for the LLM editor preview
   http.post("*/administration/preview/template", async ({ request }) => {
     const body = (await request.json()) as { template?: string; conversationId?: string };

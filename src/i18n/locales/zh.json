@@ -4571,8 +4571,12 @@
       "inSpace": "位于 {{space}}",
       "subjectRequired": "请输入要共享的人员或团队。",
       "unknownPrefix": "请使用“user:”或“team:”——或直接填写人员姓名。",
-      "cascadeApplied": "已应用于 {{count}} 项资源",
-      "cascadeSkipped": "{{count}} 项资源未更改——它不属于您"
+      "cascadeApplied_other": "已应用于 {{count}} 项资源",
+      "cascadeSkipped_other": "{{count}} 项资源未更改 — 它们不属于你",
+      "confirmOwner": "确认转移",
+      "ownerWarning": "对方将能够删除它并分享给任何人。你无法独自撤销此操作。",
+      "cascadeApplied_one": "已应用于 {{count}} 项资源",
+      "cascadeSkipped_one": "{{count}} 项资源未更改 — 它们不属于你"
     }
   }
 }

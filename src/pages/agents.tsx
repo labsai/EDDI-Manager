@@ -30,7 +30,7 @@ type SortDir = "asc" | "desc";
 
 export function AgentsPage() {
   const { t } = useTranslation();
-  const { activeSpace } = useSpaces();
+  const { activeSpace, enabled: workspacesEnabled } = useSpaces();
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
@@ -222,7 +222,14 @@ export function AgentsPage() {
                   onDuplicate={handleDuplicate}
                   onDelete={handleDelete}
                   onExport={(id, version) => setExportTarget({ id, version })}
-                  onShare={(id, name) => setShareTarget({ id, name })}
+                  onShare={
+                    // Omitted — not disabled — when the deployment does not
+                    // enforce workspaces, which hides the menu entry entirely.
+                    // A Share dialog whose every control is inert is worse than
+                    // no Share button: it teaches a model the deployment does
+                    // not have and looks broken rather than absent.
+                    workspacesEnabled ? (id, name) => setShareTarget({ id, name }) : undefined
+                  }
                 />
               ))}
             </div>

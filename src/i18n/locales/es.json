@@ -4606,8 +4606,14 @@
       "inSpace": "en {{space}}",
       "subjectRequired": "Indique una persona o un equipo.",
       "unknownPrefix": "Use «user:» o «team:», o simplemente un nombre para una persona.",
-      "cascadeApplied": "Aplicado a {{count}} recurso",
-      "cascadeSkipped": "{{count}} recurso sin cambios: no le pertenece"
+      "cascadeApplied_many": "Aplicado a {{count}} recursos",
+      "cascadeSkipped_many": "{{count}} recursos sin cambios: no le pertenecen",
+      "cascadeApplied_one": "Aplicado a {{count}} recurso",
+      "cascadeSkipped_one": "{{count}} recurso sin cambios: no le pertenece",
+      "cascadeApplied_other": "Aplicado a {{count}} recursos",
+      "cascadeSkipped_other": "{{count}} recursos sin cambios: no le pertenecen",
+      "confirmOwner": "Confirmar transferencia",
+      "ownerWarning": "Podrá eliminarlo y compartirlo con cualquiera. No podrá deshacerlo usted solo."
     }
   }
 }

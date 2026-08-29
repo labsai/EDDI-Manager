@@ -4711,8 +4711,20 @@
       "inSpace": "في {{space}}",
       "subjectRequired": "أدخل شخصًا أو فريقًا للمشاركة معه.",
       "unknownPrefix": "استخدم «user:» أو «team:» — أو اكتب اسم شخص فقط.",
-      "cascadeApplied": "طُبِّق على {{count}} مورد",
-      "cascadeSkipped": "{{count}} مورد دون تغيير — فهو ليس ملكك"
+      "cascadeApplied_few": "تم التطبيق على {{count}} موارد",
+      "cascadeSkipped_few": "{{count}} موارد دون تغيير — أنت لا تملكها",
+      "cascadeApplied_many": "تم التطبيق على {{count}} مورداً",
+      "cascadeSkipped_many": "{{count}} مورداً دون تغيير — أنت لا تملكها",
+      "cascadeApplied_one": "تم التطبيق على مورد واحد",
+      "cascadeSkipped_one": "مورد واحد دون تغيير — أنت لا تملكه",
+      "cascadeApplied_two": "تم التطبيق على موردين",
+      "cascadeSkipped_two": "موردان دون تغيير — أنت لا تملكهما",
+      "cascadeApplied_zero": "لم يتم التطبيق على أي مورد",
+      "cascadeSkipped_zero": "لم يبق أي مورد دون تغيير",
+      "cascadeApplied_other": "تم التطبيق على {{count}} مورد",
+      "cascadeSkipped_other": "{{count}} مورد دون تغيير — أنت لا تملكها",
+      "confirmOwner": "تأكيد النقل",
+      "ownerWarning": "سيتمكن من حذف هذا ومشاركته مع أي شخص. لن تتمكن من التراجع عن ذلك بمفردك."
     }
   }
 }
