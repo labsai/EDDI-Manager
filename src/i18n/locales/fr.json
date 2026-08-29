@@ -4613,7 +4613,19 @@
       "cascadeApplied_other": "Appliqué à {{count}} ressources",
       "cascadeSkipped_other": "{{count}} ressources inchangées — elles ne vous appartiennent pas",
       "confirmOwner": "Confirmer le transfert",
-      "ownerWarning": "Cette personne pourra le supprimer et le partager avec n'importe qui. Vous ne pourrez pas revenir en arrière seul."
-    }
+      "ownerWarning": "Cette personne pourra le supprimer et le partager avec n'importe qui. Vous ne pourrez pas revenir en arrière seul.",
+      "subjectIsPerson": "Personne",
+      "subjectIsTeam": "Équipe",
+      "useOnly": "Vous pouvez discuter avec cet élément, mais sa configuration ne vous a pas été partagée — il n'y a donc rien à gérer ici.",
+      "cascadeRevoked_many": "Retiré de {{count}} ressources",
+      "andMore_many": "et {{count}} autres",
+      "cascadeRevoked_one": "Retiré de {{count}} ressource",
+      "andMore_one": "et {{count}} autre",
+      "cascadeRevoked_other": "Retiré de {{count}} ressources",
+      "andMore_other": "et {{count}} autres"
+    },
+    "emptySpace": "Aucun agent dans cet espace",
+    "emptySpaceDescription": "D'autres espaces contiennent peut-être des agents accessibles.",
+    "showAllSpaces": "Afficher tous les espaces"
   }
 }

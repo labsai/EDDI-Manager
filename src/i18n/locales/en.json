@@ -4576,7 +4576,17 @@
       "cascadeApplied_other": "Applied to {{count}} resources",
       "cascadeSkipped_other": "{{count}} resources left unchanged — you do not own them",
       "confirmOwner": "Confirm transfer",
-      "ownerWarning": "They will be able to delete this and share it with anyone. You cannot take that back on your own."
-    }
+      "ownerWarning": "They will be able to delete this and share it with anyone. You cannot take that back on your own.",
+      "subjectIsPerson": "Person",
+      "subjectIsTeam": "Team",
+      "useOnly": "You can chat with this, but its configuration has not been shared with you — so there is nothing here to manage.",
+      "cascadeRevoked_one": "Removed from {{count}} resource",
+      "andMore_one": "and {{count}} more",
+      "cascadeRevoked_other": "Removed from {{count}} resources",
+      "andMore_other": "and {{count}} more"
+    },
+    "emptySpace": "No agents in this workspace",
+    "emptySpaceDescription": "Other workspaces may have agents you can see.",
+    "showAllSpaces": "Show all workspaces"
   }
 }

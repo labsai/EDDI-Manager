@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { Bot, Search, Plus, Upload, ExternalLink, Trash2, Copy, Download, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Bot, Search, Plus, Upload, ExternalLink, Trash2, Copy, Download, Share2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { useInfiniteAgentDescriptors, useDeleteAgent, useDuplicateAgent, groupAgentsByName } from "@/hooks/use-agents";
@@ -22,7 +22,9 @@ import {
 } from "@/components/shared/view-toggle";
 import { getStoredViewMode, setStoredViewMode } from "@/components/shared/view-mode";
 import { useOnboarding } from "@/hooks/use-onboarding";
-import { useSpaces } from "@/hooks/use-spaces";
+import { ALL_SPACES, useSpaces } from "@/hooks/use-spaces";
+import { SpaceSwitcher } from "@/components/workspaces/space-switcher";
+import { OwnershipBadge } from "@/components/workspaces/ownership-badge";
 import { ShareDialog } from "@/components/workspaces/share-dialog";
 
 type SortField = "name" | "version" | "modified";
@@ -30,7 +32,7 @@ type SortDir = "asc" | "desc";
 
 export function AgentsPage() {
   const { t } = useTranslation();
-  const { activeSpace, enabled: workspacesEnabled } = useSpaces();
+  const { activeSpace, setActiveSpace, enabled: workspacesEnabled } = useSpaces();
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
@@ -165,6 +167,7 @@ export function AgentsPage() {
             data-testid="agent-search"
           />
         </div>
+        <SpaceSwitcher />
         <ViewToggle view={view} onChange={handleViewChange} />
       </div>
 
@@ -192,13 +195,31 @@ export function AgentsPage() {
       )}
 
       {!isLoading && !isError && groupedAgents.length === 0 && (
-        <EmptyState
-          icon={Bot}
-          title={search ? t("common.noResults") : t("agents.empty")}
-          description={!search ? t("agents.emptyDescription", "Use the wizard to create a fully configured agent in minutes.") : undefined}
-          actionLabel={!search ? t("agents.createAgent") : undefined}
-          onAction={!search ? () => setCreateOpen(true) : undefined}
-        />
+        /* Three empty states, not two. "No agents yet" under an active
+           workspace filter is simply false — the agents exist, they are
+           somewhere else — and offering "Create agent" there compounds it,
+           because a new agent is filed in the default space and would not
+           appear in the filter either. */
+        activeSpace && !search ? (
+          <EmptyState
+            icon={Bot}
+            title={t("workspaces.emptySpace", "No agents in this workspace")}
+            description={t(
+              "workspaces.emptySpaceDescription",
+              "Other workspaces may have agents you can see."
+            )}
+            actionLabel={t("workspaces.showAllSpaces", "Show all workspaces")}
+            onAction={() => setActiveSpace(ALL_SPACES)}
+          />
+        ) : (
+          <EmptyState
+            icon={Bot}
+            title={search ? t("common.noResults") : t("agents.empty")}
+            description={!search ? t("agents.emptyDescription", "Use the wizard to create a fully configured agent in minutes.") : undefined}
+            actionLabel={!search ? t("agents.createAgent") : undefined}
+            onAction={!search ? () => setCreateOpen(true) : undefined}
+          />
+        )
       )}
 
       {!isLoading && !isError && groupedAgents.length > 0 && (
@@ -303,6 +324,16 @@ export function AgentsPage() {
                           {agent.name || t("agents.unnamed", "Unnamed Agent")}
                           <ExternalLink className="ms-1 inline h-3 w-3 opacity-40" />
                         </Link>
+                        {/* A user whose stored view mode is "list" could
+                            otherwise neither see who owns a resource nor share
+                            one — the feature was reachable from card view
+                            only. */}
+                        <OwnershipBadge
+                          className="ms-2 align-middle"
+                          ownerId={agent.ownerId}
+                          spaceId={agent.spaceId}
+                          visibility={agent.visibility}
+                        />
                       </td>
                       <td className="px-5 py-3">
                         <span className="font-mono text-xs text-muted-foreground">
@@ -337,6 +368,17 @@ export function AgentsPage() {
                           >
                             <Download className="h-4 w-4" aria-hidden="true" />
                           </button>
+                          {workspacesEnabled && (
+                            <button
+                              onClick={() => setShareTarget({ id: agent.id, name: agent.name || agent.id })}
+                              className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                              title={t("workspaces.share.title", "Share")}
+                              aria-label={t("workspaces.share.title", "Share")}
+                              data-testid={`agent-row-share-${agent.id}`}
+                            >
+                              <Share2 className="h-4 w-4" aria-hidden="true" />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDelete(agent.id, agent.version)}
                             className="rounded-md p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"

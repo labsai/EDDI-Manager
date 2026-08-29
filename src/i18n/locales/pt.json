@@ -4613,7 +4613,19 @@
       "cascadeApplied_other": "Aplicado a {{count}} recursos",
       "cascadeSkipped_other": "{{count}} recursos inalterados — eles não pertencem a você",
       "confirmOwner": "Confirmar transferência",
-      "ownerWarning": "Essa pessoa poderá excluí-lo e compartilhá-lo com qualquer um. Você não poderá desfazer isso sozinho."
-    }
+      "ownerWarning": "Essa pessoa poderá excluí-lo e compartilhá-lo com qualquer um. Você não poderá desfazer isso sozinho.",
+      "subjectIsPerson": "Pessoa",
+      "subjectIsTeam": "Equipe",
+      "useOnly": "Você pode conversar com isto, mas a configuração não foi compartilhada com você — então não há nada para gerenciar aqui.",
+      "cascadeRevoked_many": "Removido de {{count}} recursos",
+      "andMore_many": "e mais {{count}}",
+      "cascadeRevoked_one": "Removido de {{count}} recurso",
+      "andMore_one": "e mais {{count}}",
+      "cascadeRevoked_other": "Removido de {{count}} recursos",
+      "andMore_other": "e mais {{count}}"
+    },
+    "emptySpace": "Nenhum agente neste espaço",
+    "emptySpaceDescription": "Outros espaços podem ter agentes que você pode ver.",
+    "showAllSpaces": "Mostrar todos os espaços"
   }
 }

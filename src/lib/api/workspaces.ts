@@ -23,14 +23,18 @@ export interface WorkspaceInfo {
    */
   enabled: boolean;
   /**
-   * The caller's principal name, or null when anonymous.
+   * The caller's principal name, or absent when anonymous.
    *
    * This — not the token's display name — is what the backend stamps as
    * `ownerId`, so it is what "is this mine?" must compare against.
+   *
+   * Optional because EDDI's REST mapper serialises with `NON_NULL`: a null
+   * principal is *missing from the payload*, not `null` in it. Typing it as
+   * `string | null` would make a future `=== null` check silently never match.
    */
-  principal: string | null;
-  /** The space new resources land in, or null when anonymous. */
-  defaultSpace: string | null;
+  principal?: string | null;
+  /** The space new resources land in, or absent when anonymous. */
+  defaultSpace?: string | null;
   /** Every space the caller can reach, personal first. */
   spaces: SpaceInfo[];
   /** Whether this caller's reach is unlimited (admin, or enforcement off). */
@@ -51,6 +55,11 @@ export const WORKSPACES_UNAVAILABLE: WorkspaceInfo = {
   spaces: [],
   seesEverything: true,
 };
+
+/** Normalises the absent-vs-null difference away for consumers. */
+export function principalOf(info: WorkspaceInfo): string | null {
+  return info.principal ?? null;
+}
 
 /**
  * Reads the caller's workspace context.

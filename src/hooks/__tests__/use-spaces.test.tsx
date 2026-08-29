@@ -164,6 +164,90 @@ describe("useSpaces", () => {
     expect(listing.result.current.activeSpace).toBe(TEAM.id);
   });
 
+  it("keeps the remembered space when the request fails", async () => {
+    // A 502 during a deploy, or one expired-token race. An earlier version
+    // treated the resulting empty space list as "you cannot reach it any more"
+    // and DELETED the stored preference — permanently, for a transient fault.
+    // `getWorkspaceInfo` rethrows non-404s precisely so a real problem is not
+    // mistaken for "workspaces are off"; this must not then make that mistake
+    // itself, let alone destroy state doing it.
+    localStorage.setItem("eddi.workspace.space", TEAM.id);
+    vi.spyOn(workspacesApi, "getWorkspaceInfo").mockRejectedValue(new Error("boom"));
+
+    const { result } = render();
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(localStorage.getItem("eddi.workspace.space")).toBe(TEAM.id);
+  });
+
+  it("stops applying the narrowing once the request has settled into failure", async () => {
+    // Still in flight is not the same as failed. While pending the narrowing is
+    // kept, so the listing does not fetch unfiltered and refetch a moment later
+    // — but once the query has settled with no answer, this hook reports
+    // `enabled: false` and hides the switcher, so continuing to send `?space=`
+    // would leave an invisible filter with no control anywhere to clear it.
+    localStorage.setItem("eddi.workspace.space", TEAM.id);
+    vi.spyOn(workspacesApi, "getWorkspaceInfo").mockRejectedValue(new Error("boom"));
+
+    const { result } = render();
+
+    await waitFor(() => expect(result.current.activeSpace).toBe(ALL_SPACES));
+    // The preference itself survives — only its application is suspended.
+    expect(localStorage.getItem("eddi.workspace.space")).toBe(TEAM.id);
+  });
+
+  it("keeps applying the narrowing while the answer is still in flight", async () => {
+    localStorage.setItem("eddi.workspace.space", TEAM.id);
+    vi.spyOn(workspacesApi, "getWorkspaceInfo").mockImplementation(
+      () => new Promise(() => {}) as Promise<WorkspaceInfo>
+    );
+
+    const { result } = render();
+
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.activeSpace).toBe(TEAM.id);
+  });
+
+  it("keeps the remembered space when enforcement is merely switched off", async () => {
+    // The narrowing is already not applied in that state, so forgetting it as
+    // well only means an operator toggling the flag silently resets everyone's
+    // view preference.
+    localStorage.setItem("eddi.workspace.space", TEAM.id);
+    vi.spyOn(workspacesApi, "getWorkspaceInfo").mockResolvedValue(info({ enabled: false, spaces: [] }));
+
+    const { result } = render();
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.activeSpace).toBe(ALL_SPACES);
+    expect(localStorage.getItem("eddi.workspace.space")).toBe(TEAM.id);
+  });
+
+  it("still switches when localStorage is unavailable", async () => {
+    // Private mode, blocked site data, an embedded webview. Reading through to
+    // storage on every snapshot made the switcher completely inert there: the
+    // read threw, the snapshot never changed, and clicking an option did
+    // nothing at all.
+    const getItem = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("SecurityError");
+    });
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("SecurityError");
+    });
+    vi.spyOn(workspacesApi, "getWorkspaceInfo").mockResolvedValue(info());
+
+    try {
+      const { result } = render();
+      await waitFor(() => expect(result.current.spaces).toHaveLength(2));
+
+      act(() => result.current.setActiveSpace(TEAM.id));
+
+      expect(result.current.activeSpace).toBe(TEAM.id);
+    } finally {
+      getItem.mockRestore();
+      setItem.mockRestore();
+    }
+  });
+
   it("degrades to no workspaces when the endpoint is unreachable", async () => {
     // An older backend 404s, which getWorkspaceInfo resolves rather than
     // rejects; anything else rejects and lands here. Either way the rest of the

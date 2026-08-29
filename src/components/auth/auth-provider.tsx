@@ -63,7 +63,6 @@ function KeycloakAuthProvider({
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
-  const [groups, setGroups] = useState<string[]>([]);
 
   // Preserve the ID token across token refreshes.
   // keycloak-js deletes `keycloak.idToken` when the refresh token endpoint
@@ -151,13 +150,6 @@ function KeycloakAuthProvider({
           const realmRoles =
             keycloak.tokenParsed?.realm_access?.roles ?? [];
           setRoles(realmRoles);
-
-          // Group membership drives the team spaces the space switcher offers.
-          // The claim only exists once a group-membership mapper is configured on
-          // the client; without one the user simply has a personal space, which is
-          // a correct answer rather than an error worth surfacing.
-          const claimed = (keycloak.tokenParsed as { groups?: unknown } | undefined)?.groups;
-          setGroups(Array.isArray(claimed) ? claimed.filter((g): g is string => typeof g === "string") : []);
         }
 
         setLoading(false);
@@ -202,12 +194,11 @@ function KeycloakAuthProvider({
       loading,
       user,
       roles,
-      groups,
       method: "keycloak",
       login,
       logout,
     }),
-    [authenticated, loading, user, roles, groups, login, logout]
+    [authenticated, loading, user, roles, login, logout]
   );
 
   // Show loading screen during Keycloak init

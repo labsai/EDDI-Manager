@@ -4576,7 +4576,17 @@
       "confirmOwner": "이전 확인",
       "ownerWarning": "상대방이 이것을 삭제하고 누구와도 공유할 수 있게 됩니다. 혼자서는 되돌릴 수 없습니다.",
       "cascadeApplied_one": "{{count}}개 리소스에 적용됨",
-      "cascadeSkipped_one": "{{count}}개 리소스는 변경되지 않음 — 소유자가 아닙니다"
-    }
+      "cascadeSkipped_one": "{{count}}개 리소스는 변경되지 않음 — 소유자가 아닙니다",
+      "subjectIsPerson": "사용자",
+      "subjectIsTeam": "팀",
+      "useOnly": "이것과 대화할 수는 있지만 구성은 공유되지 않았으므로 여기서 관리할 것이 없습니다.",
+      "cascadeRevoked_other": "{{count}}개 리소스에서 제거됨",
+      "andMore_other": "외 {{count}}개",
+      "cascadeRevoked_one": "{{count}}개 리소스에서 제거됨",
+      "andMore_one": "외 {{count}}개"
+    },
+    "emptySpace": "이 작업 공간에 에이전트가 없습니다",
+    "emptySpaceDescription": "다른 작업 공간에 볼 수 있는 에이전트가 있을 수 있습니다.",
+    "showAllSpaces": "모든 작업 공간 표시"
   }
 }

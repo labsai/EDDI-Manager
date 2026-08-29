@@ -30,7 +30,14 @@ export function SpaceSwitcher({ className }: { className?: string }) {
 
   if (!hasChoice) return null;
 
-  const label = active ? active.label : t("workspaces.allSpaces", "All workspaces");
+  // The menu calls the personal space "My workspace"; the trigger used
+  // `active.label` unconditionally and so showed the raw principal after
+  // selecting it — the same space named two different things one click apart.
+  const label = active
+    ? active.kind === "personal"
+      ? t("workspaces.personalSpace", "My workspace")
+      : active.label
+    : t("workspaces.allSpaces", "All workspaces");
   const ActiveIcon = active ? (active.kind === "team" ? Users : User) : Layers;
 
   return (
@@ -57,9 +64,9 @@ export function SpaceSwitcher({ className }: { className?: string }) {
           onClick={() => setActiveSpace(ALL_SPACES)}
           data-testid="space-option-all"
         >
-          <Layers className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          <Layers className="me-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <span className="flex-1">{t("workspaces.allSpaces", "All workspaces")}</span>
-          {activeSpace === ALL_SPACES && <Check className="ml-2 h-4 w-4" aria-hidden="true" />}
+          {activeSpace === ALL_SPACES && <Check className="ms-2 h-4 w-4" aria-hidden="true" />}
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
@@ -72,13 +79,13 @@ export function SpaceSwitcher({ className }: { className?: string }) {
               onClick={() => setActiveSpace(space.id)}
               data-testid={`space-option-${space.id}`}
             >
-              <Icon className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <Icon className="me-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <span className="flex-1 truncate">
                 {space.kind === "personal"
                   ? t("workspaces.personalSpace", "My workspace")
                   : space.label}
               </span>
-              {activeSpace === space.id && <Check className="ml-2 h-4 w-4" aria-hidden="true" />}
+              {activeSpace === space.id && <Check className="ms-2 h-4 w-4" aria-hidden="true" />}
             </DropdownMenuItem>
           );
         })}

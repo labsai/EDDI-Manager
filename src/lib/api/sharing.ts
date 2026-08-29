@@ -48,10 +48,15 @@ export interface ResourceGrant {
 /** How a resource is shared, plus what the calling user may do with it. */
 export interface ShareInfo {
   resourceId: string;
-  /** The recorded owner, or null for data that predates ownership. */
-  ownerId: string | null;
-  /** `user:<principal>` or `team:<group>`, or `legacy`. */
-  spaceId: string | null;
+  /**
+   * The recorded owner, or absent for data that predates ownership.
+   *
+   * Optional, not `| null` alone: EDDI's REST mapper serialises with
+   * `NON_NULL`, so an unowned resource omits this field entirely.
+   */
+  ownerId?: string | null;
+  /** `user:<principal>` or `team:<group>` or `legacy`, absent when unrecorded. */
+  spaceId?: string | null;
   visibility: ResourceVisibility;
   /**
    * Explicit shares. **Empty unless the caller owns the resource** — the
@@ -60,15 +65,15 @@ export interface ShareInfo {
    * principal and team names.
    */
   grants: ResourceGrant[];
-  /** What this user may do. Null means no access at all. */
-  callerLevel: AccessLevel | null;
+  /** What this user may do. Absent means no access at all. */
+  callerLevel?: AccessLevel | null;
 }
 
 /** One resource a share touched — or declined to. */
 export interface ShareTarget {
   id: string;
-  /** Its descriptor name, or null when it has none. */
-  name: string | null;
+  /** Its descriptor name, absent when it has none. */
+  name?: string | null;
 }
 
 /**

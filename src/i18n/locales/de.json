@@ -4576,7 +4576,17 @@
       "cascadeApplied_other": "Auf {{count}} Ressourcen angewendet",
       "cascadeSkipped_other": "{{count}} Ressourcen unverändert — sie gehören Ihnen nicht",
       "confirmOwner": "Übertragung bestätigen",
-      "ownerWarning": "Sie können dies löschen und mit beliebigen Personen teilen. Das können Sie nicht allein rückgängig machen."
-    }
+      "ownerWarning": "Sie können dies löschen und mit beliebigen Personen teilen. Das können Sie nicht allein rückgängig machen.",
+      "subjectIsPerson": "Person",
+      "subjectIsTeam": "Team",
+      "useOnly": "Sie können hiermit chatten, aber die Konfiguration wurde nicht mit Ihnen geteilt — es gibt hier also nichts zu verwalten.",
+      "cascadeRevoked_one": "Aus {{count}} Ressource entfernt",
+      "andMore_one": "und {{count}} weitere",
+      "cascadeRevoked_other": "Aus {{count}} Ressourcen entfernt",
+      "andMore_other": "und {{count}} weitere"
+    },
+    "emptySpace": "Keine Agenten in diesem Bereich",
+    "emptySpaceDescription": "In anderen Bereichen gibt es möglicherweise Agenten, die Sie sehen können.",
+    "showAllSpaces": "Alle Bereiche anzeigen"
   }
 }

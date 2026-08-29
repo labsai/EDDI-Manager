@@ -4576,7 +4576,17 @@
       "confirmOwner": "确认转移",
       "ownerWarning": "对方将能够删除它并分享给任何人。你无法独自撤销此操作。",
       "cascadeApplied_one": "已应用于 {{count}} 项资源",
-      "cascadeSkipped_one": "{{count}} 项资源未更改 — 它们不属于你"
-    }
+      "cascadeSkipped_one": "{{count}} 项资源未更改 — 它们不属于你",
+      "subjectIsPerson": "个人",
+      "subjectIsTeam": "团队",
+      "useOnly": "你可以与它对话，但其配置未与你共享，因此这里没有可管理的内容。",
+      "cascadeRevoked_other": "已从 {{count}} 项资源中移除",
+      "andMore_other": "另有 {{count}} 项",
+      "cascadeRevoked_one": "已从 {{count}} 项资源中移除",
+      "andMore_one": "另有 {{count}} 项"
+    },
+    "emptySpace": "此工作区中没有智能体",
+    "emptySpaceDescription": "其他工作区可能有你可以查看的智能体。",
+    "showAllSpaces": "显示所有工作区"
   }
 }

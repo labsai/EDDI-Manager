@@ -42,7 +42,7 @@ export function OwnershipBadge({ ownerId, spaceId, visibility, className }: Owne
   if (visibility === "published") {
     return (
       <Badge variant="secondary" className={className} data-testid="ownership-badge-published">
-        <Globe className="mr-1 h-3 w-3" aria-hidden="true" />
+        <Globe className="me-1 h-3 w-3" aria-hidden="true" />
         {t("workspaces.badge.published", "Published")}
       </Badge>
     );
@@ -68,7 +68,7 @@ export function OwnershipBadge({ ownerId, spaceId, visibility, className }: Owne
           : t("workspaces.badge.ownedBy", "Owned by {{owner}}", { owner: ownerId })
       }
     >
-      <Users className="mr-1 h-3 w-3" aria-hidden="true" />
+      <Users className="me-1 h-3 w-3" aria-hidden="true" />
       {t("workspaces.badge.shared", "Shared")}
     </Badge>
   );

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getWorkspaceInfo,
+  principalOf,
   WORKSPACES_UNAVAILABLE,
   type SpaceInfo,
   type WorkspaceInfo,
@@ -19,22 +20,33 @@ const STORAGE_KEY = "eddi.workspace.space";
 /** The sentinel for "everything I can reach", which is also the default. */
 export const ALL_SPACES = "";
 
+/**
+ * The choice for this session, used only when storage is unreachable.
+ *
+ * Storage stays authoritative whenever it works — otherwise a test that clears
+ * it would get a store still holding the previous test's choice. This is the
+ * fallback for private mode, blocked site data and embedded webviews, where an
+ * earlier version left the switcher completely inert: every read went through
+ * to storage, storage threw, and the snapshot never changed no matter what was
+ * clicked.
+ */
+let sessionChoice = ALL_SPACES;
+
 function readStored(): string {
   try {
     return localStorage.getItem(STORAGE_KEY) ?? ALL_SPACES;
   } catch {
-    // Private mode, or site data blocked. A forgotten preference is not worth
-    // a broken page.
-    return ALL_SPACES;
+    return sessionChoice;
   }
 }
 
 function writeStored(spaceId: string) {
+  sessionChoice = spaceId;
   try {
     if (spaceId === ALL_SPACES) localStorage.removeItem(STORAGE_KEY);
     else localStorage.setItem(STORAGE_KEY, spaceId);
   } catch {
-    // Ignore: the switcher still works for this session.
+    // Not fatal: `sessionChoice` above already holds it for this session.
   }
 }
 
@@ -140,14 +152,21 @@ export interface UseSpacesResult {
  * treat as pure presentation.
  */
 export function useSpaces(): UseSpacesResult {
-  const { data, isLoading } = useQuery<WorkspaceInfo>({
+  const { data, isLoading, status } = useQuery<WorkspaceInfo>({
     queryKey: ["workspaces", "info"],
     queryFn: getWorkspaceInfo,
     // Group membership and the enforcement flag change on the order of a
     // deployment, not a page view. Refetching either on every mount would be
     // noise on every screen in the app.
     staleTime: 5 * 60 * 1000,
-    retry: false,
+    // `staleTime` does not apply to a query in error state, and OwnershipBadge
+    // is one observer PER AGENT CARD — so a persistently failing /workspaces
+    // (a 403 for a role outside the two this endpoint allows, say) would fire
+    // another request for every card in every infinite-scroll batch. One retry
+    // covers a blip; not remounting covers the rest.
+    retry: 1,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   // An error resolves to "no workspaces" rather than blocking the page: the
@@ -158,15 +177,27 @@ export function useSpaces(): UseSpacesResult {
 
   const activeSpace = useSyncExternalStore(spaceStore.subscribe, spaceStore.getSnapshot);
 
-  // A remembered space the user can no longer reach — they left the group, or
-  // the deployment turned workspaces off — would filter everything away with no
-  // visible cause. Drop back to showing everything instead.
+  // A remembered space the user can no longer reach — they left the group —
+  // would filter everything away with no visible cause. Drop back to showing
+  // everything instead.
+  //
+  // Gated on a SUCCESSFUL answer, not merely on "not loading". An error also
+  // leaves `spaces` empty, and treating that as "you cannot reach it" deleted
+  // the stored preference outright: a 502 during a deploy, or one expired-token
+  // race, and the user's workspace choice was gone for good. `getWorkspaceInfo`
+  // deliberately rethrows non-404s so a real problem is not mistaken for
+  // "workspaces are off" — this must not then quietly make that same mistake,
+  // and destroy state doing it.
+  //
+  // Enforcement being off is likewise not a reason to forget. The narrowing is
+  // already not applied in that state, and an operator toggling the flag should
+  // not silently reset everyone's view preference.
   useEffect(() => {
     if (activeSpace === ALL_SPACES) return;
-    if (isLoading) return;
+    if (!data || !data.enabled) return;
     if (spaces.some((s) => s.id === activeSpace)) return;
     spaceStore.set(ALL_SPACES);
-  }, [spaces, activeSpace, isLoading]);
+  }, [data, spaces, activeSpace]);
 
   const setActiveSpace = useCallback((spaceId: string) => spaceStore.set(spaceId), []);
 
@@ -176,17 +207,20 @@ export function useSpaces(): UseSpacesResult {
   );
 
   // A space narrowing is meaningless once we KNOW nothing is enforced — everyone
-  // already sees everything. But "we have not asked yet" is not "it is off":
-  // dropping the narrowing while the query is in flight makes every listing
-  // fetch unfiltered first and refetch a moment later, which the user sees as
-  // their workspace filter briefly not applying. So the remembered choice
-  // stands until an answer actually says enforcement is off, and the worst case
-  // is one ignored query parameter.
-  const narrowingApplies = data ? data.enabled : true;
+  // already sees everything.
+  //
+  // Three states, not two. "We have not asked yet" is not "it is off": dropping
+  // the narrowing while the query is in flight makes every listing fetch
+  // unfiltered and refetch a moment later, which the user sees as their own
+  // filter briefly not applying. But a query that has SETTLED into failure is
+  // not still in flight either — carrying on narrowing there would send
+  // `?space=` while this same hook reports `enabled: false` and hides the
+  // switcher, leaving an invisible filter with no control to clear it.
+  const narrowingApplies = data ? data.enabled : status === "pending";
 
   return {
     enabled: info.enabled,
-    principal: info.principal,
+    principal: principalOf(info),
     seesEverything: info.seesEverything,
     spaces,
     activeSpace: narrowingApplies ? activeSpace : ALL_SPACES,

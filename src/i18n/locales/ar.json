@@ -4724,7 +4724,25 @@
       "cascadeApplied_other": "تم التطبيق على {{count}} مورد",
       "cascadeSkipped_other": "{{count}} مورد دون تغيير — أنت لا تملكها",
       "confirmOwner": "تأكيد النقل",
-      "ownerWarning": "سيتمكن من حذف هذا ومشاركته مع أي شخص. لن تتمكن من التراجع عن ذلك بمفردك."
-    }
+      "ownerWarning": "سيتمكن من حذف هذا ومشاركته مع أي شخص. لن تتمكن من التراجع عن ذلك بمفردك.",
+      "subjectIsPerson": "شخص",
+      "subjectIsTeam": "فريق",
+      "useOnly": "يمكنك المحادثة مع هذا، لكن إعداداته لم تُشارَك معك — لذا لا يوجد ما يمكن إدارته هنا.",
+      "cascadeRevoked_few": "تمت الإزالة من {{count}} موارد",
+      "andMore_few": "و{{count}} أخرى",
+      "cascadeRevoked_many": "تمت الإزالة من {{count}} مورداً",
+      "andMore_many": "و{{count}} أخرى",
+      "cascadeRevoked_one": "تمت الإزالة من مورد واحد",
+      "andMore_one": "وواحد آخر",
+      "cascadeRevoked_two": "تمت الإزالة من موردين",
+      "andMore_two": "واثنان آخران",
+      "cascadeRevoked_zero": "لم تتم الإزالة من أي مورد",
+      "andMore_zero": "ولا شيء آخر",
+      "cascadeRevoked_other": "تمت الإزالة من {{count}} مورد",
+      "andMore_other": "و{{count}} أخرى"
+    },
+    "emptySpace": "لا توجد وكلاء في مساحة العمل هذه",
+    "emptySpaceDescription": "قد تحتوي مساحات عمل أخرى على وكلاء يمكنك رؤيتهم.",
+    "showAllSpaces": "إظهار جميع مساحات العمل"
   }
 }

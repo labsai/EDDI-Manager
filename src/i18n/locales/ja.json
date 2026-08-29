@@ -4576,7 +4576,17 @@
       "confirmOwner": "譲渡を確定",
       "ownerWarning": "相手はこれを削除し、誰とでも共有できるようになります。ご自身だけでは取り消せません。",
       "cascadeApplied_one": "{{count}} 件のリソースに適用しました",
-      "cascadeSkipped_one": "{{count}} 件のリソースは変更されていません — あなたの所有物ではありません"
-    }
+      "cascadeSkipped_one": "{{count}} 件のリソースは変更されていません — あなたの所有物ではありません",
+      "subjectIsPerson": "個人",
+      "subjectIsTeam": "チーム",
+      "useOnly": "これとチャットはできますが、設定は共有されていないため、ここで管理できるものはありません。",
+      "cascadeRevoked_other": "{{count}} 件のリソースから削除しました",
+      "andMore_other": "ほか {{count}} 件",
+      "cascadeRevoked_one": "{{count}} 件のリソースから削除しました",
+      "andMore_one": "ほか {{count}} 件"
+    },
+    "emptySpace": "このワークスペースにエージェントはありません",
+    "emptySpaceDescription": "他のワークスペースに閲覧可能なエージェントがある可能性があります。",
+    "showAllSpaces": "すべてのワークスペースを表示"
   }
 }
