@@ -359,47 +359,59 @@ export function AgentsPage() {
                         </span>
                       </td>
                       <td className="px-5 py-3 text-end">
+                        {/* All four are the shared primitive, not hand-rolled
+                            `<button>`s: the row previously had none of the
+                            focus-visible ring the primitive carries, so a
+                            keyboard user tabbed through four invisible stops. */}
                         <div className="inline-flex items-center gap-1">
                           {accessFor(agent.callerLevel).canView && (
-                          <button
-                            onClick={() => handleDuplicate(agent.id, agent.version)}
-                            className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                            title={t("common.duplicate", "Duplicate")}
-                            aria-label={t("common.duplicate", "Duplicate")}
-                          >
-                            <Copy className="h-4 w-4" aria-hidden="true" />
-                          </button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => handleDuplicate(agent.id, agent.version)}
+                              title={t("common.duplicate", "Duplicate")}
+                              aria-label={t("common.duplicate", "Duplicate")}
+                            >
+                              <Copy aria-hidden="true" />
+                            </Button>
                           )}
                           {accessFor(agent.callerLevel).canView && (
-                          <button
-                            onClick={() => setExportTarget({ id: agent.id, version: agent.version })}
-                            className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                            title={t("agents.export", "Export")}
-                            aria-label={t("agents.export", "Export")}
-                          >
-                            <Download className="h-4 w-4" aria-hidden="true" />
-                          </button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => setExportTarget({ id: agent.id, version: agent.version })}
+                              title={t("agents.export", "Export")}
+                              aria-label={t("agents.export", "Export")}
+                            >
+                              <Download aria-hidden="true" />
+                            </Button>
                           )}
                           {workspacesEnabled && accessFor(agent.callerLevel).canOwn && (
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
                               onClick={() => setShareTarget({ id: agent.id, name: agent.name || agent.id })}
-                              className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                               title={t("workspaces.share.title", "Share")}
                               aria-label={t("workspaces.share.title", "Share")}
                               data-testid={`agent-row-share-${agent.id}`}
                             >
-                              <Share2 className="h-4 w-4" aria-hidden="true" />
-                            </button>
+                              <Share2 aria-hidden="true" />
+                            </Button>
                           )}
                           {accessFor(agent.callerLevel).canOwn && (
-                          <button
-                            onClick={() => handleDelete(agent.id, agent.version)}
-                            className="rounded-md p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                            title={t("common.delete")}
-                            aria-label={t("common.delete")}
-                          >
-                            <Trash2 className="h-4 w-4" aria-hidden="true" />
-                          </button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => handleDelete(agent.id, agent.version)}
+                              title={t("common.delete")}
+                              aria-label={t("common.delete")}
+                            >
+                              <Trash2 aria-hidden="true" />
+                            </Button>
                           )}
                         </div>
                       </td>
