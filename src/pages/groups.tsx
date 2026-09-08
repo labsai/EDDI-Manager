@@ -78,6 +78,18 @@ export function GroupsPage() {
    */
   const [deleteMembers, setDeleteMembers] = useState(false);
 
+  /**
+   * Close the delete dialog and forget the cascade choice.
+   *
+   * `onOpenChange` only fires when the dialog closes itself, so a successful
+   * delete that cleared `deleteTarget` left `deleteMembers` set — and the next
+   * group's dialog opened with "also delete its agents" already ticked.
+   */
+  const closeDeleteDialog = useCallback(() => {
+    setDeleteTarget(null);
+    setDeleteMembers(false);
+  }, []);
+
   const groupedGroups = useMemo(() => {
     const list = enrichedGroups ?? [];
     return [...list].sort((a, b) => {
@@ -129,7 +141,7 @@ export function GroupsPage() {
                     "Group and all member agents deleted (soft-delete)",
                   ),
                 );
-                setDeleteTarget(null);
+                closeDeleteDialog();
               },
               onError: () => toast.error(t("common.error")),
             },
@@ -140,7 +152,7 @@ export function GroupsPage() {
       deleteMutation.mutate(deleteTarget, {
         onSuccess: () => {
           toast.success(t("groups.deleteGroupOnlySuccess", "Group deleted (agents kept)"));
-          setDeleteTarget(null);
+          closeDeleteDialog();
         },
         onError: () => toast.error(t("common.error")),
       });
@@ -453,11 +465,7 @@ export function GroupsPage() {
       <AlertDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => {
-          if (!open) {
-            setDeleteTarget(null);
-            // Never carry a cascade choice into the next group's dialog.
-            setDeleteMembers(false);
-          }
+          if (!open) closeDeleteDialog();
         }}
         title={t("groups.confirmDelete", "Delete this group?")}
         description={t(

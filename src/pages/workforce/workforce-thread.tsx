@@ -98,6 +98,20 @@ interface ThreadSendError {
   retryText: string;
   retryAttachments?: SentAttachment[];
   /**
+   * The optimistic user message this failed turn added, when it is still in the
+   * transcript.
+   *
+   * A retry re-sends through `handleSend`, which appends its own optimistic
+   * message — so without withdrawing this one first, a successful retry leaves
+   * the same text on screen twice. Kept by identity rather than by text so two
+   * genuinely identical messages are never confused for each other.
+   *
+   * Null when the turn was already withdrawn, which is what the 409 path does:
+   * there the backend never received the message at all, so leaving it on
+   * screen would show it as sent.
+   */
+  pendingUserMessage: ThreadMessage | null;
+  /**
    * The backend rejected the send because the conversation is paused awaiting
    * a human decision (409). Nothing is wrong and retrying will not help — the
    * pause has to be decided first.
@@ -862,6 +876,21 @@ function WorkforceThread() {
         });
       };
 
+      /**
+       * The failure state for a turn whose user message is still on screen.
+       *
+       * It stays there deliberately: the reader should be able to see what they
+       * sent while the error is in front of them. `handleRetry` withdraws it
+       * just before re-sending, so exactly one copy survives a retry.
+       */
+      const failed = (message: string, paused: boolean): ThreadSendError => ({
+        message,
+        retryText: messageText,
+        retryAttachments: attachments,
+        paused,
+        pendingUserMessage: userMsg,
+      });
+
       const inputData: InputData = attachments?.length
         ? {
             // Send ALL attachments (including non-forwardable ones) so the
@@ -911,12 +940,7 @@ function WorkforceThread() {
               /* non-JSON payload — the raw text is what there is */
             }
             settle();
-            setSendError({
-              message: translateStreamError(code, t) ?? message,
-              retryText: messageText,
-              retryAttachments: attachments,
-              paused: false,
-            });
+            setSendError(failed(translateStreamError(code, t) ?? message, false));
             break;
           }
           if (event.type === "done") {
@@ -940,15 +964,15 @@ function WorkforceThread() {
             }
             settle(finalContent);
             if (paused) {
-              setSendError({
-                message: t(
-                  "Workforce.thread.pausedForApproval",
-                  "This turn is paused waiting for a human decision. It resumes once the request is approved.",
+              setSendError(
+                failed(
+                  t(
+                    "Workforce.thread.pausedForApproval",
+                    "This turn is paused waiting for a human decision. It resumes once the request is approved.",
+                  ),
+                  true,
                 ),
-                retryText: messageText,
-                retryAttachments: attachments,
-                paused: true,
-              });
+              );
             }
             // The stream is logically over; abort so the reader resolves now
             // instead of waiting for the server to close.
@@ -972,22 +996,19 @@ function WorkforceThread() {
           // leaving it in the transcript shows a message as sent that was not.
           dropTurn();
           setSendError({
-            message: t(
-              "Workforce.thread.pausedRejected",
-              "This conversation is paused waiting for a human decision, so the message was not sent.",
+            ...failed(
+              t(
+                "Workforce.thread.pausedRejected",
+                "This conversation is paused waiting for a human decision, so the message was not sent.",
+              ),
+              true,
             ),
-            retryText: messageText,
-            retryAttachments: attachments,
-            paused: true,
+            // Already withdrawn above — the backend never received it.
+            pendingUserMessage: null,
           });
         } else {
           settle();
-          setSendError({
-            message: getErrorMessage(err),
-            retryText: messageText,
-            retryAttachments: attachments,
-            paused: false,
-          });
+          setSendError(failed(getErrorMessage(err), false));
         }
       } finally {
         abortRef.current = null;
@@ -1003,12 +1024,20 @@ function WorkforceThread() {
     abortRef.current?.abort();
   }, []);
 
-  /** Re-send the turn that failed. */
+  /**
+   * Re-send the turn that failed.
+   *
+   * The failed turn's user message is withdrawn first: `handleSend` appends its
+   * own, so without this a successful retry would show the same text twice.
+   */
   const handleRetry = useCallback(() => {
-    const failed = sendError;
-    if (!failed) return;
+    const previous = sendError;
+    if (!previous) return;
     setSendError(null);
-    void handleSend(failed.retryText, failed.retryAttachments);
+    if (previous.pendingUserMessage) {
+      setMessages((prev) => prev.filter((msg) => msg !== previous.pendingUserMessage));
+    }
+    void handleSend(previous.retryText, previous.retryAttachments);
   }, [sendError, handleSend]);
 
   // ─── Starting state ──────────────────────────────────────────

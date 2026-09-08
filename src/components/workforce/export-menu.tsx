@@ -23,13 +23,19 @@ interface ExportMenuProps {
 
 function ExportMenu({ conversation, groupName, className }: ExportMenuProps) {
   const { t } = useTranslation();
+  // `generateMarkdown` is a plain module with no React context, so it takes the
+  // translator rather than reaching for one — same shape as `CronDescribeT`.
+  const exportT = useCallback(
+    (key: string, fallback: string) => t(key, { defaultValue: fallback }),
+    [t],
+  );
 
   const handleMarkdown = useCallback(() => {
     if (!conversation) return;
-    const md = generateMarkdown(conversation, groupName);
+    const md = generateMarkdown(conversation, groupName, exportT);
     downloadFile(md, `discussion-${conversation.id.slice(0, 8)}.md`, "text/markdown");
     toast.success(t("Workforce.export.downloadedMd", "Downloaded as Markdown"));
-  }, [conversation, groupName, t]);
+  }, [conversation, groupName, exportT, t]);
 
   const handleJson = useCallback(() => {
     if (!conversation) return;
@@ -40,14 +46,14 @@ function ExportMenu({ conversation, groupName, className }: ExportMenuProps) {
 
   const handleCopy = useCallback(async () => {
     if (!conversation) return;
-    const md = generateMarkdown(conversation, groupName);
+    const md = generateMarkdown(conversation, groupName, exportT);
     try {
       await navigator.clipboard.writeText(md);
       toast.success(t("Workforce.export.copied", "Copied to clipboard"));
     } catch {
       toast.error(t("Workforce.export.copyFailed", "Failed to copy to clipboard"));
     }
-  }, [conversation, groupName, t]);
+  }, [conversation, groupName, exportT, t]);
 
   return (
     <DropdownMenu>

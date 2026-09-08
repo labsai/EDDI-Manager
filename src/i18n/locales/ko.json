@@ -2689,7 +2689,20 @@
       "BLOCKED": "차단됨",
       "AWAITING_APPROVAL": "승인 대기"
     },
-    "confirmDeleteMembers": "이 그룹의 구성원 에이전트도 삭제합니다. 남겨두면 어디에도 속하지 않은 채 '고아' 목록에 나타납니다."
+    "confirmDeleteMembers": "이 그룹의 구성원 에이전트도 삭제합니다. 남겨두면 어디에도 속하지 않은 채 '고아' 목록에 나타납니다.",
+    "export": {
+      "discussion": "토론",
+      "date": "날짜",
+      "status": "상태",
+      "question": "질문",
+      "synthesis": "종합",
+      "error": "오류",
+      "winner": "승자",
+      "outcome": "결과",
+      "unparsedJudgment": "해석되지 않은 판정",
+      "minorityReport": "소수 의견",
+      "finalAnswer": "최종 답변"
+    }
   },
   "taskBoard": {
     "title": "작업 보드",

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useSearchParams } from "react-router-dom";
 import {
@@ -60,6 +60,16 @@ export function GroupWorkspacePage() {
   const { id: groupId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const { t, i18n } = useTranslation();
+  /**
+   * `describeCron`'s own translator. Passing `undefined` localizes only the
+   * weekday and month names — the sentences around them ("every Monday at
+   * {{time}}") stay English. Same adapter the schedules page uses.
+   */
+  const describeT = useCallback(
+    (key: string, fallback: string, vars?: Record<string, string>) =>
+      t(key, { defaultValue: fallback, ...(vars ?? {}) }),
+    [t],
+  );
   // Same convention as the group detail page: the version rides on the URL.
   // Hardcoding 1 here read the group's FIRST version, so a renamed group showed
   // its original name in this page's header and back-link.
@@ -362,7 +372,7 @@ export function GroupWorkspacePage() {
                     const cron = schedule?.cronExpression;
                     const zone = schedule?.timeZone || "UTC";
                     const described = cron
-                      ? describeCron(cron, undefined, i18n.language)
+                      ? describeCron(cron, describeT, i18n.language)
                       : null;
                     return (
                       <>
@@ -433,7 +443,7 @@ export function GroupWorkspacePage() {
                 data-testid="workspace-cron-hint"
               >
                 {cron.trim()
-                  ? (describeCron(cron.trim(), undefined, i18n.language) ??
+                  ? (describeCron(cron.trim(), describeT, i18n.language) ??
                     t("groupWorkspace.cronInvalid", "That is not a valid cron expression."))
                   : "\u00a0"}
               </p>

@@ -3,6 +3,19 @@ import { hasDisplayableDecision } from "@/lib/group-config";
 import { parseTranscriptContent } from "@/components/groups/group-utils";
 
 /**
+ * The caller's translator, narrowed to what this module needs.
+ *
+ * Passed in rather than imported: this is a plain module with no React context,
+ * and both call sites are components that already hold `t`. The signature
+ * matches `CronDescribeT` in `lib/api/schedules.ts`, which solves the same
+ * problem the same way.
+ */
+export type ExportT = (key: string, fallback: string) => string;
+
+/** Used when a caller has no translator — the English the export always had. */
+const IDENTITY_T: ExportT = (_key, fallback) => fallback;
+
+/**
  * The one Markdown rendering of a group discussion.
  *
  * There used to be two: this one, behind the board's export menu, and a second
@@ -22,15 +35,21 @@ function readable(content: string | null | undefined): string {
 export function generateMarkdown(
   conversation: GroupConversation,
   groupName?: string,
+  t: ExportT = IDENTITY_T,
 ): string {
   const lines: string[] = [];
-  lines.push(`# ${groupName ?? "Discussion"}`);
+  lines.push(`# ${groupName ?? t("groups.export.discussion", "Discussion")}`);
   lines.push(``);
-  lines.push(`**Date:** ${new Date(conversation.created).toLocaleString()}`);
-  lines.push(`**Status:** ${conversation.state}`);
+  lines.push(`**${t("groups.export.date", "Date")}:** ${new Date(conversation.created).toLocaleString()}`);
+  // The state is a label, not the wire enum: an export headed
+  // "AWAITING_HUMAN_INPUT" reads as a leak, and every other surface has shown a
+  // localized state for a long time.
+  lines.push(
+    `**${t("groups.export.status", "Status")}:** ${t(`groups.state.${conversation.state}`, conversation.state)}`,
+  );
   if (conversation.originalQuestion) {
     lines.push(``);
-    lines.push(`> **Question:** ${conversation.originalQuestion}`);
+    lines.push(`> **${t("groups.export.question", "Question")}:** ${conversation.originalQuestion}`);
   }
   lines.push(``);
   lines.push(`---`);
@@ -43,15 +62,15 @@ export function generateMarkdown(
     // where the verbatim document belongs.
     const body = readable(entry.content);
     if (entry.type === "QUESTION") {
-      lines.push(`> **Question:** ${body}`);
+      lines.push(`> **${t("groups.export.question", "Question")}:** ${body}`);
       lines.push(``);
     } else if (entry.type === "SYNTHESIS") {
-      lines.push(`## Synthesis`);
+      lines.push(`## ${t("groups.export.synthesis", "Synthesis")}`);
       lines.push(``);
       lines.push(body);
       lines.push(``);
     } else if (entry.type === "ERROR") {
-      lines.push(`### ⚠️ ${entry.speakerDisplayName} (Error)`);
+      lines.push(`### ⚠️ ${entry.speakerDisplayName} (${t("groups.export.error", "Error")})`);
       if (entry.errorReason) lines.push(`> ${entry.errorReason}`);
       if (body) lines.push(body);
       lines.push(``);
@@ -69,16 +88,18 @@ export function generateMarkdown(
     const d = conversation.decision;
     lines.push(`---`);
     lines.push(``);
-    lines.push(`## Decision (${d.type})`);
+    // The decision's own name is the heading, as it is on the card this export
+    // mirrors. "Decision (No structured decision)" was the alternative.
+    lines.push(`## ${t(`groups.decisionType.${d.type}`, d.type)}`);
     lines.push(``);
-    if (d.winner) lines.push(`**Winner:** ${d.winner}`);
-    if (d.outcome) lines.push(`**Outcome:** ${d.outcome}`);
+    if (d.winner) lines.push(`**${t("groups.export.winner", "Winner")}:** ${d.winner}`);
+    if (d.outcome) lines.push(`**${t("groups.export.outcome", "Outcome")}:** ${d.outcome}`);
     // A NONE decision that carries `raw` means a judgment WAS produced but
     // could not be parsed — the card shows it verbatim, so the export must too
     // or the section is an empty heading.
     if (d.type === "NONE" && d.raw?.trim()) {
       lines.push(``);
-      lines.push(`### Unparsed judgment`);
+      lines.push(`### ${t("groups.export.unparsedJudgment", "Unparsed judgment")}`);
       lines.push(``);
       lines.push(d.raw);
     }
@@ -91,7 +112,7 @@ export function generateMarkdown(
     const dissents = d.dissents ?? [];
     if (dissents.length > 0) {
       lines.push(``);
-      lines.push(`**Minority report:**`);
+      lines.push(`**${t("groups.export.minorityReport", "Minority report")}:**`);
       for (const dis of dissents) {
         lines.push(`- ${dis.displayName || dis.agentId}: ${dis.position}`);
       }
@@ -107,7 +128,7 @@ export function generateMarkdown(
   if (finalAnswer.trim()) {
     lines.push(`---`);
     lines.push(``);
-    lines.push(`## Final Answer`);
+    lines.push(`## ${t("groups.export.finalAnswer", "Final Answer")}`);
     lines.push(``);
     lines.push(finalAnswer);
   }

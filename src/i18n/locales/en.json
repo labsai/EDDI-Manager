@@ -2742,7 +2742,20 @@
       "BLOCKED": "Blocked",
       "AWAITING_APPROVAL": "Awaiting approval"
     },
-    "confirmDeleteMembers": "Also delete this group's member agents. Left behind, they belong to nothing and show up under Orphans."
+    "confirmDeleteMembers": "Also delete this group's member agents. Left behind, they belong to nothing and show up under Orphans.",
+    "export": {
+      "discussion": "Discussion",
+      "date": "Date",
+      "status": "Status",
+      "question": "Question",
+      "synthesis": "Synthesis",
+      "error": "Error",
+      "winner": "Winner",
+      "outcome": "Outcome",
+      "unparsedJudgment": "Unparsed judgment",
+      "minorityReport": "Minority report",
+      "finalAnswer": "Final answer"
+    }
   },
   "taskBoard": {
     "title": "Task Board",

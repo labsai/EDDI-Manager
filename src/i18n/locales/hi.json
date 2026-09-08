@@ -2689,7 +2689,20 @@
       "BLOCKED": "अवरुद्ध",
       "AWAITING_APPROVAL": "स्वीकृति की प्रतीक्षा में"
     },
-    "confirmDeleteMembers": "इस समूह के सदस्य एजेंट भी हटाएँ। पीछे छूटने पर वे किसी से नहीं जुड़े रहते और «अनाथ» में दिखते हैं।"
+    "confirmDeleteMembers": "इस समूह के सदस्य एजेंट भी हटाएँ। पीछे छूटने पर वे किसी से नहीं जुड़े रहते और «अनाथ» में दिखते हैं।",
+    "export": {
+      "discussion": "चर्चा",
+      "date": "दिनांक",
+      "status": "स्थिति",
+      "question": "प्रश्न",
+      "synthesis": "संश्लेषण",
+      "error": "त्रुटि",
+      "winner": "विजेता",
+      "outcome": "परिणाम",
+      "unparsedJudgment": "अपठित निर्णय",
+      "minorityReport": "अल्पमत मत",
+      "finalAnswer": "अंतिम उत्तर"
+    }
   },
   "taskBoard": {
     "title": "कार्य बोर्ड",

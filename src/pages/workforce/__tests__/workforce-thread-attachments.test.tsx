@@ -765,6 +765,29 @@ describe("WorkforceThread – Attachment Features", () => {
       await user.click(await screen.findByTestId("thread-retry"));
       expect(await screen.findByText("Second time lucky")).toBeInTheDocument();
       expect(screen.queryByTestId("thread-send-error")).not.toBeInTheDocument();
+
+      // Exactly one copy of what was sent. `handleSend` appends its own
+      // optimistic message, so a retry that does not withdraw the failed turn's
+      // leaves the same text on screen twice.
+      expect(screen.getAllByText("Try me")).toHaveLength(1);
+    });
+
+    it("keeps the failed message visible while the error is on screen", async () => {
+      // Withdrawing it at failure time would fix the duplicate but hide what
+      // the reader had just typed, next to an error asking them to retry it.
+      setupMocks({
+        sendMessageStreaming: (vi.spyOn(chatApi, "sendMessageStreaming") as any).mockImplementation(
+          () => {
+            throw new Error("Nope");
+          },
+        ),
+      });
+      renderThread();
+      await waitForInit();
+      await send("Still here");
+
+      await screen.findByTestId("thread-send-error");
+      expect(screen.getByText("Still here")).toBeInTheDocument();
     });
 
     it("says a paused conversation is paused, and does not offer a pointless retry", async () => {

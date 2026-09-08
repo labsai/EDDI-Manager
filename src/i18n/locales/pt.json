@@ -2718,7 +2718,20 @@
       "BLOCKED": "Bloqueada",
       "AWAITING_APPROVAL": "A aguardar aprovação"
     },
-    "confirmDeleteMembers": "Eliminar também os agentes membros deste grupo. Se ficarem, deixam de pertencer a algo e aparecem em Órfãos."
+    "confirmDeleteMembers": "Eliminar também os agentes membros deste grupo. Se ficarem, deixam de pertencer a algo e aparecem em Órfãos.",
+    "export": {
+      "discussion": "Discussão",
+      "date": "Data",
+      "status": "Estado",
+      "question": "Pergunta",
+      "synthesis": "Síntese",
+      "error": "Erro",
+      "winner": "Vencedor",
+      "outcome": "Resultado",
+      "unparsedJudgment": "Veredicto não interpretado",
+      "minorityReport": "Voto de vencido",
+      "finalAnswer": "Resposta final"
+    }
   },
   "taskBoard": {
     "title": "Quadro de tarefas",

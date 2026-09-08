@@ -152,7 +152,7 @@ export function DiscussionInput({ onSubmit, isLoading, disabled, mode = "new", d
                   type="button"
                   onClick={() => removeAttachment(a.id)}
                   aria-label={t("groups.removeAttachment", "Remove {{name}}", { name: a.fileName })}
-                  className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <X className="h-2.5 w-2.5" />
                 </button>

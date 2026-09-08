@@ -2689,7 +2689,20 @@
       "BLOCKED": "ブロック中",
       "AWAITING_APPROVAL": "承認待ち"
     },
-    "confirmDeleteMembers": "このグループのメンバーエージェントも削除します。残すとどこにも属さなくなり、「孤立」に表示されます。"
+    "confirmDeleteMembers": "このグループのメンバーエージェントも削除します。残すとどこにも属さなくなり、「孤立」に表示されます。",
+    "export": {
+      "discussion": "ディスカッション",
+      "date": "日付",
+      "status": "状態",
+      "question": "質問",
+      "synthesis": "統合",
+      "error": "エラー",
+      "winner": "勝者",
+      "outcome": "結果",
+      "unparsedJudgment": "解析できなかった判定",
+      "minorityReport": "少数意見",
+      "finalAnswer": "最終回答"
+    }
   },
   "taskBoard": {
     "title": "タスクボード",

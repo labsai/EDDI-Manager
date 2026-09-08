@@ -2718,7 +2718,20 @@
       "BLOCKED": "Bloqueada",
       "AWAITING_APPROVAL": "Esperando aprobación"
     },
-    "confirmDeleteMembers": "Eliminar también los agentes miembros de este grupo. Si se quedan, no pertenecen a nada y aparecen en Huérfanos."
+    "confirmDeleteMembers": "Eliminar también los agentes miembros de este grupo. Si se quedan, no pertenecen a nada y aparecen en Huérfanos.",
+    "export": {
+      "discussion": "Debate",
+      "date": "Fecha",
+      "status": "Estado",
+      "question": "Pregunta",
+      "synthesis": "Síntesis",
+      "error": "Error",
+      "winner": "Ganador",
+      "outcome": "Resultado",
+      "unparsedJudgment": "Veredicto sin interpretar",
+      "minorityReport": "Voto particular",
+      "finalAnswer": "Respuesta final"
+    }
   },
   "taskBoard": {
     "title": "Tablero de tareas",

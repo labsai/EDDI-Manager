@@ -2805,7 +2805,20 @@
       "BLOCKED": "محجوبة",
       "AWAITING_APPROVAL": "بانتظار الموافقة"
     },
-    "confirmDeleteMembers": "احذف أيضًا وكلاء هذه المجموعة. إن بقوا فلن ينتموا إلى شيء وسيظهرون ضمن «اليتيمة»."
+    "confirmDeleteMembers": "احذف أيضًا وكلاء هذه المجموعة. إن بقوا فلن ينتموا إلى شيء وسيظهرون ضمن «اليتيمة».",
+    "export": {
+      "discussion": "نقاش",
+      "date": "التاريخ",
+      "status": "الحالة",
+      "question": "السؤال",
+      "synthesis": "الخلاصة",
+      "error": "خطأ",
+      "winner": "الفائز",
+      "outcome": "النتيجة",
+      "unparsedJudgment": "حكم غير مُحلَّل",
+      "minorityReport": "رأي الأقلية",
+      "finalAnswer": "الإجابة النهائية"
+    }
   },
   "taskBoard": {
     "title": "لوحة المهام",

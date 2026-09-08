@@ -173,15 +173,20 @@ export function parseVotePayload(content: string | null | undefined): VotePayloa
   const node = readJson(content);
   if (!node) return null;
 
-  const options: string[] = [];
+  // A set, not a list: an APPROVAL ballot that repeats an option
+  // (`{"votes": ["A", "A"]}`) is one selection said twice, and rendering it
+  // twice also gives two badges the same React key. Deduplicating only the
+  // `vote`/`votes` overlap missed the repeat inside `votes` itself.
+  const seen = new Set<string>();
   if (Array.isArray(node.votes)) {
     for (const vote of node.votes) {
       const option = str(vote);
-      if (option) options.push(option);
+      if (option) seen.add(option);
     }
   }
   const single = str(node.vote);
-  if (single && !options.includes(single)) options.push(single);
+  if (single) seen.add(single);
+  const options = [...seen];
 
   const statement = str(node.statement);
   // A ballot with no option AND no statement is not a ballot — most likely an

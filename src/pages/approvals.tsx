@@ -164,15 +164,23 @@ function ApprovalQueueRow({
           </span>
         </td>
         <td className="px-4 py-3">
-          <Link
-            to={item.groupId
-              ? (groupHref ?? `/manage/groups/${item.groupId}`)
-              : `/manage/conversationview/${item.conversationId}`}
-            className="font-mono text-xs text-primary hover:underline"
-          >
-            {item.conversationId.slice(0, 12)}…
-            <ExternalLink className="ms-1 inline h-3 w-3" />
-          </Link>
+          {item.groupId && !groupHref ? (
+            // Held until the group's current version is known — see `groupHrefFor`.
+            <span
+              className="font-mono text-xs text-muted-foreground"
+              data-testid={`link-pending-${item.conversationId}`}
+            >
+              {item.conversationId.slice(0, 12)}…
+            </span>
+          ) : (
+            <Link
+              to={groupHref ?? `/manage/conversationview/${item.conversationId}`}
+              className="font-mono text-xs text-primary hover:underline"
+            >
+              {item.conversationId.slice(0, 12)}…
+              <ExternalLink className="ms-1 inline h-3 w-3" />
+            </Link>
+          )}
         </td>
         <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
           {item.pauseType === "TOOL_CALL" && (
@@ -302,15 +310,24 @@ function ApprovalQueueRow({
                 </button>
               </>
             )}
-            {item.groupId && (
-              <Link
-                to={groupHref ?? `/manage/groups/${item.groupId}`}
-                className="rounded-md border border-border px-2.5 py-1 text-xs text-primary hover:bg-muted transition-colors"
-                data-testid={`view-${item.conversationId}`}
-              >
-                {t("common.view", "View")}
-              </Link>
-            )}
+            {item.groupId &&
+              (groupHref ? (
+                <Link
+                  to={groupHref}
+                  className="rounded-md border border-border px-2.5 py-1 text-xs text-primary hover:bg-muted transition-colors"
+                  data-testid={`view-${item.conversationId}`}
+                >
+                  {t("common.view", "View")}
+                </Link>
+              ) : (
+                <span
+                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground opacity-50"
+                  aria-disabled="true"
+                  data-testid={`view-pending-${item.conversationId}`}
+                >
+                  {t("common.view", "View")}
+                </span>
+              ))}
           </div>
         </td>
       </tr>
@@ -390,7 +407,7 @@ export function ApprovalsPage() {
    * while the discussion underneath was the current one. One descriptor call
    * for the whole page fixes every row.
    */
-  const { data: groupDescriptors } = useGroupDescriptors(100);
+  const { data: groupDescriptors, isLoading: groupVersionsLoading } = useGroupDescriptors(100);
   const groupVersions = useMemo(() => {
     const map = new Map<string, number>();
     for (const group of groupGroupsByName(groupDescriptors ?? [])) {
@@ -399,18 +416,28 @@ export function ApprovalsPage() {
     return map;
   }, [groupDescriptors]);
 
-  /** Where a row's View link should land: the group, at its current version,
-   *  with the paused discussion already selected. */
+  /**
+   * Where a row's View link should land: the group, at its current version,
+   * with the paused discussion already selected.
+   *
+   * `null` while the descriptor list is still loading, so the link is held
+   * rather than emitted without a version — the group page defaults a missing
+   * version to 1, which for an edited group is its original configuration. Once
+   * the list has landed a group it does not carry (deleted, or past the first
+   * hundred) still gets a link: no version is the pre-existing behaviour, and
+   * an unreachable one would be worse than an imprecise one.
+   */
   const groupHrefFor = useCallback(
     (item: PendingApprovalSummary): string | null => {
       if (!item.groupId) return null;
+      if (groupVersionsLoading) return null;
       const version = groupVersions.get(item.groupId);
       const params = new URLSearchParams();
       if (version != null) params.set("version", String(version));
       params.set("conversation", item.conversationId);
       return `/manage/groups/${item.groupId}?${params.toString()}`;
     },
-    [groupVersions],
+    [groupVersions, groupVersionsLoading],
   );
 
   // Merge 1:1 (regular) and group-surface pendings into one queue. The regular

@@ -191,7 +191,7 @@ function BoardInput({ onSend, disabled = false, placeholder, className, mode = "
               <button
                 type="button"
                 onClick={() => removeAttachment(a.id)}
-                className="ms-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20 transition-colors"
+                className="ms-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={t("groups.removeAttachment", "Remove {{name}}", { name: a.fileName })}
               >
                 <X className="h-3 w-3" />

@@ -2718,7 +2718,20 @@
       "BLOCKED": "Bloquée",
       "AWAITING_APPROVAL": "En attente d'approbation"
     },
-    "confirmDeleteMembers": "Supprimer aussi les agents membres de ce groupe. S'ils restent, ils n'appartiennent plus à rien et apparaissent dans Orphelins."
+    "confirmDeleteMembers": "Supprimer aussi les agents membres de ce groupe. S'ils restent, ils n'appartiennent plus à rien et apparaissent dans Orphelins.",
+    "export": {
+      "discussion": "Discussion",
+      "date": "Date",
+      "status": "Statut",
+      "question": "Question",
+      "synthesis": "Synthèse",
+      "error": "Erreur",
+      "winner": "Gagnant",
+      "outcome": "Résultat",
+      "unparsedJudgment": "Verdict non interprété",
+      "minorityReport": "Avis minoritaire",
+      "finalAnswer": "Réponse finale"
+    }
   },
   "taskBoard": {
     "title": "Tableau des tâches",

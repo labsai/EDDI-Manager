@@ -593,11 +593,13 @@ function ConversationViewer({
   const handleExport = useCallback(() => {
     if (!conversation) return;
     downloadFile(
-      generateMarkdown(conversation, groupName),
+      generateMarkdown(conversation, groupName, (key, fallback) =>
+        t(key, { defaultValue: fallback }),
+      ),
       `discussion-${conversationId.slice(0, 8)}.md`,
       "text/markdown",
     );
-  }, [conversation, conversationId, groupName]);
+  }, [conversation, conversationId, groupName, t]);
 
   // Process transcript to insert phase separators
   const processedEntries = useMemo(() => {

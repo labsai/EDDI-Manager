@@ -2689,7 +2689,20 @@
       "BLOCKED": "Blockiert",
       "AWAITING_APPROVAL": "Wartet auf Freigabe"
     },
-    "confirmDeleteMembers": "Auch die Mitglieds-Agenten dieser Gruppe löschen. Bleiben sie zurück, gehören sie zu nichts mehr und erscheinen unter „Verwaiste“."
+    "confirmDeleteMembers": "Auch die Mitglieds-Agenten dieser Gruppe löschen. Bleiben sie zurück, gehören sie zu nichts mehr und erscheinen unter „Verwaiste“.",
+    "export": {
+      "discussion": "Diskussion",
+      "date": "Datum",
+      "status": "Status",
+      "question": "Frage",
+      "synthesis": "Synthese",
+      "error": "Fehler",
+      "winner": "Gewinner",
+      "outcome": "Ergebnis",
+      "unparsedJudgment": "Nicht ausgewertetes Urteil",
+      "minorityReport": "Minderheitsvotum",
+      "finalAnswer": "Endgültige Antwort"
+    }
   },
   "taskBoard": {
     "title": "Aufgabenübersicht",

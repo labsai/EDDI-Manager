@@ -2689,7 +2689,20 @@
       "BLOCKED": "已阻塞",
       "AWAITING_APPROVAL": "等待审批"
     },
-    "confirmDeleteMembers": "同时删除该群组的成员智能体。若保留，它们将不再归属任何群组，并出现在“孤立项”中。"
+    "confirmDeleteMembers": "同时删除该群组的成员智能体。若保留，它们将不再归属任何群组，并出现在“孤立项”中。",
+    "export": {
+      "discussion": "讨论",
+      "date": "日期",
+      "status": "状态",
+      "question": "问题",
+      "synthesis": "综合结论",
+      "error": "错误",
+      "winner": "获胜方",
+      "outcome": "结果",
+      "unparsedJudgment": "未能解析的裁决",
+      "minorityReport": "少数意见",
+      "finalAnswer": "最终答案"
+    }
   },
   "taskBoard": {
     "title": "任务看板",
