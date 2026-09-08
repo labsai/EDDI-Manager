@@ -3258,7 +3258,8 @@
     "humanTurn": "सदस्य की बारी",
     "humanTurnReason": "{{member}} के बोलने की प्रतीक्षा",
     "humanTurnMemberFallback": "एक सदस्य",
-    "decidedProgress": "{{total}} में से {{decided}} तय"
+    "decidedProgress": "{{total}} में से {{decided}} तय",
+    "groupLinkUnavailable": "यह समूह नहीं मिला, इसलिए इसका कोई भरोसेमंद लिंक नहीं है।"
   },
   "chatDrawer": {
     "deploying": "एजेंट Deploy हो रहा है…",

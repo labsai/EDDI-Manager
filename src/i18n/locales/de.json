@@ -3258,7 +3258,8 @@
     "humanTurn": "Zug des Mitglieds",
     "humanTurnReason": "Wartet darauf, dass {{member}} spricht",
     "humanTurnMemberFallback": "ein Mitglied",
-    "decidedProgress": "{{decided}} von {{total}} entschieden"
+    "decidedProgress": "{{decided}} von {{total}} entschieden",
+    "groupLinkUnavailable": "Diese Gruppe wurde nicht gefunden, daher gibt es keinen verlässlichen Link dorthin."
   },
   "chatDrawer": {
     "deploying": "Agent wird bereitgestellt…",

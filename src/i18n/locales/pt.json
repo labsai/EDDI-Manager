@@ -2729,7 +2729,7 @@
       "winner": "Vencedor",
       "outcome": "Resultado",
       "unparsedJudgment": "Veredicto não interpretado",
-      "minorityReport": "Voto de vencido",
+      "minorityReport": "Voto vencido",
       "finalAnswer": "Resposta final"
     },
     "deleteMembersConfigFailed": "Não foi possível ler os membros do grupo, por isso nada foi eliminado. Tente novamente."
@@ -3289,7 +3289,8 @@
     "humanTurn": "Vez do membro",
     "humanTurnReason": "A aguardar que {{member}} fale",
     "humanTurnMemberFallback": "um membro",
-    "decidedProgress": "{{decided}} de {{total}} decididas"
+    "decidedProgress": "{{decided}} de {{total}} decididas",
+    "groupLinkUnavailable": "Este grupo não foi encontrado, por isso não há uma ligação fiável para ele."
   },
   "chatDrawer": {
     "deploying": "Implantando agente…",

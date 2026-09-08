@@ -3258,7 +3258,8 @@
     "humanTurn": "成员发言",
     "humanTurnReason": "正在等待 {{member}} 发言",
     "humanTurnMemberFallback": "某位成员",
-    "decidedProgress": "已决定 {{decided}}/{{total}}"
+    "decidedProgress": "已决定 {{decided}}/{{total}}",
+    "groupLinkUnavailable": "未找到该群组，因此无法提供可靠的链接。"
   },
   "chatDrawer": {
     "deploying": "正在部署智能体…",

@@ -28,7 +28,11 @@ const GROUP = {
   ],
 };
 
-function serve(onDeleteAgent: (id: string) => void, groupOk = true) {
+function serve(
+  onDeleteAgent: (id: string) => void,
+  groupOk = true,
+  onDeleteGroup: () => void = () => {},
+) {
   server.use(
     http.get("*/groupstore/groups/descriptors", () =>
       HttpResponse.json([
@@ -53,7 +57,10 @@ function serve(onDeleteAgent: (id: string) => void, groupOk = true) {
       onDeleteAgent(String(params.agentId));
       return new HttpResponse(null, { status: 204 });
     }),
-    http.delete(`*/groupstore/groups/${GROUP.id}`, () => new HttpResponse(null, { status: 204 })),
+    http.delete(`*/groupstore/groups/${GROUP.id}`, () => {
+      onDeleteGroup();
+      return new HttpResponse(null, { status: 204 });
+    }),
   );
 }
 
@@ -94,6 +101,53 @@ describe("GroupsPage — cascade delete", () => {
 
     await waitFor(() => expect(screen.queryByTestId("delete-members-checkbox")).toBeNull());
     expect(deleted).toEqual([]);
+  });
+
+  it("deletes nothing when the dialog is dismissed while it reads the members", async () => {
+    // A cascade awaits `getGroup()` before it can mutate, and the dialog stays
+    // dismissable throughout — Escape and the scrim close it whatever
+    // `isPending` says. Without a cancellation token the awaited continuation
+    // resumes against a dialog nobody is looking at and deletes anyway.
+    const deleted: string[] = [];
+    let groupDeleted = false;
+    let release: (() => void) | null = null;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    serve((id) => deleted.push(id), true, () => {
+      groupDeleted = true;
+    });
+    // The list enriches each descriptor through this same endpoint, so only the
+    // confirm-time read is held — holding the first would stop the page
+    // rendering at all.
+    let reads = 0;
+    server.use(
+      http.get(`*/groupstore/groups/${GROUP.id}`, async () => {
+        if (++reads > 1) await held;
+        return HttpResponse.json(GROUP);
+      }),
+    );
+
+    const checkbox = await openDeleteDialog();
+    await userEvent.click(checkbox);
+    await userEvent.click(confirmButton());
+
+    // Dismiss while the read is still in flight, then let it land.
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByTestId("delete-members-checkbox")).toBeNull(),
+    );
+    release!();
+
+    // The held read now resolves. `waitFor` cannot assert that nothing follows
+    // — it succeeds on its first attempt, before the continuation has had a
+    // turn — so wait for the read itself to land and then give the continuation
+    // real time to do the wrong thing.
+    await waitFor(() => expect(reads).toBe(2));
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    expect(deleted).toEqual([]);
+    expect(groupDeleted).toBe(false);
   });
 
   it("deletes nothing when the group's members cannot be read", async () => {

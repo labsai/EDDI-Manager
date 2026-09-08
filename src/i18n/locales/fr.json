@@ -3289,7 +3289,8 @@
     "humanTurn": "Tour du membre",
     "humanTurnReason": "En attente de la prise de parole de {{member}}",
     "humanTurnMemberFallback": "un membre",
-    "decidedProgress": "{{decided}} sur {{total}} décidés"
+    "decidedProgress": "{{decided}} sur {{total}} décidés",
+    "groupLinkUnavailable": "Ce groupe est introuvable ; aucun lien fiable ne peut être proposé."
   },
   "chatDrawer": {
     "deploying": "Déploiement de l'agent…",

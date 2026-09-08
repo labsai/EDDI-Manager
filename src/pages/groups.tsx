@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useOnboarding } from "@/hooks/use-onboarding";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
@@ -86,7 +86,24 @@ export function GroupsPage() {
    * delete that cleared `deleteTarget` left `deleteMembers` set — and the next
    * group's dialog opened with "also delete its agents" already ticked.
    */
+  /**
+   * The delete the dialog is currently asking about.
+   *
+   * A cascade awaits `getGroup()` before it can mutate, and the dialog stays
+   * dismissable throughout — Escape and the scrim both close it, whatever
+   * `isPending` says. Without this token the awaited continuation would resume
+   * against a dialog nobody is looking at any more and delete the group's
+   * agents anyway.
+   */
+  const deleteRequestRef = useRef(0);
+  /** True while a cascade is reading the group it is about to delete over. */
+  const [readingConfig, setReadingConfig] = useState(false);
+
   const closeDeleteDialog = useCallback(() => {
+    // Invalidate any in-flight request first: the continuation checks this
+    // token before it mutates.
+    deleteRequestRef.current++;
+    setReadingConfig(false);
     setDeleteTarget(null);
     setDeleteMembers(false);
   }, []);
@@ -134,12 +151,16 @@ export function GroupsPage() {
     if (!deleteTarget) return;
 
     if (deleteMembers) {
+      const request = ++deleteRequestRef.current;
       let config: AgentGroupConfiguration;
+      setReadingConfig(true);
       try {
         config = await getGroup(deleteTarget.id, deleteTarget.version);
       } catch {
+        setReadingConfig(false);
         // Do not quietly downgrade to a group-only delete: keeping the agents
         // is the one thing the reader said they did not want.
+        if (deleteRequestRef.current !== request) return;
         toast.error(
           t(
             "groups.deleteMembersConfigFailed",
@@ -148,6 +169,10 @@ export function GroupsPage() {
         );
         return;
       }
+      setReadingConfig(false);
+      // Dismissed while the read was in flight — the reader withdrew the
+      // request, so nothing is deleted and nothing is reported.
+      if (deleteRequestRef.current !== request) return;
       deleteWithMembersMutation.mutate(
         { groupId: deleteTarget.id, version: deleteTarget.version, config },
         {
@@ -492,7 +517,9 @@ export function GroupsPage() {
         cancelLabel={t("common.cancel")}
         variant="destructive"
         onConfirm={() => void confirmDelete()}
-        isPending={deleteMutation.isPending || deleteWithMembersMutation.isPending}
+        isPending={
+          readingConfig || deleteMutation.isPending || deleteWithMembersMutation.isPending
+        }
       >
         <label className="flex items-start gap-2 text-xs text-muted-foreground">
           <input

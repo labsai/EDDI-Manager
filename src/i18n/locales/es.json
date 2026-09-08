@@ -3289,7 +3289,8 @@
     "humanTurn": "Turno del miembro",
     "humanTurnReason": "Esperando a que {{member}} hable",
     "humanTurnMemberFallback": "un miembro",
-    "decidedProgress": "{{decided}} de {{total}} decididas"
+    "decidedProgress": "{{decided}} de {{total}} decididas",
+    "groupLinkUnavailable": "No se ha encontrado este grupo, así que no hay un enlace fiable hacia él."
   },
   "chatDrawer": {
     "deploying": "Desplegando agente…",

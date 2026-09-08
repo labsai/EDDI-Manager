@@ -3258,7 +3258,8 @@
     "humanTurn": "メンバーの番",
     "humanTurnReason": "{{member}} の発言を待っています",
     "humanTurnMemberFallback": "あるメンバー",
-    "decidedProgress": "{{total}} 件中 {{decided}} 件を判断済み"
+    "decidedProgress": "{{total}} 件中 {{decided}} 件を判断済み",
+    "groupLinkUnavailable": "このグループが見つからないため、確実なリンクを表示できません。"
   },
   "chatDrawer": {
     "deploying": "エージェントをデプロイ中…",

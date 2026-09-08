@@ -3258,7 +3258,8 @@
     "humanTurn": "ตาของสมาชิก",
     "humanTurnReason": "กำลังรอให้ {{member}} พูด",
     "humanTurnMemberFallback": "สมาชิกคนหนึ่ง",
-    "decidedProgress": "ตัดสินใจแล้ว {{decided}} จาก {{total}}"
+    "decidedProgress": "ตัดสินใจแล้ว {{decided}} จาก {{total}}",
+    "groupLinkUnavailable": "ไม่พบกลุ่มนี้ จึงไม่มีลิงก์ที่เชื่อถือได้"
   },
   "chatDrawer": {
     "deploying": "กำลังปรับใช้เอเจนต์…",

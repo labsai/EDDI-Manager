@@ -168,6 +168,10 @@ function ApprovalQueueRow({
             // Held until the group's current version is known — see `groupHrefFor`.
             <span
               className="font-mono text-xs text-muted-foreground"
+              title={t(
+                "hitl.groupLinkUnavailable",
+                "This group could not be located, so there is no safe link to it.",
+              )}
               data-testid={`link-pending-${item.conversationId}`}
             >
               {item.conversationId.slice(0, 12)}…
@@ -323,6 +327,10 @@ function ApprovalQueueRow({
                 <span
                   className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground opacity-50"
                   aria-disabled="true"
+                  title={t(
+                    "hitl.groupLinkUnavailable",
+                    "This group could not be located, so there is no safe link to it.",
+                  )}
                   data-testid={`view-pending-${item.conversationId}`}
                 >
                   {t("common.view", "View")}
@@ -407,7 +415,7 @@ export function ApprovalsPage() {
    * while the discussion underneath was the current one. One descriptor call
    * for the whole page fixes every row.
    */
-  const { data: groupDescriptors, isLoading: groupVersionsLoading } = useGroupDescriptors(100);
+  const { data: groupDescriptors } = useGroupDescriptors(100);
   const groupVersions = useMemo(() => {
     const map = new Map<string, number>();
     for (const group of groupGroupsByName(groupDescriptors ?? [])) {
@@ -420,24 +428,27 @@ export function ApprovalsPage() {
    * Where a row's View link should land: the group, at its current version,
    * with the paused discussion already selected.
    *
-   * `null` while the descriptor list is still loading, so the link is held
-   * rather than emitted without a version — the group page defaults a missing
-   * version to 1, which for an edited group is its original configuration. Once
-   * the list has landed a group it does not carry (deleted, or past the first
-   * hundred) still gets a link: no version is the pre-existing behaviour, and
-   * an unreachable one would be worse than an imprecise one.
+   * `null` when the version is not known — while the descriptor list is still
+   * loading, and also for a group it does not carry (deleted, or past the first
+   * hundred). The group page defaults a missing version to 1, which for an
+   * edited group is its ORIGINAL configuration: a different member list and a
+   * different name from the one the paused discussion is actually running
+   * under. This is the screen where someone approves an action without the
+   * surrounding context, so showing them the wrong context is the worse of the
+   * two failures — worse than making them find the group themselves.
    */
   const groupHrefFor = useCallback(
     (item: PendingApprovalSummary): string | null => {
       if (!item.groupId) return null;
-      if (groupVersionsLoading) return null;
       const version = groupVersions.get(item.groupId);
-      const params = new URLSearchParams();
-      if (version != null) params.set("version", String(version));
-      params.set("conversation", item.conversationId);
+      if (version == null) return null;
+      const params = new URLSearchParams({
+        version: String(version),
+        conversation: item.conversationId,
+      });
       return `/manage/groups/${item.groupId}?${params.toString()}`;
     },
-    [groupVersions, groupVersionsLoading],
+    [groupVersions],
   );
 
   // Merge 1:1 (regular) and group-surface pendings into one queue. The regular

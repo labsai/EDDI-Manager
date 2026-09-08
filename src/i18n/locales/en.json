@@ -3298,7 +3298,8 @@
     "humanTurn": "Member's turn",
     "humanTurnReason": "Waiting on {{member}} to speak",
     "humanTurnMemberFallback": "a member",
-    "decidedProgress": "{{decided}} of {{total}} decided"
+    "decidedProgress": "{{decided}} of {{total}} decided",
+    "groupLinkUnavailable": "This group could not be located, so there is no safe link to it."
   },
   "chatDrawer": {
     "deploying": "Deploying agent…",

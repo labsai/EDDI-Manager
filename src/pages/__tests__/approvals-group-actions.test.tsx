@@ -110,6 +110,22 @@ describe("ApprovalsPage — group pauses", () => {
     expect(href).toMatch(/version=\d+/);
   });
 
+  it("offers no link when the group's version cannot be established", async () => {
+    // The group page defaults a missing version to 1 — for an edited group,
+    // its ORIGINAL member list and name. This is the screen where someone
+    // approves an action without the surrounding context, so showing them the
+    // wrong context is worse than making them find the group themselves.
+    serveGroupPendings([PAUSED]);
+    server.use(http.get("*/groupstore/groups/descriptors", () => HttpResponse.json([])));
+    render();
+
+    expect(await screen.findByTestId("view-pending-gc-paused")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    expect(screen.queryByTestId("view-gc-paused")).not.toBeInTheDocument();
+  });
+
   it("offers no verdict on a member's turn, which is not a decision", async () => {
     serveGroupPendings([HUMAN_TURN]);
     render();
