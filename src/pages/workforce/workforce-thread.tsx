@@ -911,8 +911,8 @@ function WorkforceThread() {
           }
         : { input: messageText };
 
+      let streamedAnything = false;
       try {
-        let streamedAnything = false;
         // Which terminal event actually arrived. A stream can also just stop —
         // a dropped connection, a proxy timing out — and that is neither.
         let sawDone = false;
@@ -945,7 +945,13 @@ function WorkforceThread() {
               /* non-JSON payload — the raw text is what there is */
             }
             settle();
-            setSendError(failed(translateStreamError(code, t) ?? message, false));
+            setSendError({
+              ...failed(translateStreamError(code, t) ?? message, false),
+              // Same rule as a dropped stream: once a partial reply is on
+              // screen the question has to stay above it, or a retry leaves
+              // the half-answer stranded above the next question.
+              pendingUserMessage: streamedAnything ? null : userMsg,
+            });
             break;
           }
           if (event.type === "done") {
@@ -1032,7 +1038,10 @@ function WorkforceThread() {
           });
         } else {
           settle();
-          setSendError(failed(getErrorMessage(err), false));
+          setSendError({
+            ...failed(getErrorMessage(err), false),
+            pendingUserMessage: streamedAnything ? null : userMsg,
+          });
         }
       } finally {
         abortRef.current = null;

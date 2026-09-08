@@ -64,17 +64,26 @@ function serve(
   );
 }
 
-async function openDeleteDialog() {
-  renderPage("/manage/groups", <GroupsPage />);
-  // Delete lives in the card's actions menu, so the menu opens first.
+/** Open the card's actions menu and choose Delete. */
+async function reopenDeleteDialog() {
   await userEvent.click(await screen.findByTestId(`group-menu-${GROUP.id}`));
   await userEvent.click(await screen.findByRole("button", { name: /^delete$/i }));
   return screen.findByTestId("delete-members-checkbox");
 }
 
-/** The dialog's confirm button, which is the only Delete left once it is open. */
+async function openDeleteDialog() {
+  renderPage("/manage/groups", <GroupsPage />);
+  // Delete lives in the card's actions menu, so the menu opens first.
+  return reopenDeleteDialog();
+}
+
+/**
+ * The dialog's confirm button. Found by test id rather than by name: the label
+ * becomes "…" while the dialog reports itself pending, which is exactly the
+ * state some of these tests assert on.
+ */
 function confirmButton() {
-  return screen.getByRole("button", { name: /^delete$/i });
+  return screen.getByTestId("alert-dialog-confirm");
 }
 
 describe("GroupsPage — cascade delete", () => {
@@ -148,6 +157,49 @@ describe("GroupsPage — cascade delete", () => {
 
     expect(deleted).toEqual([]);
     expect(groupDeleted).toBe(false);
+  });
+
+  it("a dismissed read does not report a newer one as idle", async () => {
+    // Request A is dismissed, request B starts, then A resolves. If A's
+    // continuation clears the pending flag, B's dialog looks ready while it is
+    // still reading, and its confirm button re-enables mid-flight.
+    const deleted: string[] = [];
+    const gates: Array<() => void> = [];
+    serve((id) => deleted.push(id));
+    let reads = 0;
+    server.use(
+      http.get(`*/groupstore/groups/${GROUP.id}`, async () => {
+        if (++reads > 1) {
+          await new Promise<void>((resolve) => gates.push(resolve));
+        }
+        return HttpResponse.json(GROUP);
+      }),
+    );
+
+    // A
+    const checkbox = await openDeleteDialog();
+    await userEvent.click(checkbox);
+    await userEvent.click(confirmButton());
+    await waitFor(() => expect(reads).toBe(2));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByTestId("delete-members-checkbox")).toBeNull(),
+    );
+
+    // B
+    await userEvent.click(await reopenDeleteDialog());
+    await userEvent.click(confirmButton());
+    await waitFor(() => expect(reads).toBe(3));
+
+    // A lands late. B is still reading, so its confirm must stay busy.
+    gates[0]!();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(confirmButton()).toBeDisabled();
+
+    // B lands and deletes exactly once.
+    gates[1]!();
+    await waitFor(() => expect(deleted).toContain("agent-moderator"));
+    expect(deleted.filter((id) => id === "agent-moderator")).toHaveLength(1);
   });
 
   it("deletes nothing when the group's members cannot be read", async () => {

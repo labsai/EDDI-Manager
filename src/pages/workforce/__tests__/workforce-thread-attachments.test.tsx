@@ -790,6 +790,41 @@ describe("WorkforceThread – Attachment Features", () => {
       expect(screen.getByText("Still here")).toBeInTheDocument();
     });
 
+    it("keeps the question above a partial reply when the stream then errors", async () => {
+      // Tokens arrived, then the turn failed. Withdrawing the question on retry
+      // would leave that half-answer sitting above the NEXT question rather
+      // than below the one it belongs to.
+      let attempt = 0;
+      setupMocks({
+        sendMessageStreaming: (vi.spyOn(chatApi, "sendMessageStreaming") as any).mockImplementation(
+          async function* () {
+            attempt++;
+            if (attempt === 1) {
+              yield { type: "token", data: "Partial reply" };
+              yield { type: "error", data: JSON.stringify({ message: "Upstream died" }) };
+              return;
+            }
+            yield { type: "token", data: "Complete reply" };
+            yield { type: "done", data: "" };
+          },
+        ),
+      });
+      renderThread();
+      await waitForInit();
+      const user = await send("Ask once");
+
+      const error = await screen.findByTestId("thread-send-error");
+      expect(error).toHaveTextContent("Upstream died");
+      expect(screen.getByText("Partial reply")).toBeInTheDocument();
+
+      await user.click(screen.getByTestId("thread-retry"));
+      expect(await screen.findByText("Complete reply")).toBeInTheDocument();
+
+      // The first question survives, so the partial answer still sits under it.
+      const asked = screen.getAllByText("Ask once");
+      expect(asked).toHaveLength(2);
+    });
+
     it("says a paused conversation is paused, and does not offer a pointless retry", async () => {
       setupMocks({
         sendMessageStreaming: (vi.spyOn(chatApi, "sendMessageStreaming") as any).mockImplementation(

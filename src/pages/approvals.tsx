@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { findBlockedCalls } from "@/lib/operator/blocked-calls";
 import { AlertDialog } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { ApprovalBanner } from "@/components/hitl/approval-banner";
 import { RequestPreview } from "@/components/operator/request-preview";
 import {
@@ -244,42 +245,46 @@ function ApprovalQueueRow({
                     aria-hidden="true"
                   />
                 </button>
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => onRequestConfirm(item, "CANCEL")}
                   disabled={cancelMutation.isPending && cancelMutation.variables === item.conversationId}
-                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`cancel-${item.conversationId}`}
                 >
                   {t("hitl.cancel", "Cancel")}
-                </button>
+                </Button>
               </>
             )}
             {!item.groupId && item.pauseType !== "TOOL_CALL" && !isHumanTurn && (
               <>
-                <button
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={() => onRequestConfirm(item, "APPROVED")}
                   disabled={resumeMutation.isPending && resumeMutation.variables?.conversationId === item.conversationId}
-                  className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`approve-${item.conversationId}`}
                 >
                   {t("hitl.approve", "Approve")}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
                   onClick={() => onRequestConfirm(item, "REJECTED")}
                   disabled={resumeMutation.isPending && resumeMutation.variables?.conversationId === item.conversationId}
-                  className="rounded-md bg-destructive px-2.5 py-1 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`reject-${item.conversationId}`}
                 >
                   {t("hitl.reject", "Reject")}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => onRequestConfirm(item, "CANCEL")}
                   disabled={cancelMutation.isPending && cancelMutation.variables === item.conversationId}
-                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`cancel-${item.conversationId}`}
                 >
                   {t("hitl.cancel", "Cancel")}
-                </button>
+                </Button>
               </>
             )}
             {/* A group phase pause needs nothing but a verdict, so it is
@@ -288,30 +293,33 @@ function ApprovalQueueRow({
                 the link only, and the link now opens that discussion. */}
             {item.groupId && !isHumanTurn && (
               <>
-                <button
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={() => onRequestConfirm(item, "APPROVED")}
                   disabled={groupDecisionPending}
-                  className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`approve-${item.conversationId}`}
                 >
                   {t("hitl.approve", "Approve")}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
                   onClick={() => onRequestConfirm(item, "REJECTED")}
                   disabled={groupDecisionPending}
-                  className="rounded-md bg-destructive px-2.5 py-1 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`reject-${item.conversationId}`}
                 >
                   {t("hitl.reject", "Reject")}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => onRequestConfirm(item, "CANCEL")}
                   disabled={groupDecisionPending}
-                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`cancel-${item.conversationId}`}
                 >
                   {t("hitl.cancel", "Cancel")}
-                </button>
+                </Button>
               </>
             )}
             {item.groupId &&
@@ -630,9 +638,9 @@ export function ApprovalsPage() {
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center">
           <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
           <p className="mt-2 text-destructive">{t("common.loadError", "Failed to load data")}</p>
-          <button onClick={handleRefresh} className="mt-3 text-sm text-primary hover:underline">
+          <Button variant="link" size="sm" onClick={handleRefresh} className="mt-3">
             {t("common.retry", "Retry")}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -663,15 +671,16 @@ export function ApprovalsPage() {
               data-testid="approval-search"
             />
           </div>
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={handleRefresh}
             aria-label={t("common.refresh", "Refresh")}
             title={t("common.refresh", "Refresh")}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
             data-testid="refresh-approvals"
           >
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
-          </button>
+          </Button>
         </div>
       </div>
 

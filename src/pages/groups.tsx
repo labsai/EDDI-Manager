@@ -157,10 +157,13 @@ export function GroupsPage() {
       try {
         config = await getGroup(deleteTarget.id, deleteTarget.version);
       } catch {
+        // Only this request may clear the flag. A dismissed request resolving
+        // late would otherwise report a NEWER one as idle while it is still
+        // reading, and the dialog would look ready when it is not.
+        if (deleteRequestRef.current !== request) return;
         setReadingConfig(false);
         // Do not quietly downgrade to a group-only delete: keeping the agents
         // is the one thing the reader said they did not want.
-        if (deleteRequestRef.current !== request) return;
         toast.error(
           t(
             "groups.deleteMembersConfigFailed",
@@ -169,10 +172,11 @@ export function GroupsPage() {
         );
         return;
       }
-      setReadingConfig(false);
       // Dismissed while the read was in flight — the reader withdrew the
-      // request, so nothing is deleted and nothing is reported.
+      // request, so nothing is deleted, nothing is reported, and a newer
+      // request's pending state is left alone.
       if (deleteRequestRef.current !== request) return;
+      setReadingConfig(false);
       deleteWithMembersMutation.mutate(
         { groupId: deleteTarget.id, version: deleteTarget.version, config },
         {
