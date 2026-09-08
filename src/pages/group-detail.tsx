@@ -543,8 +543,8 @@ export function GroupDetailPage() {
                     setDeleteTarget(conv.id);
                   }}
                   className="ms-auto opacity-0 group-hover/item:opacity-100 group-focus-within/item:opacity-100 focus-visible:opacity-100 max-md:opacity-100 text-muted-foreground hover:text-destructive"
-                  title={t("common.delete")}
-                  aria-label={t("common.delete")}
+                  title={t("common.delete", "Delete")}
+                  aria-label={t("common.delete", "Delete")}
                   data-testid={`delete-discussion-${conv.id}`}
                 >
                   <Trash2 />
@@ -856,7 +856,7 @@ export function GroupDetailPage() {
           "groups.confirmDeleteDiscussionDescription",
           "The transcript and everything in it are removed permanently. This cannot be undone.",
         )}
-        confirmLabel={t("common.delete")}
+        confirmLabel={t("common.delete", "Delete")}
         cancelLabel={t("common.cancel")}
         variant="destructive"
         onConfirm={() => {

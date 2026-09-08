@@ -597,6 +597,20 @@ export function ApprovalsPage() {
           isPending: resumeMutation.isPending || groupApproveMutation.isPending,
         };
       case "REJECTED":
+        // Same asymmetry as APPROVED above: a group verdict is decided for the
+        // whole paused phase, and the generic wording describes one request.
+        if (confirm.item.groupId) {
+          return {
+            title: t("hitl.confirmRejectTitle", "Reject request?"),
+            description: t(
+              "hitl.confirmRejectGroupDescription",
+              "Reject the whole paused phase. Every task waiting on this pause is rejected with it, and the discussion does not continue past it — open the group to decide them individually.",
+            ),
+            confirmLabel: t("hitl.reject", "Reject"),
+            variant: "destructive" as const,
+            isPending: groupApproveMutation.isPending,
+          };
+        }
         return {
           title: t("hitl.confirmRejectTitle", "Reject request?"),
           description: t("hitl.confirmRejectDescription", "Reject this request? The conversation will not proceed."),

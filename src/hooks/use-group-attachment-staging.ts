@@ -150,16 +150,23 @@ export function useGroupAttachmentStaging(enabled: boolean): GroupAttachmentStag
         seen.add(id);
         return true;
       });
-      const picked = fresh.slice(0, room);
-      if (picked.length < fresh.length) toast.warning(tooMany());
-
       const accepted: PendingGroupAttachment[] = [];
+      // Set when a file was turned away because the count was already full,
+      // rather than for its own size. Truncating to `room` up front spent a
+      // slot on a file the loop below then rejected: pick one oversized file
+      // and one legal one with a single slot left, and the legal one was never
+      // looked at.
+      let overflowed = false;
       // The per-file cap alone is not enough: this endpoint takes the bytes
       // inline, so fifty legal files still become one enormous base64 body.
       let stagedBytes = staged.reduce((sum, a) => sum + a.sizeBytes, 0);
       // One message per selection, however many files miss out.
       let reportedBudget = false;
-      for (const file of picked) {
+      for (const file of fresh) {
+        if (accepted.length >= room) {
+          overflowed = true;
+          break;
+        }
         if (file.size > MAX_ATTACHMENT_BYTES) {
           toast.error(
             t("groups.attachmentTooLarge", "{{name}} is too large to attach", { name: file.name }),
@@ -194,6 +201,7 @@ export function useGroupAttachmentStaging(enabled: boolean): GroupAttachmentStag
           );
         }
       }
+      if (overflowed) toast.warning(tooMany());
       // Cleared while this read was in flight — the files belong to a composer
       // state that no longer exists.
       if (accepted.length && generationRef.current === generation) {
