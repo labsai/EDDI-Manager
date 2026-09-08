@@ -235,7 +235,7 @@ function ApprovalQueueRow({
                 <button
                   onClick={() => setExpanded((v) => !v)}
                   aria-expanded={expanded}
-                  className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-600 hover:bg-amber-500/20 transition-colors"
+                  className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-600 hover:bg-amber-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`review-${item.conversationId}`}
                 >
                   {expanded ? t("common.close", "Close") : t("hitl.review", "Review")}
@@ -247,7 +247,7 @@ function ApprovalQueueRow({
                 <button
                   onClick={() => onRequestConfirm(item, "CANCEL")}
                   disabled={cancelMutation.isPending && cancelMutation.variables === item.conversationId}
-                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`cancel-${item.conversationId}`}
                 >
                   {t("hitl.cancel", "Cancel")}
@@ -259,7 +259,7 @@ function ApprovalQueueRow({
                 <button
                   onClick={() => onRequestConfirm(item, "APPROVED")}
                   disabled={resumeMutation.isPending && resumeMutation.variables?.conversationId === item.conversationId}
-                  className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                  className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`approve-${item.conversationId}`}
                 >
                   {t("hitl.approve", "Approve")}
@@ -267,7 +267,7 @@ function ApprovalQueueRow({
                 <button
                   onClick={() => onRequestConfirm(item, "REJECTED")}
                   disabled={resumeMutation.isPending && resumeMutation.variables?.conversationId === item.conversationId}
-                  className="rounded-md bg-destructive px-2.5 py-1 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50"
+                  className="rounded-md bg-destructive px-2.5 py-1 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`reject-${item.conversationId}`}
                 >
                   {t("hitl.reject", "Reject")}
@@ -275,7 +275,7 @@ function ApprovalQueueRow({
                 <button
                   onClick={() => onRequestConfirm(item, "CANCEL")}
                   disabled={cancelMutation.isPending && cancelMutation.variables === item.conversationId}
-                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`cancel-${item.conversationId}`}
                 >
                   {t("hitl.cancel", "Cancel")}
@@ -291,7 +291,7 @@ function ApprovalQueueRow({
                 <button
                   onClick={() => onRequestConfirm(item, "APPROVED")}
                   disabled={groupDecisionPending}
-                  className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                  className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`approve-${item.conversationId}`}
                 >
                   {t("hitl.approve", "Approve")}
@@ -299,7 +299,7 @@ function ApprovalQueueRow({
                 <button
                   onClick={() => onRequestConfirm(item, "REJECTED")}
                   disabled={groupDecisionPending}
-                  className="rounded-md bg-destructive px-2.5 py-1 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50"
+                  className="rounded-md bg-destructive px-2.5 py-1 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`reject-${item.conversationId}`}
                 >
                   {t("hitl.reject", "Reject")}
@@ -307,7 +307,7 @@ function ApprovalQueueRow({
                 <button
                   onClick={() => onRequestConfirm(item, "CANCEL")}
                   disabled={groupDecisionPending}
-                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid={`cancel-${item.conversationId}`}
                 >
                   {t("hitl.cancel", "Cancel")}

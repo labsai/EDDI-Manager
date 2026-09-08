@@ -3568,7 +3568,8 @@
       "pausedForApproval": "Dieser Schritt wartet auf eine menschliche Entscheidung. Nach der Freigabe läuft er weiter.",
       "pausedRejected": "Diese Unterhaltung wartet auf eine menschliche Entscheidung — die Nachricht wurde deshalb nicht gesendet.",
       "reviewApprovals": "Offene Freigaben prüfen",
-      "stop": "Erzeugung stoppen"
+      "stop": "Erzeugung stoppen",
+      "streamEnded": "Die Verbindung endete, bevor die Antwort fertig war. Was angekommen ist, steht oben — zum erneuten Versuch noch einmal senden."
     },
     "chat": {
       "agentDetails": "Agenten-Details",

@@ -817,6 +817,63 @@ describe("WorkforceThread – Attachment Features", () => {
       expect(screen.queryByText("While paused")).not.toBeInTheDocument();
     });
 
+    it("reports a stream that stops before it finishes, keeping what arrived", async () => {
+      // Settling silently presented a truncated reply as a finished one, with
+      // no way to tell and nothing to do about it.
+      setupMocks({
+        sendMessageStreaming: (vi.spyOn(chatApi, "sendMessageStreaming") as any).mockImplementation(
+          async function* () {
+            yield { type: "token", data: "Half an answer" };
+            // Ends without `done` — a dropped connection, not a finished turn.
+          },
+        ),
+      });
+      renderThread();
+      await waitForInit();
+      await send("Long one");
+
+      const error = await screen.findByTestId("thread-send-error");
+      expect(error).toHaveTextContent(/connection ended/i);
+      // The partial reply is real content and stays.
+      expect(screen.getByText("Half an answer")).toBeInTheDocument();
+      // The question stays above it, so re-sending appends below rather than
+      // leaving the half-answer stranded above the next question.
+      expect(screen.getByText("Long one")).toBeInTheDocument();
+    });
+
+    it("does not report a stream the reader stopped", async () => {
+      setupMocks({
+        sendMessageStreaming: (vi.spyOn(chatApi, "sendMessageStreaming") as any).mockImplementation(
+          async function* (
+            _env: string,
+            _agentId: string,
+            _convId: string,
+            _input: unknown,
+            signal?: AbortSignal,
+          ) {
+            yield { type: "token", data: "Partial" };
+            await new Promise((_resolve, reject) => {
+              signal?.addEventListener("abort", () =>
+                reject(new DOMException("aborted", "AbortError")),
+              );
+            });
+          },
+        ),
+      });
+      renderThread();
+      await waitForInit();
+      const user = await send("Stop me");
+
+      await screen.findByText(/Partial/);
+      await user.click(screen.getByTestId("thread-stop"));
+
+      await waitFor(() =>
+        expect(screen.queryByTestId("thread-stop")).not.toBeInTheDocument(),
+      );
+      // Stopping is a decision, not a failure.
+      expect(screen.queryByTestId("thread-send-error")).not.toBeInTheDocument();
+    });
+
     it("streams the reply as it arrives, and can be stopped", async () => {
       setupMocks({
         sendMessageStreaming: (vi.spyOn(chatApi, "sendMessageStreaming") as any).mockImplementation(

@@ -3603,7 +3603,8 @@
       "pausedForApproval": "Ce tour est en pause dans l'attente d'une décision humaine. Il reprendra une fois la demande approuvée.",
       "pausedRejected": "Cette conversation est en pause dans l'attente d'une décision humaine ; le message n'a donc pas été envoyé.",
       "reviewApprovals": "Examiner les approbations en attente",
-      "stop": "Arrêter la génération"
+      "stop": "Arrêter la génération",
+      "streamEnded": "La connexion s'est interrompue avant la fin de la réponse. Ce qui est arrivé figure ci-dessus ; renvoyez le message pour réessayer."
     },
     "chat": {
       "agentDetails": "Détails de l agent",

@@ -3603,7 +3603,8 @@
       "pausedForApproval": "Esta vez está em pausa à espera de uma decisão humana. Retoma assim que o pedido for aprovado.",
       "pausedRejected": "Esta conversa está em pausa à espera de uma decisão humana, por isso a mensagem não foi enviada.",
       "reviewApprovals": "Rever aprovações pendentes",
-      "stop": "Parar a geração"
+      "stop": "Parar a geração",
+      "streamEnded": "A ligação terminou antes de a resposta ficar completa. O que chegou está acima — envie novamente para tentar outra vez."
     },
     "chat": {
       "agentDetails": "Detalhes do Agente",

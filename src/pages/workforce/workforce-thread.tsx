@@ -913,6 +913,10 @@ function WorkforceThread() {
 
       try {
         let streamedAnything = false;
+        // Which terminal event actually arrived. A stream can also just stop —
+        // a dropped connection, a proxy timing out — and that is neither.
+        let sawDone = false;
+        let sawError = false;
 
         for await (const event of sendMessageStreaming(
           "production",
@@ -927,6 +931,7 @@ function WorkforceThread() {
             continue;
           }
           if (event.type === "error") {
+            sawError = true;
             // The backend sends `{"message","code"}`; a known code has a
             // sentence in the reader's language, and the backend's own text is
             // the fallback rather than something discarded.
@@ -944,6 +949,7 @@ function WorkforceThread() {
             break;
           }
           if (event.type === "done") {
+            sawDone = true;
             // A turn that produced no tokens still has its answer in the
             // snapshot, and a turn that paused for approval says so there.
             let finalContent: string | undefined;
@@ -981,9 +987,27 @@ function WorkforceThread() {
           }
         }
 
-        // A stream that ended without `done` (a dropped connection) still has
-        // to settle, or the placeholder streams forever.
+        // A stream that ended without `done` still has to settle, or the
+        // placeholder streams forever — but settling silently was wrong: it
+        // presented a truncated reply as a finished one, with no way to tell
+        // and nothing to do about it.
         settle();
+        if (!sawDone && !sawError && !abort.signal.aborted) {
+          setSendError({
+            ...failed(
+              t(
+                "Workforce.thread.streamEnded",
+                "The connection ended before the reply finished. What arrived is above — send again to retry.",
+              ),
+              false,
+            ),
+            // The partial reply stays, so the message that produced it has to
+            // stay above it. Withdrawing the question on retry would leave the
+            // half-answer sitting above the next question rather than below
+            // the one it belongs to.
+            pendingUserMessage: null,
+          });
+        }
         updateActivityRef.current(boardId, memberId);
       } catch (err) {
         // Expected once `done` has already aborted the reader.

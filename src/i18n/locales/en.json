@@ -3568,7 +3568,8 @@
       "pausedForApproval": "This turn is paused waiting for a human decision. It resumes once the request is approved.",
       "pausedRejected": "This conversation is paused waiting for a human decision, so the message was not sent.",
       "reviewApprovals": "Review pending approvals",
-      "stop": "Stop generating"
+      "stop": "Stop generating",
+      "streamEnded": "The connection ended before the reply finished. What arrived is above — send again to retry."
     },
     "chat": {
       "agentDetails": "Agent Details",
