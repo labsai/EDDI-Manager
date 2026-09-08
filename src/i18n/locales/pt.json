@@ -2701,11 +2701,24 @@
       "acceptSuperseded": "Também aceitou {{proposal}}, que a contraproposta acima substitui.",
       "inReturnFor": "em troca de {{received}}",
       "lessons_one": "{{count}} lição para a equipa",
-      "lessons_other": "{{count}} lições para a equipa"
+      "lessons_other": "{{count}} lições para a equipa",
+      "bids_many": "{{count}} propostas",
+      "lessons_many": "{{count}} lições para a equipa"
     },
     "discussionDeleted": "Discussão eliminada",
     "confirmDeleteDiscussionTitle": "Eliminar esta discussão?",
-    "confirmDeleteDiscussionDescription": "A transcrição e tudo o que contém são removidos permanentemente. Não é possível anular."
+    "confirmDeleteDiscussionDescription": "A transcrição e tudo o que contém são removidos permanentemente. Não é possível anular.",
+    "taskStatus": {
+      "PENDING": "Pendente",
+      "ASSIGNED": "Atribuída",
+      "IN_PROGRESS": "Em curso",
+      "COMPLETED": "Concluída",
+      "VERIFIED": "Verificada",
+      "FAILED": "Falhou",
+      "BLOCKED": "Bloqueada",
+      "AWAITING_APPROVAL": "A aguardar aprovação"
+    },
+    "confirmDeleteMembers": "Eliminar também os agentes membros deste grupo. Se ficarem, deixam de pertencer a algo e aparecem em Órfãos."
   },
   "taskBoard": {
     "title": "Quadro de tarefas",
@@ -3171,7 +3184,11 @@
     "hitlApprovalChannel": "ID do Canal de Aprovação",
     "hitlApprovalChannelHint": "Canal do Slack que recebe um cartão de aprovação quando uma conversa é pausada.",
     "hitlApproverUserIds": "IDs de Utilizador dos Aprovadores",
-    "hitlApproverUserIdsHint": "IDs de utilizador do Slack separados por vírgulas com permissão para aprovar através de botões. Sem esta lista, os botões não são apresentados (falha fechada)."
+    "hitlApproverUserIdsHint": "IDs de utilizador do Slack separados por vírgulas com permissão para aprovar através de botões. Sem esta lista, os botões não são apresentados (falha fechada).",
+    "typeAgent": "Agente",
+    "typeGroup": "Grupo",
+    "selectGroup": "Escolher um grupo…",
+    "unknownGroup": "{{id}} (não encontrado)"
   },
   "hitl": {
     "loadingApprovalDetails": "Carregando detalhes de aprovação…",
@@ -4283,7 +4300,10 @@
     "cadenceSummary_many": "até {{max}} tarefas/execução",
     "cadenceSummary_one": "até {{max}} tarefa/execução",
     "cadenceSummary_other": "até {{max}} tarefas/execução",
-    "inputTemplateTooLong": "O modelo de prompt está limitado a {{max}} caracteres."
+    "inputTemplateTooLong": "O modelo de prompt está limitado a {{max}} caracteres.",
+    "cronInvalid": "Essa expressão cron não é válida.",
+    "scheduleUnknown": "Agendamento indisponível",
+    "nextRun": "próxima {{when}}"
   },
   "workforceWizard": {
     "title": "Nova equipa"

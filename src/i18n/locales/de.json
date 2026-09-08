@@ -2678,7 +2678,18 @@
     },
     "discussionDeleted": "Diskussion gelöscht",
     "confirmDeleteDiscussionTitle": "Diese Diskussion löschen?",
-    "confirmDeleteDiscussionDescription": "Das Protokoll und alles darin werden dauerhaft entfernt. Das lässt sich nicht rückgängig machen."
+    "confirmDeleteDiscussionDescription": "Das Protokoll und alles darin werden dauerhaft entfernt. Das lässt sich nicht rückgängig machen.",
+    "taskStatus": {
+      "PENDING": "Offen",
+      "ASSIGNED": "Zugewiesen",
+      "IN_PROGRESS": "In Arbeit",
+      "COMPLETED": "Abgeschlossen",
+      "VERIFIED": "Geprüft",
+      "FAILED": "Fehlgeschlagen",
+      "BLOCKED": "Blockiert",
+      "AWAITING_APPROVAL": "Wartet auf Freigabe"
+    },
+    "confirmDeleteMembers": "Auch die Mitglieds-Agenten dieser Gruppe löschen. Bleiben sie zurück, gehören sie zu nichts mehr und erscheinen unter „Verwaiste“."
   },
   "taskBoard": {
     "title": "Aufgabenübersicht",
@@ -3142,7 +3153,11 @@
     "hitlApprovalChannel": "Freigabe-Channel-ID",
     "hitlApprovalChannelHint": "Slack-Channel, der eine Freigabekarte erhält, wenn eine Konversation pausiert.",
     "hitlApproverUserIds": "Benutzer-IDs der Freigeber",
-    "hitlApproverUserIdsHint": "Kommagetrennte Slack-Benutzer-IDs, die über Buttons freigeben dürfen. Ohne diese Liste werden keine Buttons angezeigt (fail-closed)."
+    "hitlApproverUserIdsHint": "Kommagetrennte Slack-Benutzer-IDs, die über Buttons freigeben dürfen. Ohne diese Liste werden keine Buttons angezeigt (fail-closed).",
+    "typeAgent": "Agent",
+    "typeGroup": "Gruppe",
+    "selectGroup": "Gruppe auswählen …",
+    "unknownGroup": "{{id}} (nicht gefunden)"
   },
   "hitl": {
     "loadingApprovalDetails": "Freigabedetails werden geladen …",
@@ -4245,7 +4260,10 @@
     "maxCostInvalid": "Die maximalen Kosten pro Lauf müssen eine Zahl ab 0 sein.",
     "cadenceSummary_one": "bis zu {{max}} Aufgabe/Lauf",
     "cadenceSummary_other": "bis zu {{max}} Aufgaben/Lauf",
-    "inputTemplateTooLong": "Die Prompt-Vorlage ist auf {{max}} Zeichen begrenzt."
+    "inputTemplateTooLong": "Die Prompt-Vorlage ist auf {{max}} Zeichen begrenzt.",
+    "cronInvalid": "Das ist kein gültiger Cron-Ausdruck.",
+    "scheduleUnknown": "Zeitplan nicht verfügbar",
+    "nextRun": "nächster {{when}}"
   },
   "workforceWizard": {
     "title": "Neues Team"

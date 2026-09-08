@@ -2678,7 +2678,18 @@
     },
     "discussionDeleted": "ลบการอภิปรายแล้ว",
     "confirmDeleteDiscussionTitle": "ลบการอภิปรายนี้หรือไม่",
-    "confirmDeleteDiscussionDescription": "บันทึกการสนทนาและทุกอย่างในนั้นจะถูกลบอย่างถาวร และไม่สามารถกู้คืนได้"
+    "confirmDeleteDiscussionDescription": "บันทึกการสนทนาและทุกอย่างในนั้นจะถูกลบอย่างถาวร และไม่สามารถกู้คืนได้",
+    "taskStatus": {
+      "PENDING": "รอดำเนินการ",
+      "ASSIGNED": "มอบหมายแล้ว",
+      "IN_PROGRESS": "กำลังดำเนินการ",
+      "COMPLETED": "เสร็จสิ้น",
+      "VERIFIED": "ตรวจสอบแล้ว",
+      "FAILED": "ล้มเหลว",
+      "BLOCKED": "ถูกบล็อก",
+      "AWAITING_APPROVAL": "รออนุมัติ"
+    },
+    "confirmDeleteMembers": "ลบเอเจนต์สมาชิกของกลุ่มนี้ด้วย หากปล่อยไว้ เอเจนต์จะไม่สังกัดสิ่งใดและจะไปอยู่ในรายการกำพร้า"
   },
   "taskBoard": {
     "title": "บอร์ดงาน",
@@ -3142,7 +3153,11 @@
     "hitlApprovalChannel": "ID ช่องอนุมัติ",
     "hitlApprovalChannelHint": "ช่อง Slack ที่รับการ์ดอนุมัติเมื่อการสนทนาหยุดชั่วคราว",
     "hitlApproverUserIds": "ID ผู้ใช้ที่เป็นผู้อนุมัติ",
-    "hitlApproverUserIdsHint": "ID ผู้ใช้ Slack คั่นด้วยจุลภาคที่ได้รับอนุญาตให้อนุมัติผ่านปุ่ม หากไม่มีรายการนี้ ปุ่มจะไม่ถูกแสดง (ปิดโดยปริยายเมื่อล้มเหลว)"
+    "hitlApproverUserIdsHint": "ID ผู้ใช้ Slack คั่นด้วยจุลภาคที่ได้รับอนุญาตให้อนุมัติผ่านปุ่ม หากไม่มีรายการนี้ ปุ่มจะไม่ถูกแสดง (ปิดโดยปริยายเมื่อล้มเหลว)",
+    "typeAgent": "เอเจนต์",
+    "typeGroup": "กลุ่ม",
+    "selectGroup": "เลือกกลุ่ม…",
+    "unknownGroup": "{{id}} (ไม่พบ)"
   },
   "hitl": {
     "loadingApprovalDetails": "กำลังโหลดรายละเอียดการอนุมัติ…",
@@ -4245,7 +4260,10 @@
     "maxCostInvalid": "ต้นทุนสูงสุดต่อการรันต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป",
     "cadenceSummary_other": "สูงสุด {{max}} งานต่อการรัน",
     "cadenceSummary_one": "สูงสุด {{max}} งานต่อการรัน",
-    "inputTemplateTooLong": "เทมเพลตพรอมต์จำกัดที่ {{max}} อักขระ"
+    "inputTemplateTooLong": "เทมเพลตพรอมต์จำกัดที่ {{max}} อักขระ",
+    "cronInvalid": "นี่ไม่ใช่นิพจน์ cron ที่ถูกต้อง",
+    "scheduleUnknown": "ไม่พบตารางเวลา",
+    "nextRun": "ครั้งถัดไป {{when}}"
   },
   "workforceWizard": {
     "title": "ทีมใหม่"

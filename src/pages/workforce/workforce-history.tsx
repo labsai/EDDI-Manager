@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import {
+  useGroup,
   useGroupConversations,
   useDeleteGroupConversation,
 } from "@/hooks/use-groups";
@@ -234,6 +235,12 @@ function WorkforceHistory() {
   const listRef = useRef<HTMLDivElement>(null);
 
   // Data
+  // Titles the exported file. Without it every export is headed "Discussion",
+  // whichever task force produced it.
+  const { data: boardConfig } = useGroup(
+    boardId ?? "",
+    Number(searchParams.get("version")) || 1,
+  );
   const { data: conversations, isLoading, isError } = useGroupConversations(
     boardId ?? "",
     PAGE_SIZE * (page + 1),
@@ -486,6 +493,7 @@ function WorkforceHistory() {
             <ConversationViewer
               groupId={boardId}
               conversationId={selectedId}
+              groupName={boardConfig?.name}
               onClose={() => {
                 setSelectedId(null);
                 setShowViewer(false);

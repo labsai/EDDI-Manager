@@ -2782,11 +2782,30 @@
       "acceptSuperseded": "قَبِل أيضًا {{proposal}}، غير أن العرض المضاد أعلاه يلغيه.",
       "inReturnFor": "مقابل {{received}}",
       "lessons_one": "درس واحد للفريق",
-      "lessons_other": "{{count}} دروس للفريق"
+      "lessons_other": "{{count}} دروس للفريق",
+      "bids_zero": "لا عروض",
+      "bids_two": "عرضان",
+      "bids_few": "{{count}} عروض",
+      "bids_many": "{{count}} عرضًا",
+      "lessons_zero": "لا دروس للفريق",
+      "lessons_two": "درسان للفريق",
+      "lessons_few": "{{count}} دروس للفريق",
+      "lessons_many": "{{count}} درسًا للفريق"
     },
     "discussionDeleted": "تم حذف النقاش",
     "confirmDeleteDiscussionTitle": "حذف هذا النقاش؟",
-    "confirmDeleteDiscussionDescription": "سيُحذف السجل وكل ما فيه نهائيًا. لا يمكن التراجع عن ذلك."
+    "confirmDeleteDiscussionDescription": "سيُحذف السجل وكل ما فيه نهائيًا. لا يمكن التراجع عن ذلك.",
+    "taskStatus": {
+      "PENDING": "قيد الانتظار",
+      "ASSIGNED": "مُسنَدة",
+      "IN_PROGRESS": "قيد التنفيذ",
+      "COMPLETED": "مكتملة",
+      "VERIFIED": "مُتحقَّق منها",
+      "FAILED": "فاشلة",
+      "BLOCKED": "محجوبة",
+      "AWAITING_APPROVAL": "بانتظار الموافقة"
+    },
+    "confirmDeleteMembers": "احذف أيضًا وكلاء هذه المجموعة. إن بقوا فلن ينتموا إلى شيء وسيظهرون ضمن «اليتيمة»."
   },
   "taskBoard": {
     "title": "لوحة المهام",
@@ -3258,7 +3277,11 @@
     "hitlApprovalChannel": "معرّف قناة الموافقة",
     "hitlApprovalChannelHint": "قناة Slack التي تتلقى بطاقة موافقة عند إيقاف المحادثة مؤقتًا.",
     "hitlApproverUserIds": "معرّفات مستخدمي الموافِقين",
-    "hitlApproverUserIdsHint": "معرّفات مستخدمي Slack مفصولة بفواصل ويُسمح لهم بالموافقة عبر الأزرار. بدون هذه القائمة لا تُعرض الأزرار (فشل مغلق)."
+    "hitlApproverUserIdsHint": "معرّفات مستخدمي Slack مفصولة بفواصل ويُسمح لهم بالموافقة عبر الأزرار. بدون هذه القائمة لا تُعرض الأزرار (فشل مغلق).",
+    "typeAgent": "وكيل",
+    "typeGroup": "مجموعة",
+    "selectGroup": "اختر مجموعة…",
+    "unknownGroup": "{{id}} (غير موجودة)"
   },
   "hitl": {
     "loadingApprovalDetails": "جارٍ تحميل تفاصيل الموافقة…",
@@ -4397,7 +4420,10 @@
     "cadenceSummary_two": "حتى {{max}} مهام/تشغيل",
     "cadenceSummary_zero": "حتى {{max}} مهام/تشغيل",
     "cadenceSummary_other": "حتى {{max}} مهام/تشغيل",
-    "inputTemplateTooLong": "قالب المطالبة محدود بـ {{max}} حرفاً."
+    "inputTemplateTooLong": "قالب المطالبة محدود بـ {{max}} حرفاً.",
+    "cronInvalid": "هذا ليس تعبير cron صالحًا.",
+    "scheduleUnknown": "الجدولة غير متاحة",
+    "nextRun": "التالي {{when}}"
   },
   "workforceWizard": {
     "title": "فريق جديد"

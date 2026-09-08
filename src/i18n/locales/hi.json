@@ -2678,7 +2678,18 @@
     },
     "discussionDeleted": "चर्चा हटाई गई",
     "confirmDeleteDiscussionTitle": "यह चर्चा हटाएँ?",
-    "confirmDeleteDiscussionDescription": "प्रतिलेख और उसमें मौजूद सब कुछ स्थायी रूप से हट जाएगा। इसे पूर्ववत नहीं किया जा सकता।"
+    "confirmDeleteDiscussionDescription": "प्रतिलेख और उसमें मौजूद सब कुछ स्थायी रूप से हट जाएगा। इसे पूर्ववत नहीं किया जा सकता।",
+    "taskStatus": {
+      "PENDING": "लंबित",
+      "ASSIGNED": "सौंपी गई",
+      "IN_PROGRESS": "चल रही है",
+      "COMPLETED": "पूर्ण",
+      "VERIFIED": "सत्यापित",
+      "FAILED": "विफल",
+      "BLOCKED": "अवरुद्ध",
+      "AWAITING_APPROVAL": "स्वीकृति की प्रतीक्षा में"
+    },
+    "confirmDeleteMembers": "इस समूह के सदस्य एजेंट भी हटाएँ। पीछे छूटने पर वे किसी से नहीं जुड़े रहते और «अनाथ» में दिखते हैं।"
   },
   "taskBoard": {
     "title": "कार्य बोर्ड",
@@ -3142,7 +3153,11 @@
     "hitlApprovalChannel": "अनुमोदन चैनल ID",
     "hitlApprovalChannelHint": "Slack चैनल जिसे बातचीत रुकने पर अनुमोदन कार्ड प्राप्त होता है।",
     "hitlApproverUserIds": "अनुमोदक उपयोगकर्ता ID",
-    "hitlApproverUserIdsHint": "अल्पविराम-पृथक Slack उपयोगकर्ता ID जिन्हें बटन के माध्यम से अनुमोदन की अनुमति है। इस सूची के बिना, बटन प्रदर्शित नहीं होते (फेल-क्लोज्ड)।"
+    "hitlApproverUserIdsHint": "अल्पविराम-पृथक Slack उपयोगकर्ता ID जिन्हें बटन के माध्यम से अनुमोदन की अनुमति है। इस सूची के बिना, बटन प्रदर्शित नहीं होते (फेल-क्लोज्ड)।",
+    "typeAgent": "एजेंट",
+    "typeGroup": "समूह",
+    "selectGroup": "एक समूह चुनें…",
+    "unknownGroup": "{{id}} (नहीं मिला)"
   },
   "hitl": {
     "loadingApprovalDetails": "अनुमोदन विवरण लोड हो रहा है…",
@@ -4245,7 +4260,10 @@
     "maxCostInvalid": "प्रति रन अधिकतम लागत 0 या उससे अधिक संख्या होनी चाहिए।",
     "cadenceSummary_one": "प्रति रन अधिकतम {{max}} कार्य",
     "cadenceSummary_other": "प्रति रन अधिकतम {{max}} कार्य",
-    "inputTemplateTooLong": "प्रॉम्प्ट टेम्पलेट {{max}} वर्णों तक सीमित है।"
+    "inputTemplateTooLong": "प्रॉम्प्ट टेम्पलेट {{max}} वर्णों तक सीमित है।",
+    "cronInvalid": "यह मान्य क्रॉन अभिव्यक्ति नहीं है।",
+    "scheduleUnknown": "शेड्यूल उपलब्ध नहीं",
+    "nextRun": "अगला {{when}}"
   },
   "workforceWizard": {
     "title": "नई टीम"

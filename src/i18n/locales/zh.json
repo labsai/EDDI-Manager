@@ -2678,7 +2678,18 @@
     },
     "discussionDeleted": "已删除讨论",
     "confirmDeleteDiscussionTitle": "删除该讨论？",
-    "confirmDeleteDiscussionDescription": "记录及其中的全部内容将被永久删除，且无法撤销。"
+    "confirmDeleteDiscussionDescription": "记录及其中的全部内容将被永久删除，且无法撤销。",
+    "taskStatus": {
+      "PENDING": "待处理",
+      "ASSIGNED": "已指派",
+      "IN_PROGRESS": "进行中",
+      "COMPLETED": "已完成",
+      "VERIFIED": "已验证",
+      "FAILED": "已失败",
+      "BLOCKED": "已阻塞",
+      "AWAITING_APPROVAL": "等待审批"
+    },
+    "confirmDeleteMembers": "同时删除该群组的成员智能体。若保留，它们将不再归属任何群组，并出现在“孤立项”中。"
   },
   "taskBoard": {
     "title": "任务看板",
@@ -3142,7 +3153,11 @@
     "hitlApprovalChannel": "审批频道 ID",
     "hitlApprovalChannelHint": "会话暂停时接收审批卡片的 Slack 频道。",
     "hitlApproverUserIds": "审批者用户 ID",
-    "hitlApproverUserIdsHint": "以逗号分隔、允许通过按钮进行审批的 Slack 用户 ID。若无此列表，则不渲染按钮（默认关闭）。"
+    "hitlApproverUserIdsHint": "以逗号分隔、允许通过按钮进行审批的 Slack 用户 ID。若无此列表，则不渲染按钮（默认关闭）。",
+    "typeAgent": "智能体",
+    "typeGroup": "群组",
+    "selectGroup": "选择群组…",
+    "unknownGroup": "{{id}}（未找到）"
   },
   "hitl": {
     "loadingApprovalDetails": "正在加载审批详情…",
@@ -4245,7 +4260,10 @@
     "maxCostInvalid": "每次运行的最高费用必须是大于或等于 0 的数字。",
     "cadenceSummary_other": "每次运行最多 {{max}} 个任务",
     "cadenceSummary_one": "每次运行最多 {{max}} 个任务",
-    "inputTemplateTooLong": "提示模板限制为 {{max}} 个字符。"
+    "inputTemplateTooLong": "提示模板限制为 {{max}} 个字符。",
+    "cronInvalid": "这不是有效的 cron 表达式。",
+    "scheduleUnknown": "无法获取排程",
+    "nextRun": "下次 {{when}}"
   },
   "workforceWizard": {
     "title": "新建团队"

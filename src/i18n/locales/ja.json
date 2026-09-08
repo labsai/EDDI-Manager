@@ -2678,7 +2678,18 @@
     },
     "discussionDeleted": "ディスカッションを削除しました",
     "confirmDeleteDiscussionTitle": "このディスカッションを削除しますか？",
-    "confirmDeleteDiscussionDescription": "記録とその内容はすべて完全に削除されます。元に戻すことはできません。"
+    "confirmDeleteDiscussionDescription": "記録とその内容はすべて完全に削除されます。元に戻すことはできません。",
+    "taskStatus": {
+      "PENDING": "未着手",
+      "ASSIGNED": "割り当て済み",
+      "IN_PROGRESS": "進行中",
+      "COMPLETED": "完了",
+      "VERIFIED": "検証済み",
+      "FAILED": "失敗",
+      "BLOCKED": "ブロック中",
+      "AWAITING_APPROVAL": "承認待ち"
+    },
+    "confirmDeleteMembers": "このグループのメンバーエージェントも削除します。残すとどこにも属さなくなり、「孤立」に表示されます。"
   },
   "taskBoard": {
     "title": "タスクボード",
@@ -3142,7 +3153,11 @@
     "hitlApprovalChannel": "承認チャネル ID",
     "hitlApprovalChannelHint": "会話が一時停止したときに承認カードを受け取る Slack チャネル。",
     "hitlApproverUserIds": "承認者ユーザー ID",
-    "hitlApproverUserIdsHint": "ボタンで承認できる Slack ユーザー ID（カンマ区切り）。このリストがない場合、ボタンは表示されません（フェイルクローズ）。"
+    "hitlApproverUserIdsHint": "ボタンで承認できる Slack ユーザー ID（カンマ区切り）。このリストがない場合、ボタンは表示されません（フェイルクローズ）。",
+    "typeAgent": "エージェント",
+    "typeGroup": "グループ",
+    "selectGroup": "グループを選択…",
+    "unknownGroup": "{{id}}（見つかりません）"
   },
   "hitl": {
     "loadingApprovalDetails": "承認の詳細を読み込んでいます…",
@@ -4245,7 +4260,10 @@
     "maxCostInvalid": "1回あたりの最大コストは 0 以上の数値である必要があります。",
     "cadenceSummary_other": "1回の実行につき最大 {{max}} タスク",
     "cadenceSummary_one": "1回の実行につき最大 {{max}} タスク",
-    "inputTemplateTooLong": "プロンプトテンプレートは {{max}} 文字までです。"
+    "inputTemplateTooLong": "プロンプトテンプレートは {{max}} 文字までです。",
+    "cronInvalid": "有効な cron 式ではありません。",
+    "scheduleUnknown": "スケジュールを取得できません",
+    "nextRun": "次回 {{when}}"
   },
   "workforceWizard": {
     "title": "新しいチーム"

@@ -4,10 +4,16 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Boxes, Search, Plus, ExternalLink, Copy, Trash2, ArrowUp, ArrowDown, ArrowUpDown, LayoutTemplate } from "lucide-react";
 import { toast } from "sonner";
-import { useEnrichedGroupDescriptors, useDeleteGroup, useDuplicateGroup } from "@/hooks/use-groups";
+import {
+  useEnrichedGroupDescriptors,
+  useDeleteGroup,
+  useDeleteGroupWithMembers,
+  useDuplicateGroup,
+} from "@/hooks/use-groups";
 import { GroupCard } from "@/components/groups/group-card";
 import { styleDisplay } from "@/lib/discussion-styles";
 import { CreateGroupDialog } from "@/components/groups/create-group-dialog";
+import type { AgentGroupConfiguration } from "@/lib/api/groups";
 import { CreateOrWizardDialog } from "@/components/shared/create-or-wizard-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -59,7 +65,18 @@ export function GroupsPage() {
 
   const { data: enrichedGroups, isLoading, isError, refetch } = useEnrichedGroupDescriptors(100, 0, search);
   const deleteMutation = useDeleteGroup();
+  const deleteWithMembersMutation = useDeleteGroupWithMembers();
   const duplicateMutation = useDuplicateGroup();
+  /**
+   * Whether to take the group's member agents with it.
+   *
+   * The group config panel and the Workforce settings page both offer this;
+   * the list's trash icon — the entry point most people actually use — deleted
+   * the group alone and said nothing, so a wizard-built team left its agents
+   * behind with nothing pointing at them. They show up on `/manage/orphans`,
+   * which is a poor way to learn what just happened.
+   */
+  const [deleteMembers, setDeleteMembers] = useState(false);
 
   const groupedGroups = useMemo(() => {
     const list = enrichedGroups ?? [];
@@ -92,9 +109,37 @@ export function GroupsPage() {
 
   function confirmDelete() {
     if (deleteTarget) {
+      if (deleteMembers) {
+        const config = enrichedGroups?.find((g) => g.id === deleteTarget.id);
+        // Cascading needs the member list, which only the enriched descriptor
+        // carries. Without it there is nothing to cascade over, so fall through
+        // to the group-only delete rather than pretend.
+        if (config) {
+          deleteWithMembersMutation.mutate(
+            {
+              groupId: deleteTarget.id,
+              version: deleteTarget.version,
+              config: config as unknown as AgentGroupConfiguration,
+            },
+            {
+              onSuccess: () => {
+                toast.success(
+                  t(
+                    "groups.deleteWithMembersSuccess",
+                    "Group and all member agents deleted (soft-delete)",
+                  ),
+                );
+                setDeleteTarget(null);
+              },
+              onError: () => toast.error(t("common.error")),
+            },
+          );
+          return;
+        }
+      }
       deleteMutation.mutate(deleteTarget, {
         onSuccess: () => {
-          toast.success(t("common.delete") + " ✓");
+          toast.success(t("groups.deleteGroupOnlySuccess", "Group deleted (agents kept)"));
           setDeleteTarget(null);
         },
         onError: () => toast.error(t("common.error")),
@@ -407,14 +452,40 @@ export function GroupsPage() {
       {/* Delete confirmation */}
       <AlertDialog
         open={deleteTarget !== null}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+            // Never carry a cascade choice into the next group's dialog.
+            setDeleteMembers(false);
+          }
+        }}
         title={t("groups.confirmDelete", "Delete this group?")}
-        description={t("groups.confirmDeleteDesc", "This will permanently delete the group configuration.")}
+        description={t(
+          "groups.confirmDeleteDesc",
+          "This will permanently delete the group configuration.",
+        )}
         confirmLabel={t("common.delete")}
         cancelLabel={t("common.cancel")}
+        variant="destructive"
         onConfirm={confirmDelete}
-        isPending={deleteMutation.isPending}
-      />
+        isPending={deleteMutation.isPending || deleteWithMembersMutation.isPending}
+      >
+        <label className="flex items-start gap-2 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={deleteMembers}
+            onChange={(e) => setDeleteMembers(e.target.checked)}
+            className="mt-0.5"
+            data-testid="delete-members-checkbox"
+          />
+          <span>
+            {t(
+              "groups.confirmDeleteMembers",
+              "Also delete this group's member agents. Left behind, they belong to nothing and show up under Orphans.",
+            )}
+          </span>
+        </label>
+      </AlertDialog>
     </div>
   );
 }

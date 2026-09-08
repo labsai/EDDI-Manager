@@ -2701,11 +2701,24 @@
       "acceptSuperseded": "A également accepté {{proposal}}, que la contre-proposition ci-dessus annule.",
       "inReturnFor": "en échange de {{received}}",
       "lessons_one": "{{count}} enseignement pour l'équipe",
-      "lessons_other": "{{count}} enseignements pour l'équipe"
+      "lessons_other": "{{count}} enseignements pour l'équipe",
+      "bids_many": "{{count}} offres",
+      "lessons_many": "{{count}} enseignements pour l'équipe"
     },
     "discussionDeleted": "Discussion supprimée",
     "confirmDeleteDiscussionTitle": "Supprimer cette discussion ?",
-    "confirmDeleteDiscussionDescription": "La transcription et tout ce qu'elle contient sont supprimés définitivement. Cette action est irréversible."
+    "confirmDeleteDiscussionDescription": "La transcription et tout ce qu'elle contient sont supprimés définitivement. Cette action est irréversible.",
+    "taskStatus": {
+      "PENDING": "En attente",
+      "ASSIGNED": "Attribuée",
+      "IN_PROGRESS": "En cours",
+      "COMPLETED": "Terminée",
+      "VERIFIED": "Vérifiée",
+      "FAILED": "Échouée",
+      "BLOCKED": "Bloquée",
+      "AWAITING_APPROVAL": "En attente d'approbation"
+    },
+    "confirmDeleteMembers": "Supprimer aussi les agents membres de ce groupe. S'ils restent, ils n'appartiennent plus à rien et apparaissent dans Orphelins."
   },
   "taskBoard": {
     "title": "Tableau des tâches",
@@ -3171,7 +3184,11 @@
     "hitlApprovalChannel": "ID du canal d'approbation",
     "hitlApprovalChannelHint": "Canal Slack qui reçoit une carte d'approbation lorsqu'une conversation est mise en pause.",
     "hitlApproverUserIds": "ID des utilisateurs approbateurs",
-    "hitlApproverUserIdsHint": "ID d'utilisateurs Slack séparés par des virgules, autorisés à approuver via les boutons. Sans cette liste, les boutons ne sont pas affichés (échec par fermeture)."
+    "hitlApproverUserIdsHint": "ID d'utilisateurs Slack séparés par des virgules, autorisés à approuver via les boutons. Sans cette liste, les boutons ne sont pas affichés (échec par fermeture).",
+    "typeAgent": "Agent",
+    "typeGroup": "Groupe",
+    "selectGroup": "Choisir un groupe…",
+    "unknownGroup": "{{id}} (introuvable)"
   },
   "hitl": {
     "loadingApprovalDetails": "Chargement des détails d’approbation…",
@@ -4283,7 +4300,10 @@
     "cadenceSummary_many": "jusqu'à {{max}} tâches/exécution",
     "cadenceSummary_one": "jusqu'à {{max}} tâche/exécution",
     "cadenceSummary_other": "jusqu'à {{max}} tâches/exécution",
-    "inputTemplateTooLong": "Le modèle de prompt est limité à {{max}} caractères."
+    "inputTemplateTooLong": "Le modèle de prompt est limité à {{max}} caractères.",
+    "cronInvalid": "Cette expression cron n'est pas valide.",
+    "scheduleUnknown": "Planification indisponible",
+    "nextRun": "prochaine {{when}}"
   },
   "workforceWizard": {
     "title": "Nouvelle équipe"
