@@ -241,7 +241,7 @@ take.
 
 ## `--color-warning` and the same tree-shaking trap
 
-`@theme` gained `--color-warning` / `--color-warning-foreground` (amber-700 in light,
+`@theme` gained `--color-warning` / `--color-warning-foreground` (amber-800 in light,
 amber-400 in dark) so the app's caution surfaces stop hard-coding `amber-*`. Both tokens
 reach `:root` in `compiled.css`, but only because of specific scanned call sites:
 
