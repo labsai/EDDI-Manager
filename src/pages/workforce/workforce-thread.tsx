@@ -882,14 +882,23 @@ function WorkforceThread() {
        * It stays there deliberately: the reader should be able to see what they
        * sent while the error is in front of them. `handleRetry` withdraws it
        * just before re-sending, so exactly one copy survives a retry.
+       *
+       * Not withdrawn once tokens have arrived. `settle` keeps a partial reply,
+       * and a retry that took the question away would leave that half-answer
+       * stranded above the NEXT question rather than below the one it belongs
+       * to. Decided here rather than at each call site: four sites were spelling
+       * out the same rule, and the one that did not — the pause after `done` --
+       * was the one that got it wrong.
        */
       const failed = (message: string, paused: boolean): ThreadSendError => ({
         message,
         retryText: messageText,
         retryAttachments: attachments,
         paused,
-        pendingUserMessage: userMsg,
+        pendingUserMessage: streamedAnything ? null : userMsg,
       });
+
+      let streamedAnything = false;
 
       const inputData: InputData = attachments?.length
         ? {
@@ -911,7 +920,6 @@ function WorkforceThread() {
           }
         : { input: messageText };
 
-      let streamedAnything = false;
       try {
         // Which terminal event actually arrived. A stream can also just stop —
         // a dropped connection, a proxy timing out — and that is neither.
@@ -945,13 +953,7 @@ function WorkforceThread() {
               /* non-JSON payload — the raw text is what there is */
             }
             settle();
-            setSendError({
-              ...failed(translateStreamError(code, t) ?? message, false),
-              // Same rule as a dropped stream: once a partial reply is on
-              // screen the question has to stay above it, or a retry leaves
-              // the half-answer stranded above the next question.
-              pendingUserMessage: streamedAnything ? null : userMsg,
-            });
+            setSendError(failed(translateStreamError(code, t) ?? message, false));
             break;
           }
           if (event.type === "done") {
@@ -1008,20 +1010,15 @@ function WorkforceThread() {
         // and nothing to do about it.
         settle();
         if (!sawDone && !sawError && !abort.signal.aborted) {
-          setSendError({
-            ...failed(
+          setSendError(
+            failed(
               t(
                 "Workforce.thread.streamEnded",
                 "The connection ended before the reply finished. What arrived is above — send again to retry.",
               ),
               false,
             ),
-            // The partial reply stays, so the message that produced it has to
-            // stay above it. Withdrawing the question on retry would leave the
-            // half-answer sitting above the next question rather than below
-            // the one it belongs to.
-            pendingUserMessage: null,
-          });
+          );
         }
         updateActivityRef.current(boardId, memberId);
       } catch (err) {
@@ -1033,24 +1030,23 @@ function WorkforceThread() {
           // conversation is paused. Both the placeholder and the optimistic
           // user message have to go: the backend never received it, and
           // leaving it in the transcript shows a message as sent that was not.
+          // `dropTurn` already removed the message: the backend never received
+          // it, so whatever `failed` records here has nothing left to withdraw.
+          // A paused error offers a link to the approvals queue rather than a
+          // Retry, so it is never read either way.
           dropTurn();
-          setSendError({
-            ...failed(
+          setSendError(
+            failed(
               t(
                 "Workforce.thread.pausedRejected",
                 "This conversation is paused waiting for a human decision, so the message was not sent.",
               ),
               true,
             ),
-            // Already withdrawn above — the backend never received it.
-            pendingUserMessage: null,
-          });
+          );
         } else {
           settle();
-          setSendError({
-            ...failed(getErrorMessage(err), false),
-            pendingUserMessage: streamedAnything ? null : userMsg,
-          });
+          setSendError(failed(getErrorMessage(err), false));
         }
       } finally {
         abortRef.current = null;

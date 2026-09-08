@@ -78,6 +78,22 @@ describe("generateMarkdown", () => {
     expect(md).toContain("Ship on Friday.");
   });
 
+  it("still writes the final answer when the SYNTHESIS entry says something else", () => {
+    // A synthesis entry that is not the final answer is a second piece of
+    // content, not a duplicate of it. Treating its presence as "already
+    // written" dropped the final answer out of the file.
+    const md = generateMarkdown(
+      conversation({
+        synthesizedAnswer: "Ship on Friday.",
+        transcript: [entry({ type: "SYNTHESIS", content: "Opinions were split." })],
+      }),
+    );
+
+    expect(md).toContain("Opinions were split.");
+    expect(md).toContain("Final Answer");
+    expect(md).toContain("Ship on Friday.");
+  });
+
   it("writes the final answer when there is no SYNTHESIS entry at all", () => {
     const md = generateMarkdown(conversation({ synthesizedAnswer: "Ship on Friday." }));
 

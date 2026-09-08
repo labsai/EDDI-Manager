@@ -141,10 +141,13 @@ export function generateMarkdown(
   // guarded this and the board's did not, so consolidating without the guard
   // wrote the same text twice, under two headings.
   const finalAnswer = readable(conversation.synthesizedAnswer);
-  // A SYNTHESIS entry with no body writes no heading and no text, so treating
-  // its mere presence as "already written" dropped the final answer entirely.
+  // Suppressed only when the SAME text is already in the file. Presence of a
+  // SYNTHESIS entry is not enough on either side of it: an entry with no body
+  // writes nothing, and an entry whose text differs from the final answer is a
+  // second piece of content, not a duplicate of this one. Both were dropping
+  // `synthesizedAnswer` out of the export entirely.
   const synthesisAlreadyWritten = (conversation.transcript ?? []).some(
-    (entry) => entry.type === "SYNTHESIS" && readable(entry.content).trim().length > 0,
+    (entry) => entry.type === "SYNTHESIS" && readable(entry.content).trim() === finalAnswer.trim(),
   );
   if (finalAnswer.trim() && !synthesisAlreadyWritten) {
     lines.push(`---`);

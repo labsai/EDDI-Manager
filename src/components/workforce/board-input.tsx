@@ -190,14 +190,16 @@ function BoardInput({ onSend, disabled = false, placeholder, className, mode = "
               </span>
               {/* Without a size, the total-size cap can only be found by hitting it. */}
               <span className="tabular-nums">{formatAttachmentBytes(a.sizeBytes)}</span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="iconSm"
                 onClick={() => removeAttachment(a.id)}
-                className="ms-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="ms-0.5 rounded-full hover:bg-muted-foreground/20"
                 aria-label={t("groups.removeAttachment", "Remove {{name}}", { name: a.fileName })}
               >
-                <X className="h-3 w-3" />
-              </button>
+                <X />
+              </Button>
             </li>
           ))}
         </ul>
