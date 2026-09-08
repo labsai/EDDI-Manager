@@ -2687,7 +2687,22 @@
         "flow": "Des phases que vous définissez vous-même"
       }
     },
-    "unsupportedStyle": "Ce serveur ne prend pas en charge {{style}}. Choisissez un autre cadre pour continuer."
+    "unsupportedStyle": "Ce serveur ne prend pas en charge {{style}}. Choisissez un autre cadre pour continuer.",
+    "payload": {
+      "ballot": "Bulletin",
+      "confidence": "{{percent}} % de confiance",
+      "noOption": "Aucune option n'a été nommée, ce bulletin ne compte donc pas dans le décompte.",
+      "bids_one": "{{count}} offre",
+      "bids_other": "{{count}} offres",
+      "noBids": "N'a soumissionné pour aucune tâche.",
+      "bargain": "Mouvement de négociation",
+      "counterProposal": "Contre-proposition",
+      "accepted": "Proposition {{proposal}} acceptée.",
+      "acceptSuperseded": "A également accepté {{proposal}}, que la contre-proposition ci-dessus annule.",
+      "inReturnFor": "en échange de {{received}}",
+      "lessons_one": "{{count}} enseignement pour l'équipe",
+      "lessons_other": "{{count}} enseignements pour l'équipe"
+    }
   },
   "taskBoard": {
     "title": "Tableau des tâches",

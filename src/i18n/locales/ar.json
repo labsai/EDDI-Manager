@@ -2768,7 +2768,22 @@
         "flow": "مراحل تحددها بنفسك"
       }
     },
-    "unsupportedStyle": "لا يدعم هذا الخادم {{style}}. اختر إطارًا آخر للمتابعة."
+    "unsupportedStyle": "لا يدعم هذا الخادم {{style}}. اختر إطارًا آخر للمتابعة.",
+    "payload": {
+      "ballot": "بطاقة التصويت",
+      "confidence": "ثقة {{percent}} ٪",
+      "noOption": "لم يُذكر أي خيار، لذا لا يُحتسب هذا الصوت في النتيجة.",
+      "bids_one": "عرض واحد",
+      "bids_other": "{{count}} عروض",
+      "noBids": "لم يتقدَّم بعرض لأي مهمة.",
+      "bargain": "خطوة تفاوضية",
+      "counterProposal": "عرض مضاد",
+      "accepted": "تم قبول المقترح {{proposal}}.",
+      "acceptSuperseded": "قَبِل أيضًا {{proposal}}، غير أن العرض المضاد أعلاه يلغيه.",
+      "inReturnFor": "مقابل {{received}}",
+      "lessons_one": "درس واحد للفريق",
+      "lessons_other": "{{count}} دروس للفريق"
+    }
   },
   "taskBoard": {
     "title": "لوحة المهام",

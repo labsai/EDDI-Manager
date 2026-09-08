@@ -2660,7 +2660,22 @@
         "flow": "自分で定義するフェーズ"
       }
     },
-    "unsupportedStyle": "このサーバーは {{style}} に対応していません。別の形式を選んでください。"
+    "unsupportedStyle": "このサーバーは {{style}} に対応していません。別の形式を選んでください。",
+    "payload": {
+      "ballot": "投票",
+      "confidence": "確信度 {{percent}}%",
+      "noOption": "選択肢が示されていないため、この投票は集計に含まれません。",
+      "bids_one": "{{count}} 件の入札",
+      "bids_other": "{{count}} 件の入札",
+      "noBids": "どのタスクにも入札しませんでした。",
+      "bargain": "交渉の一手",
+      "counterProposal": "対案",
+      "accepted": "提案 {{proposal}} を受諾しました。",
+      "acceptSuperseded": "{{proposal}} も受諾していますが、上の対案がそれに優先します。",
+      "inReturnFor": "{{received}} と引き換えに",
+      "lessons_one": "チームへの学び {{count}} 件",
+      "lessons_other": "チームへの学び {{count}} 件"
+    }
   },
   "taskBoard": {
     "title": "タスクボード",

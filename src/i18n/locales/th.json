@@ -2660,7 +2660,22 @@
         "flow": "ขั้นตอนที่คุณกำหนดเอง"
       }
     },
-    "unsupportedStyle": "เซิร์ฟเวอร์นี้ไม่รองรับ {{style}} โปรดเลือกรูปแบบอื่นเพื่อดำเนินการต่อ"
+    "unsupportedStyle": "เซิร์ฟเวอร์นี้ไม่รองรับ {{style}} โปรดเลือกรูปแบบอื่นเพื่อดำเนินการต่อ",
+    "payload": {
+      "ballot": "บัตรลงคะแนน",
+      "confidence": "มั่นใจ {{percent}}%",
+      "noOption": "ไม่ได้ระบุตัวเลือก คะแนนนี้จึงไม่ถูกนับรวม",
+      "bids_one": "{{count}} ข้อเสนอ",
+      "bids_other": "{{count}} ข้อเสนอ",
+      "noBids": "ไม่ได้เสนอรับงานใดเลย",
+      "bargain": "การเจรจาต่อรอง",
+      "counterProposal": "ข้อเสนอโต้กลับ",
+      "accepted": "ยอมรับข้อเสนอ {{proposal}} แล้ว",
+      "acceptSuperseded": "ยอมรับ {{proposal}} ด้วย แต่ข้อเสนอโต้กลับด้านบนมีผลแทน",
+      "inReturnFor": "แลกกับ {{received}}",
+      "lessons_one": "บทเรียนสำหรับทีม {{count}} ข้อ",
+      "lessons_other": "บทเรียนสำหรับทีม {{count}} ข้อ"
+    }
   },
   "taskBoard": {
     "title": "บอร์ดงาน",

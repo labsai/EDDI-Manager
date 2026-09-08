@@ -2713,7 +2713,22 @@
         "flow": "Phases you define yourself"
       }
     },
-    "unsupportedStyle": "This server does not support {{style}}. Pick another framework to continue."
+    "unsupportedStyle": "This server does not support {{style}}. Pick another framework to continue.",
+    "payload": {
+      "ballot": "Ballot",
+      "confidence": "{{percent}}% confident",
+      "noOption": "No option was named, so this ballot does not count towards the tally.",
+      "bids_one": "{{count}} bid",
+      "bids_other": "{{count}} bids",
+      "noBids": "Did not bid on any task.",
+      "bargain": "Bargaining move",
+      "counterProposal": "Counter-proposal",
+      "accepted": "Accepted proposal {{proposal}}.",
+      "acceptSuperseded": "Also accepted {{proposal}}, which the counter-proposal above supersedes.",
+      "inReturnFor": "in return for {{received}}",
+      "lessons_one": "{{count}} lesson for the team",
+      "lessons_other": "{{count}} lessons for the team"
+    }
   },
   "taskBoard": {
     "title": "Task Board",

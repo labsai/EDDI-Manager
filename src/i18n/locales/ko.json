@@ -2660,7 +2660,22 @@
         "flow": "직접 정의하는 단계"
       }
     },
-    "unsupportedStyle": "이 서버는 {{style}}을(를) 지원하지 않습니다. 다른 형식을 선택하세요."
+    "unsupportedStyle": "이 서버는 {{style}}을(를) 지원하지 않습니다. 다른 형식을 선택하세요.",
+    "payload": {
+      "ballot": "투표",
+      "confidence": "확신도 {{percent}}%",
+      "noOption": "선택지를 밝히지 않아 이 투표는 집계에 포함되지 않습니다.",
+      "bids_one": "입찰 {{count}}건",
+      "bids_other": "입찰 {{count}}건",
+      "noBids": "어떤 작업에도 입찰하지 않았습니다.",
+      "bargain": "협상 수",
+      "counterProposal": "역제안",
+      "accepted": "제안 {{proposal}}을(를) 수락했습니다.",
+      "acceptSuperseded": "{{proposal}}도 수락했지만 위의 역제안이 이를 대체합니다.",
+      "inReturnFor": "{{received}}을(를) 대가로",
+      "lessons_one": "팀을 위한 교훈 {{count}}건",
+      "lessons_other": "팀을 위한 교훈 {{count}}건"
+    }
   },
   "taskBoard": {
     "title": "작업 보드",

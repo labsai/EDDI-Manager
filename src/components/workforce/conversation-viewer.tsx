@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { parseTranscriptContent, truncateContent } from "@/components/groups/group-utils";
+import { StructuredTurnCard } from "@/components/groups/structured-turn-card";
+import { parseStructuredPayload } from "@/lib/group-payloads";
 import { DiscussionInsights } from "@/components/groups/discussion-insights";
 import { PersistedTaskBoard } from "@/components/groups/task-board";
 import { DecisionRecordCard } from "@/components/groups/decision-record-card";
@@ -212,6 +214,10 @@ function AgentEntryCard({
   const { t } = useTranslation();
   const typeInfo = entryTypeInfo(entry.type);
   const borderClass = agentBorderClass(entry.speakerAgentId);
+  // A ballot, bid sheet, bargaining move or retro harvest stores the member's
+  // raw JSON reply rather than prose, and gets a typed card — see
+  // `lib/group-payloads.ts`. Everything else takes the markdown path below.
+  const structuredPayload = parseStructuredPayload(entry.type, entry.content);
   const parsedContent = parseTranscriptContent(entry.content ?? "");
   const hasContent = parsedContent.trim().length > 0;
   const { contentRef, isCollapsible, isExpanded, setIsExpanded } = useCollapsibleContent(parsedContent);
@@ -250,7 +256,9 @@ function AgentEntryCard({
 
       {/* Content */}
       <div className="ps-10">
-        {hasContent ? (
+        {structuredPayload ? (
+          <StructuredTurnCard payload={structuredPayload} />
+        ) : hasContent ? (
           <>
             <div
               ref={contentRef}
@@ -399,6 +407,7 @@ function ErrorEntryCard({
   index: number;
 }) {
   const { t } = useTranslation();
+  const errorBody = parseTranscriptContent(entry.content ?? "").trim();
 
   return (
     <div
@@ -426,9 +435,13 @@ function ErrorEntryCard({
           {entry.errorReason}
         </p>
       )}
-      {entry.content && (
+      {/* An ERROR entry normally carries its text in `errorReason` with a null
+          body, but the engine has more than one site that builds one and a
+          future/older shape may put text here. Parse it like every other body
+          rather than printing whatever the wire held. */}
+      {errorBody && (
         <p className="text-sm text-red-700 dark:text-red-300 whitespace-pre-wrap mt-2 ps-6">
-          {entry.content}
+          {errorBody}
         </p>
       )}
     </div>

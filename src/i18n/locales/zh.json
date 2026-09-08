@@ -2660,7 +2660,22 @@
         "flow": "由你自行定义的阶段"
       }
     },
-    "unsupportedStyle": "此服务器不支持 {{style}}。请选择其他框架以继续。"
+    "unsupportedStyle": "此服务器不支持 {{style}}。请选择其他框架以继续。",
+    "payload": {
+      "ballot": "投票",
+      "confidence": "置信度 {{percent}}%",
+      "noOption": "未指明任何选项，因此该票不计入统计。",
+      "bids_one": "{{count}} 项竞标",
+      "bids_other": "{{count}} 项竞标",
+      "noBids": "未对任何任务竞标。",
+      "bargain": "谈判动作",
+      "counterProposal": "反提案",
+      "accepted": "已接受提案 {{proposal}}。",
+      "acceptSuperseded": "同时接受了 {{proposal}}，但上方的反提案取而代之。",
+      "inReturnFor": "以换取 {{received}}",
+      "lessons_one": "为团队总结 {{count}} 条经验",
+      "lessons_other": "为团队总结 {{count}} 条经验"
+    }
   },
   "taskBoard": {
     "title": "任务看板",

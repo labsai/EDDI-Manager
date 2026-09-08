@@ -2660,7 +2660,22 @@
         "flow": "Phasen, die Sie selbst festlegen"
       }
     },
-    "unsupportedStyle": "Dieser Server unterstützt {{style}} nicht. Wählen Sie ein anderes Format, um fortzufahren."
+    "unsupportedStyle": "Dieser Server unterstützt {{style}} nicht. Wählen Sie ein anderes Format, um fortzufahren.",
+    "payload": {
+      "ballot": "Stimmzettel",
+      "confidence": "{{percent}} % Zuversicht",
+      "noOption": "Es wurde keine Option genannt, daher zählt diese Stimme nicht für das Ergebnis.",
+      "bids_one": "{{count}} Gebot",
+      "bids_other": "{{count}} Gebote",
+      "noBids": "Hat auf keine Aufgabe geboten.",
+      "bargain": "Verhandlungszug",
+      "counterProposal": "Gegenvorschlag",
+      "accepted": "Vorschlag {{proposal}} angenommen.",
+      "acceptSuperseded": "Außerdem wurde {{proposal}} angenommen — der Gegenvorschlag oben hebt das auf.",
+      "inReturnFor": "im Gegenzug für {{received}}",
+      "lessons_one": "{{count}} Erkenntnis für das Team",
+      "lessons_other": "{{count}} Erkenntnisse für das Team"
+    }
   },
   "taskBoard": {
     "title": "Aufgabenübersicht",

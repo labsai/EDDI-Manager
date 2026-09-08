@@ -2687,7 +2687,22 @@
         "flow": "Fases que você mesmo define"
       }
     },
-    "unsupportedStyle": "Este servidor não oferece suporte a {{style}}. Escolha outro formato para continuar."
+    "unsupportedStyle": "Este servidor não oferece suporte a {{style}}. Escolha outro formato para continuar.",
+    "payload": {
+      "ballot": "Voto",
+      "confidence": "{{percent}} % de confiança",
+      "noOption": "Nenhuma opção foi indicada, por isso este voto não conta para a apuração.",
+      "bids_one": "{{count}} proposta",
+      "bids_other": "{{count}} propostas",
+      "noBids": "Não se candidatou a nenhuma tarefa.",
+      "bargain": "Movimento de negociação",
+      "counterProposal": "Contraproposta",
+      "accepted": "Proposta {{proposal}} aceite.",
+      "acceptSuperseded": "Também aceitou {{proposal}}, que a contraproposta acima substitui.",
+      "inReturnFor": "em troca de {{received}}",
+      "lessons_one": "{{count}} lição para a equipa",
+      "lessons_other": "{{count}} lições para a equipa"
+    }
   },
   "taskBoard": {
     "title": "Quadro de tarefas",
