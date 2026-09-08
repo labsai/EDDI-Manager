@@ -247,7 +247,7 @@ reach `:root` in `compiled.css`, but only because of specific scanned call sites
 
 | Token | Kept alive by |
 |---|---|
-| `--color-warning` | `ui/badge.tsx` (`bg-warning/15 text-warning`), `ui/alert-dialog.tsx`, `ui/unsaved-changes-dialog.tsx`, `shared/refetch-error-notice.tsx`, `layout/platform-status.tsx` |
+| `--color-warning` | `ui/badge.tsx` (`bg-warning/15 text-warning`), `ui/alert-dialog.tsx`, `ui/unsaved-changes-dialog.tsx`, `shared/refetch-error-notice.tsx` |
 | `--color-warning-foreground` | **`ui/button.tsx`'s `warning` variant, and nothing else** |
 
 The second row is the `--color-sidebar-accent-foreground` situation again: no synced

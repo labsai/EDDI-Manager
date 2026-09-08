@@ -78,7 +78,7 @@ export function AlertDialog({
               {cancelLabel}
             </Button>
             <Button
-              variant={variant === "destructive" ? "destructive" : "primary"}
+              variant={variant === "destructive" ? "destructive" : "warning"}
               className="flex-1"
               onClick={() => {
                 onConfirm();
