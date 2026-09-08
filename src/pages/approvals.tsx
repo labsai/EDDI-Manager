@@ -423,7 +423,12 @@ export function ApprovalsPage() {
    * while the discussion underneath was the current one. One descriptor call
    * for the whole page fixes every row.
    */
-  const { data: groupDescriptors } = useGroupDescriptors(100);
+  // The descriptor endpoint returns one row per VERSION, which
+  // `groupGroupsByName` then dedupes — so N rows can be far fewer than N
+  // distinct groups, and a group outside the window gets no link at all. A
+  // wider window rather than a per-row fetch: this list is already bounded and
+  // one call is cheaper than one per queued approval.
+  const { data: groupDescriptors } = useGroupDescriptors(500);
   const groupVersions = useMemo(() => {
     const map = new Map<string, number>();
     for (const group of groupGroupsByName(groupDescriptors ?? [])) {
@@ -566,6 +571,22 @@ export function ApprovalsPage() {
     if (!confirm) return null;
     switch (confirm.action) {
       case "APPROVED":
+        // A group verdict applies to the whole paused phase, including every
+        // task waiting in it. The group page can approve tasks one by one; this
+        // queue cannot, so it says what it is about to do rather than implying
+        // a narrower decision.
+        if (confirm.item.groupId) {
+          return {
+            title: t("hitl.confirmApproveTitle", "Approve request?"),
+            description: t(
+              "hitl.confirmApproveGroupDescription",
+              "Approve the whole paused phase and resume the discussion. Every task waiting on this pause is approved with it — open the group to decide them individually.",
+            ),
+            confirmLabel: t("hitl.approve", "Approve"),
+            variant: "warning" as const,
+            isPending: groupApproveMutation.isPending,
+          };
+        }
         return {
           title: t("hitl.confirmApproveTitle", "Approve request?"),
           description: t("hitl.confirmApproveDescription", "Approve and resume this conversation?"),

@@ -797,7 +797,10 @@ export function GroupDetailPage() {
         </div>
 
         {/* RIGHT: Config panel — hidden on small screens and in fullscreen */}
-        {showConfig && !isFullscreen && (
+        {/* Not while the sheet is open: below `xl` this block is CSS-hidden
+            rather than unmounted, so the two would be live at once — duplicate
+            test ids in the DOM and two panels with independent editing state. */}
+        {showConfig && !isFullscreen && !configSheetOpen && (
           <div className="w-72 shrink-0 rounded-xl border border-border bg-card overflow-hidden flex flex-col max-xl:hidden">
             <div className="p-3 border-b border-border flex items-center justify-between">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -852,7 +855,6 @@ export function GroupDetailPage() {
         confirmLabel={t("common.delete")}
         cancelLabel={t("common.cancel")}
         variant="destructive"
-        isPending={deleteConvMutation.isPending}
         onConfirm={() => {
           if (deleteTarget) handleDeleteConversation(deleteTarget);
           setDeleteTarget(null);

@@ -965,10 +965,19 @@ function WorkforceThread() {
                 const snapshot = JSON.parse(event.data);
                 paused = snapshot?.conversationState === "AWAITING_HUMAN";
                 if (!streamedAnything && Array.isArray(snapshot?.conversationSteps)) {
-                  finalContent = parseConversationSteps(snapshot.conversationSteps)
-                    .filter((m) => m.role === "agent")
-                    .map((m) => m.content)
-                    .join("\n\n");
+                  // The LAST agent message, never a join across steps.
+                  // `sendMessageStreaming` posts to `/agents/{id}/stream` with no
+                  // query params, so unlike the `returnCurrentStepOnly=true`
+                  // calls this replaced, the `done` snapshot carries the whole
+                  // conversation. Joining it filled the new bubble with every
+                  // reply in the thread — the entire history rendered a second
+                  // time, and on a paused turn directly above the pause banner.
+                  // `use-chat` and `use-operator-chat` both take only the last
+                  // output for the same reason.
+                  const agentSteps = parseConversationSteps(snapshot.conversationSteps).filter(
+                    (m) => m.role === "agent",
+                  );
+                  finalContent = agentSteps[agentSteps.length - 1]?.content;
                 }
               } catch {
                 /* an unreadable snapshot costs the fallback text, not the turn */

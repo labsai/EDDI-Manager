@@ -213,7 +213,10 @@ function BargainBody({ payload, className }: { payload: BargainPayload; classNam
               className="rounded-lg border border-border bg-background/60 p-2 text-xs"
             >
               <span className="text-foreground">{concession.gaveUp}</span>
-              <span className="mx-1.5 text-muted-foreground" aria-hidden="true">
+              {/* U+2192 is not bidi-mirrored: in Arabic the two spans swap but
+                  the arrow keeps pointing right, so it ends up aimed back at
+                  what was given up. Flipped with the writing direction. */}
+              <span className="mx-1.5 text-muted-foreground rtl:-scale-x-100 inline-block" aria-hidden="true">
                 →
               </span>
               <span className="text-muted-foreground">

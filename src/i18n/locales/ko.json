@@ -2701,7 +2701,8 @@
       "outcome": "결과",
       "unparsedJudgment": "해석되지 않은 판정",
       "minorityReport": "소수 의견",
-      "finalAnswer": "최종 답변"
+      "finalAnswer": "최종 답변",
+      "phase": "단계"
     },
     "deleteMembersConfigFailed": "그룹 구성원을 읽지 못해 아무것도 삭제되지 않았습니다. 다시 시도해 주세요."
   },
@@ -3259,7 +3260,8 @@
     "humanTurnReason": "{{member}}님의 발언을 기다리는 중",
     "humanTurnMemberFallback": "한 구성원",
     "decidedProgress": "{{total}}건 중 {{decided}}건 결정됨",
-    "groupLinkUnavailable": "이 그룹을 찾을 수 없어 안전한 링크를 제공할 수 없습니다."
+    "groupLinkUnavailable": "이 그룹을 찾을 수 없어 안전한 링크를 제공할 수 없습니다.",
+    "confirmApproveGroupDescription": "일시 중지된 단계 전체를 승인하고 토론을 재개합니다. 대기 중인 모든 작업도 함께 승인됩니다. 개별 결정은 그룹에서 하세요."
   },
   "chatDrawer": {
     "deploying": "에이전트 배포 중…",

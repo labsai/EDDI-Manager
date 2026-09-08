@@ -381,7 +381,9 @@ export function GroupWorkspacePage() {
                         </p>
                         <p className="text-[10px] text-muted-foreground">
                           {cron && <span className="font-mono me-1.5">{cron}</span>}
-                          <span>{zone}</span>
+                          {/* Only when the schedule was actually read: "Schedule
+                              unavailable / UTC" states a zone we do not know. */}
+                          {schedule && <span>{zone}</span>}
                           {schedule?.nextFire != null && (
                             <span className="ms-1.5">
                               {t("groupWorkspace.nextRun", "next {{when}}", {

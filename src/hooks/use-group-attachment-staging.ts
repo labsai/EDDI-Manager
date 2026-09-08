@@ -92,9 +92,17 @@ export function useGroupAttachmentStaging(enabled: boolean): GroupAttachmentStag
   const stagedRef = useRef<PendingGroupAttachment[]>([]);
   /** Tail of the staging queue — see `addFiles`. */
   const queueRef = useRef<Promise<void>>(Promise.resolve());
+  /**
+   * Bumped whenever staging is cleared. A read already awaiting `readAsBase64`
+   * would otherwise append its result afterwards and put chips back on a
+   * composer that has since switched to a continuation, where the paperclip is
+   * hidden and nothing would be sent.
+   */
+  const generationRef = useRef(0);
 
   useEffect(() => {
     if (!enabled) {
+      generationRef.current++;
       stagedRef.current = [];
       setAttachments([]);
     }
@@ -118,6 +126,7 @@ export function useGroupAttachmentStaging(enabled: boolean): GroupAttachmentStag
     // `await` in here.
     async (files: File[]) => {
       if (!files.length) return;
+      const generation = generationRef.current;
       const tooMany = () =>
         t("groups.attachmentLimit", "At most {{max}} attachments per discussion", {
           max: MAX_GROUP_ATTACHMENTS,
@@ -181,7 +190,9 @@ export function useGroupAttachmentStaging(enabled: boolean): GroupAttachmentStag
           );
         }
       }
-      if (accepted.length) {
+      // Cleared while this read was in flight — the files belong to a composer
+      // state that no longer exists.
+      if (accepted.length && generationRef.current === generation) {
         // Ref first and synchronously, so a queued run already sees these.
         stagedRef.current = [...stagedRef.current, ...accepted];
         setAttachments(stagedRef.current);
@@ -214,6 +225,7 @@ export function useGroupAttachmentStaging(enabled: boolean): GroupAttachmentStag
   }, []);
 
   const clear = useCallback(() => {
+    generationRef.current++;
     stagedRef.current = [];
     setAttachments([]);
   }, []);

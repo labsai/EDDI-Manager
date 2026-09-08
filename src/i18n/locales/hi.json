@@ -2701,7 +2701,8 @@
       "outcome": "परिणाम",
       "unparsedJudgment": "अपठित निर्णय",
       "minorityReport": "अल्पमत मत",
-      "finalAnswer": "अंतिम उत्तर"
+      "finalAnswer": "अंतिम उत्तर",
+      "phase": "चरण"
     },
     "deleteMembersConfigFailed": "समूह के सदस्य पढ़े नहीं जा सके, इसलिए कुछ भी नहीं हटाया गया। फिर से प्रयास करें।"
   },
@@ -3259,7 +3260,8 @@
     "humanTurnReason": "{{member}} के बोलने की प्रतीक्षा",
     "humanTurnMemberFallback": "एक सदस्य",
     "decidedProgress": "{{total}} में से {{decided}} तय",
-    "groupLinkUnavailable": "यह समूह नहीं मिला, इसलिए इसका कोई भरोसेमंद लिंक नहीं है।"
+    "groupLinkUnavailable": "यह समूह नहीं मिला, इसलिए इसका कोई भरोसेमंद लिंक नहीं है।",
+    "confirmApproveGroupDescription": "पूरे रुके हुए चरण को स्वीकृत करें और चर्चा जारी रखें। इस विराम पर प्रतीक्षारत हर कार्य भी स्वीकृत हो जाएगा — अलग-अलग निर्णय के लिए समूह खोलें।"
   },
   "chatDrawer": {
     "deploying": "एजेंट Deploy हो रहा है…",

@@ -98,6 +98,30 @@ describe("ApprovalsPage — group pauses", () => {
 
   it("links to the paused discussion at the group's current version", async () => {
     serveGroupPendings([PAUSED]);
+    // A version other than 1: asserting only that SOME version is present
+    // passes identically against a hardcoded 1, which is the whole point of
+    // reading it from the descriptor.
+    server.use(
+      http.get("*/groupstore/groups/descriptors", () =>
+        HttpResponse.json([
+          {
+            resource: "eddi://ai.labs.group/groupstore/groups/grp1?version=1",
+            name: "Panel",
+            createdOn: 1,
+            lastModifiedOn: 1,
+          },
+          {
+            resource: "eddi://ai.labs.group/groupstore/groups/grp1?version=4",
+            name: "Panel",
+            createdOn: 1,
+            lastModifiedOn: 2,
+          },
+        ]),
+      ),
+      http.get("*/groupstore/groups/grp1", () =>
+        HttpResponse.json({ id: "grp1", name: "Panel", style: "ROUND_TABLE", members: [] }),
+      ),
+    );
     render();
 
     const link = await screen.findByTestId("view-gc-paused");
@@ -107,7 +131,8 @@ describe("ApprovalsPage — group pauses", () => {
     // configuration of any group that has ever been edited.
     expect(href).toContain("/manage/groups/grp1");
     expect(href).toContain("conversation=gc-paused");
-    expect(href).toMatch(/version=\d+/);
+    // The latest version, not the first and not a default.
+    expect(href).toContain("version=4");
   });
 
   it("offers no link when the group's version cannot be established", async () => {

@@ -2701,7 +2701,8 @@
       "outcome": "结果",
       "unparsedJudgment": "未能解析的裁决",
       "minorityReport": "少数意见",
-      "finalAnswer": "最终答案"
+      "finalAnswer": "最终答案",
+      "phase": "阶段"
     },
     "deleteMembersConfigFailed": "无法读取该群组的成员，因此未删除任何内容。请重试。"
   },
@@ -3259,7 +3260,8 @@
     "humanTurnReason": "正在等待 {{member}} 发言",
     "humanTurnMemberFallback": "某位成员",
     "decidedProgress": "已决定 {{decided}}/{{total}}",
-    "groupLinkUnavailable": "未找到该群组，因此无法提供可靠的链接。"
+    "groupLinkUnavailable": "未找到该群组，因此无法提供可靠的链接。",
+    "confirmApproveGroupDescription": "批准整个暂停阶段并继续讨论。该暂停下等待的每项任务都会一并批准；如需逐项决定，请打开该群组。"
   },
   "chatDrawer": {
     "deploying": "正在部署智能体…",

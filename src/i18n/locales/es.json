@@ -2730,7 +2730,8 @@
       "outcome": "Resultado",
       "unparsedJudgment": "Veredicto sin interpretar",
       "minorityReport": "Voto particular",
-      "finalAnswer": "Respuesta final"
+      "finalAnswer": "Respuesta final",
+      "phase": "Fase"
     },
     "deleteMembersConfigFailed": "No se pudieron leer los miembros del grupo, así que no se eliminó nada. Vuelve a intentarlo."
   },
@@ -3290,7 +3291,8 @@
     "humanTurnReason": "Esperando a que {{member}} hable",
     "humanTurnMemberFallback": "un miembro",
     "decidedProgress": "{{decided}} de {{total}} decididas",
-    "groupLinkUnavailable": "No se ha encontrado este grupo, así que no hay un enlace fiable hacia él."
+    "groupLinkUnavailable": "No se ha encontrado este grupo, así que no hay un enlace fiable hacia él.",
+    "confirmApproveGroupDescription": "Aprobar toda la fase en pausa y reanudar el debate. Cada tarea pendiente se aprueba con ella; abre el grupo para decidirlas una por una."
   },
   "chatDrawer": {
     "deploying": "Desplegando agente…",

@@ -55,7 +55,20 @@ export function generateMarkdown(
   lines.push(`---`);
   lines.push(``);
 
+  // Phase separators, which the history viewer's own renderer emitted and this
+  // one did not: without them a multi-phase discussion exports as an
+  // undifferentiated run of speaker headings.
+  let lastPhaseIndex = -1;
   for (const entry of conversation.transcript ?? []) {
+    if (
+      entry.phaseIndex >= 0 &&
+      entry.phaseIndex !== lastPhaseIndex &&
+      entry.type !== "QUESTION"
+    ) {
+      lastPhaseIndex = entry.phaseIndex;
+      lines.push(`## ${t("groups.export.phase", "Phase")} ${entry.phaseIndex + 1}: ${entry.phaseName ?? entry.type}`);
+      lines.push(``);
+    }
     // The same reading every transcript surface does — a judge answers in JSON,
     // so an unparsed SYNTHESIS body exports as a raw blob under a "Synthesis"
     // heading. Markdown is the human-readable export; the JSON one below is
@@ -124,8 +137,14 @@ export function generateMarkdown(
   // rather than a SYNTHESIS entry whenever the discussion carries no synthesis
   // element, so exporting it raw put the blob back under a different heading —
   // and a verdict that was only a tally leaves nothing to print at all.
+  // Skipped when a SYNTHESIS entry already carried it: the viewer's renderer
+  // guarded this and the board's did not, so consolidating without the guard
+  // wrote the same text twice, under two headings.
   const finalAnswer = readable(conversation.synthesizedAnswer);
-  if (finalAnswer.trim()) {
+  const synthesisAlreadyWritten = (conversation.transcript ?? []).some(
+    (entry) => entry.type === "SYNTHESIS",
+  );
+  if (finalAnswer.trim() && !synthesisAlreadyWritten) {
     lines.push(`---`);
     lines.push(``);
     lines.push(`## ${t("groups.export.finalAnswer", "Final Answer")}`);

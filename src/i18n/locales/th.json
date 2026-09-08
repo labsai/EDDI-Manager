@@ -2701,7 +2701,8 @@
       "outcome": "ผลลัพธ์",
       "unparsedJudgment": "คำตัดสินที่อ่านค่าไม่ได้",
       "minorityReport": "ความเห็นเสียงข้างน้อย",
-      "finalAnswer": "คำตอบสุดท้าย"
+      "finalAnswer": "คำตอบสุดท้าย",
+      "phase": "เฟส"
     },
     "deleteMembersConfigFailed": "อ่านรายชื่อสมาชิกของกลุ่มไม่ได้ จึงไม่มีการลบสิ่งใด กรุณาลองอีกครั้ง"
   },
@@ -3259,7 +3260,8 @@
     "humanTurnReason": "กำลังรอให้ {{member}} พูด",
     "humanTurnMemberFallback": "สมาชิกคนหนึ่ง",
     "decidedProgress": "ตัดสินใจแล้ว {{decided}} จาก {{total}}",
-    "groupLinkUnavailable": "ไม่พบกลุ่มนี้ จึงไม่มีลิงก์ที่เชื่อถือได้"
+    "groupLinkUnavailable": "ไม่พบกลุ่มนี้ จึงไม่มีลิงก์ที่เชื่อถือได้",
+    "confirmApproveGroupDescription": "อนุมัติทั้งเฟสที่หยุดไว้และดำเนินการอภิปรายต่อ งานที่รออยู่ทั้งหมดจะได้รับการอนุมัติไปด้วย เปิดกลุ่มเพื่อตัดสินแยกรายการ"
   },
   "chatDrawer": {
     "deploying": "กำลังปรับใช้เอเจนต์…",

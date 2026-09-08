@@ -97,7 +97,9 @@ function BoardInput({ onSend, disabled = false, placeholder, className, mode = "
   // phase, so this is a real ceiling. Unenforced, a 50k-character question
   // uploaded in full and came back as a 400 the user never saw — the Manager's
   // composer already blocks it, and this one posts to the same endpoint.
-  const tooLong = message.length > MAX_GROUP_QUESTION_CHARS;
+  // Measured on the trimmed body, which is what is actually sent — trailing
+  // whitespace should not block a question that fits.
+  const tooLong = trimmed.length > MAX_GROUP_QUESTION_CHARS;
   const canSend =
     (trimmed.length > 0 || attachments.length > 0) && !disabled && !tooLong && !isStaging;
 
@@ -205,6 +207,7 @@ function BoardInput({ onSend, disabled = false, placeholder, className, mode = "
         <p
           className="mb-2 text-xs text-destructive"
           role="alert"
+          id="board-question-too-long"
           data-testid="board-question-too-long"
         >
           {t("groups.questionTooLong", "A question can be at most {{max}} characters", {
@@ -249,6 +252,8 @@ function BoardInput({ onSend, disabled = false, placeholder, className, mode = "
             handleInput();
           }}
           onKeyDown={handleKeyDown}
+          aria-invalid={tooLong || undefined}
+          aria-describedby={tooLong ? "board-question-too-long" : undefined}
           placeholder={
             disabled && disabledMessage
               ? disabledMessage

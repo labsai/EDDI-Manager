@@ -2817,7 +2817,8 @@
       "outcome": "النتيجة",
       "unparsedJudgment": "حكم غير مُحلَّل",
       "minorityReport": "رأي الأقلية",
-      "finalAnswer": "الإجابة النهائية"
+      "finalAnswer": "الإجابة النهائية",
+      "phase": "مرحلة"
     },
     "deleteMembersConfigFailed": "تعذّرت قراءة أعضاء المجموعة، لذا لم يُحذف أي شيء. حاول مرة أخرى."
   },
@@ -3383,7 +3384,8 @@
     "humanTurnReason": "في انتظار أن يتحدث {{member}}",
     "humanTurnMemberFallback": "أحد الأعضاء",
     "decidedProgress": "تم البت في {{decided}} من {{total}}",
-    "groupLinkUnavailable": "تعذّر العثور على هذه المجموعة، لذا لا يوجد رابط موثوق إليها."
+    "groupLinkUnavailable": "تعذّر العثور على هذه المجموعة، لذا لا يوجد رابط موثوق إليها.",
+    "confirmApproveGroupDescription": "الموافقة على المرحلة المتوقفة بالكامل واستئناف النقاش. تُعتمد معها كل مهمة معلَّقة — افتح المجموعة للبتّ فيها فرديًا."
   },
   "chatDrawer": {
     "deploying": "جارٍ نشر الوكيل…",

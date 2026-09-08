@@ -2754,7 +2754,8 @@
       "outcome": "Outcome",
       "unparsedJudgment": "Unparsed judgment",
       "minorityReport": "Minority report",
-      "finalAnswer": "Final answer"
+      "finalAnswer": "Final answer",
+      "phase": "Phase"
     },
     "deleteMembersConfigFailed": "Could not read the group's members, so nothing was deleted. Try again."
   },
@@ -3299,7 +3300,8 @@
     "humanTurnReason": "Waiting on {{member}} to speak",
     "humanTurnMemberFallback": "a member",
     "decidedProgress": "{{decided}} of {{total}} decided",
-    "groupLinkUnavailable": "This group could not be located, so there is no safe link to it."
+    "groupLinkUnavailable": "This group could not be located, so there is no safe link to it.",
+    "confirmApproveGroupDescription": "Approve the whole paused phase and resume the discussion. Every task waiting on this pause is approved with it — open the group to decide them individually."
   },
   "chatDrawer": {
     "deploying": "Deploying agent…",

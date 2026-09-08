@@ -2701,7 +2701,8 @@
       "outcome": "結果",
       "unparsedJudgment": "解析できなかった判定",
       "minorityReport": "少数意見",
-      "finalAnswer": "最終回答"
+      "finalAnswer": "最終回答",
+      "phase": "フェーズ"
     },
     "deleteMembersConfigFailed": "グループのメンバーを読み取れなかったため、何も削除されていません。もう一度お試しください。"
   },
@@ -3259,7 +3260,8 @@
     "humanTurnReason": "{{member}} の発言を待っています",
     "humanTurnMemberFallback": "あるメンバー",
     "decidedProgress": "{{total}} 件中 {{decided}} 件を判断済み",
-    "groupLinkUnavailable": "このグループが見つからないため、確実なリンクを表示できません。"
+    "groupLinkUnavailable": "このグループが見つからないため、確実なリンクを表示できません。",
+    "confirmApproveGroupDescription": "停止中のフェーズ全体を承認し、ディスカッションを再開します。保留中のタスクもすべて併せて承認されます。個別に判断するにはグループを開いてください。"
   },
   "chatDrawer": {
     "deploying": "エージェントをデプロイ中…",
