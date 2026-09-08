@@ -3666,7 +3666,11 @@
       "sendError": "عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.",
       "startingConversation": "جارٍ بدء المحادثة…",
       "toggleContext": "تبديل السياق",
-      "placeholderNamed": "رسالة إلى {{name}}…"
+      "placeholderNamed": "رسالة إلى {{name}}…",
+      "pausedForApproval": "هذه الخطوة متوقفة بانتظار قرار بشري، وستُستأنف بمجرد الموافقة على الطلب.",
+      "pausedRejected": "هذه المحادثة متوقفة بانتظار قرار بشري، لذا لم تُرسَل الرسالة.",
+      "reviewApprovals": "مراجعة الموافقات المعلَّقة",
+      "stop": "إيقاف التوليد"
     },
     "chat": {
       "agentDetails": "تفاصيل الوكيل",

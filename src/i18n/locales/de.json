@@ -3534,7 +3534,11 @@
       "sendError": "Entschuldigung, es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
       "startingConversation": "Konversation wird gestartet …",
       "toggleContext": "Kontext umschalten",
-      "placeholderNamed": "Nachricht an {{name}} …"
+      "placeholderNamed": "Nachricht an {{name}} …",
+      "pausedForApproval": "Dieser Schritt wartet auf eine menschliche Entscheidung. Nach der Freigabe läuft er weiter.",
+      "pausedRejected": "Diese Unterhaltung wartet auf eine menschliche Entscheidung — die Nachricht wurde deshalb nicht gesendet.",
+      "reviewApprovals": "Offene Freigaben prüfen",
+      "stop": "Erzeugung stoppen"
     },
     "chat": {
       "agentDetails": "Agenten-Details",

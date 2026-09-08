@@ -3534,7 +3534,11 @@
       "sendError": "죄송합니다. 오류가 발생했습니다. 다시 시도해 주세요.",
       "startingConversation": "대화를 시작하는 중…",
       "toggleContext": "컨텍스트 전환",
-      "placeholderNamed": "{{name}}에게 메시지…"
+      "placeholderNamed": "{{name}}에게 메시지…",
+      "pausedForApproval": "이 차례는 사람의 결정을 기다리며 멈춰 있습니다. 요청이 승인되면 다시 진행됩니다.",
+      "pausedRejected": "이 대화는 사람의 결정을 기다리며 멈춰 있어 메시지가 전송되지 않았습니다.",
+      "reviewApprovals": "대기 중인 승인 검토",
+      "stop": "생성 중지"
     },
     "chat": {
       "agentDetails": "에이전트 상세 정보",

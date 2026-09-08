@@ -3534,7 +3534,11 @@
       "sendError": "申し訳ありません。エラーが発生しました。もう一度お試しください。",
       "startingConversation": "会話を開始しています…",
       "toggleContext": "コンテキストの表示切替",
-      "placeholderNamed": "{{name}} にメッセージ…"
+      "placeholderNamed": "{{name}} にメッセージ…",
+      "pausedForApproval": "このターンは人による判断を待って停止しています。承認されると再開します。",
+      "pausedRejected": "この会話は人による判断を待って停止しているため、メッセージは送信されませんでした。",
+      "reviewApprovals": "保留中の承認を確認",
+      "stop": "生成を停止"
     },
     "chat": {
       "agentDetails": "エージェントの詳細",

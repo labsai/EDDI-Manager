@@ -30,8 +30,7 @@ function setupMocks(overrides?: {
   conversationId?: string;
   member?: { agentId: string; displayName: string; role?: string };
   startConversation?: ReturnType<typeof vi.fn>;
-  sendMessage?: ReturnType<typeof vi.fn>;
-  sendMessageWithContext?: ReturnType<typeof vi.fn>;
+  sendMessageStreaming?: ReturnType<typeof vi.fn>;
   readConversation?: ReturnType<typeof vi.fn>;
 }) {
   const convId = overrides?.conversationId ?? "conv-test-123";
@@ -62,32 +61,21 @@ function setupMocks(overrides?: {
     vi
       .spyOn(chatApi, "readConversation")
       .mockResolvedValue({ conversationSteps: [] } as any);
-  const sendMsg =
-    overrides?.sendMessage ??
-    vi.spyOn(chatApi, "sendMessage").mockResolvedValue({
-      conversationSteps: [
-        {
-          timestamp: Date.now(),
-          conversationStep: [
-            { key: "output:text:0", value: "Agent reply" },
-          ],
-        },
-      ],
-    } as any);
-  const sendCtx =
-    overrides?.sendMessageWithContext ??
-    vi.spyOn(chatApi, "sendMessageWithContext").mockResolvedValue({
-      conversationSteps: [
-        {
-          timestamp: Date.now(),
-          conversationStep: [
-            { key: "output:text:0", value: "Agent reply with attachment" },
-          ],
-        },
-      ],
-    } as any);
+  // One entry point now: the thread streams its turns, so text arrives as it
+  // is generated instead of appearing whole after the round trip.
+  const sendStream =
+    overrides?.sendMessageStreaming ??
+    (vi.spyOn(chatApi, "sendMessageStreaming") as any).mockImplementation(
+      () => streamOf("Agent reply"),
+    );
 
-  return { convId, member, startConv, readConv, sendMsg, sendCtx };
+  return { convId, member, startConv, readConv, sendStream };
+}
+
+/** An SSE generator yielding `text` as one token, then `done`. */
+async function* streamOf(text: string) {
+  yield { type: "token" as const, data: text };
+  yield { type: "done" as const, data: "" };
 }
 
 function renderThread(memberId = "agent1") {
@@ -317,8 +305,8 @@ describe("WorkforceThread – Attachment Features", () => {
   });
 
   describe("Sending messages with attachments", () => {
-    it("sends message with attachment context via sendMessageWithContext", async () => {
-      const { sendCtx } = setupMocks();
+    it("sends message with attachment context", async () => {
+      const { sendStream } = setupMocks();
       vi.spyOn(attachmentsApi, "uploadAttachment").mockResolvedValue({
         storageRef: "ref-send",
         fileName: "report.pdf",
@@ -348,7 +336,7 @@ describe("WorkforceThread – Attachment Features", () => {
       await user.click(sendBtn);
 
       await waitFor(() => {
-        expect(sendCtx).toHaveBeenCalledWith(
+        expect(sendStream).toHaveBeenCalledWith(
           "production",
           "agent1",
           "conv-test-123",
@@ -363,12 +351,13 @@ describe("WorkforceThread – Attachment Features", () => {
               }),
             }),
           }),
+          expect.anything(),
         );
       });
     });
 
     it("sends attachment-only message (no text)", async () => {
-      const { sendCtx } = setupMocks();
+      const { sendStream } = setupMocks();
       vi.spyOn(attachmentsApi, "uploadAttachment").mockResolvedValue({
         storageRef: "ref-only",
         fileName: "image.png",
@@ -393,7 +382,7 @@ describe("WorkforceThread – Attachment Features", () => {
       await user.click(sendBtn);
 
       await waitFor(() => {
-        expect(sendCtx).toHaveBeenCalledWith(
+        expect(sendStream).toHaveBeenCalledWith(
           "production",
           "agent1",
           "conv-test-123",
@@ -408,12 +397,13 @@ describe("WorkforceThread – Attachment Features", () => {
               }),
             }),
           }),
+          expect.anything(),
         );
       });
     });
 
     it("includes non-forwardable attachments in context", async () => {
-      const { sendCtx } = setupMocks();
+      const { sendStream } = setupMocks();
       vi.spyOn(attachmentsApi, "uploadAttachment").mockResolvedValue({
         storageRef: "ref-large",
         fileName: "big.pdf",
@@ -445,7 +435,7 @@ describe("WorkforceThread – Attachment Features", () => {
 
       // Non-forwardable should still be in context
       await waitFor(() => {
-        expect(sendCtx).toHaveBeenCalledWith(
+        expect(sendStream).toHaveBeenCalledWith(
           "production",
           "agent1",
           "conv-test-123",
@@ -459,6 +449,7 @@ describe("WorkforceThread – Attachment Features", () => {
               }),
             }),
           }),
+          expect.anything(),
         );
       });
     });
@@ -546,8 +537,8 @@ describe("WorkforceThread – Attachment Features", () => {
       });
     });
 
-    it("sends plain message without attachments via sendMessage", async () => {
-      const { sendMsg } = setupMocks();
+    it("sends a plain message with no context block", async () => {
+      const { sendStream } = setupMocks();
       renderThread();
       await waitForInit();
 
@@ -559,11 +550,12 @@ describe("WorkforceThread – Attachment Features", () => {
       await user.click(sendBtn);
 
       await waitFor(() => {
-        expect(sendMsg).toHaveBeenCalledWith(
+        expect(sendStream).toHaveBeenCalledWith(
           "production",
           "agent1",
           "conv-test-123",
-          "Plain text message",
+          { input: "Plain text message" },
+          expect.anything(),
         );
       });
     });
@@ -722,28 +714,122 @@ describe("WorkforceThread – Attachment Features", () => {
   });
 
   describe("Error handling", () => {
-    it("shows error when send fails", async () => {
+    /**
+     * A failed turn used to be appended to the transcript as a message with
+     * `role: "agent"` reading "Sorry, I encountered an error." — so an expired
+     * token, an exceeded quota, an undeployed agent and a paused conversation
+     * all rendered identically, in the agent's voice, while the backend's own
+     * sentence went to `console.error` and nowhere else.
+     */
+    async function send(text: string) {
+      const user = userEvent.setup();
+      await user.type(screen.getByPlaceholderText(/Message Test Agent/i), text);
+      await user.click(screen.getByRole("button", { name: /Send/i }));
+      return user;
+    }
+
+    it("reports a failed send as an error, not as something the agent said", async () => {
       setupMocks({
-        sendMessage: vi
-          .spyOn(chatApi, "sendMessage")
-          .mockRejectedValue(new Error("Network error")) as any,
+        sendMessageStreaming: (vi.spyOn(chatApi, "sendMessageStreaming") as any).mockImplementation(
+          () => {
+            throw new Error("Upstream model unavailable");
+          },
+        ),
       });
       renderThread();
       await waitForInit();
+      await send("Will fail");
 
-      const user = userEvent.setup();
-      const textarea = screen.getByPlaceholderText(/Message Test Agent/i);
-      await user.type(textarea, "Will fail");
+      const error = await screen.findByTestId("thread-send-error");
+      // The backend's own sentence, which the old handler discarded.
+      expect(error).toHaveTextContent("Upstream model unavailable");
+      expect(screen.queryByText(/Sorry, I encountered an error/i)).not.toBeInTheDocument();
+      expect(screen.queryByText("Agent reply")).not.toBeInTheDocument();
+    });
 
-      const sendBtn = screen.getByRole("button", { name: /Send/i });
-      await user.click(sendBtn);
-
-      // Agent reply should NOT appear
-      await waitFor(() => {
-        expect(
-          screen.queryByText("Agent reply"),
-        ).not.toBeInTheDocument();
+    it("retries the failed turn", async () => {
+      let attempt = 0;
+      setupMocks({
+        sendMessageStreaming: (vi.spyOn(chatApi, "sendMessageStreaming") as any).mockImplementation(
+          () => {
+            attempt++;
+            if (attempt === 1) throw new Error("Transient failure");
+            return streamOf("Second time lucky");
+          },
+        ),
       });
+      renderThread();
+      await waitForInit();
+      const user = await send("Try me");
+
+      await user.click(await screen.findByTestId("thread-retry"));
+      expect(await screen.findByText("Second time lucky")).toBeInTheDocument();
+      expect(screen.queryByTestId("thread-send-error")).not.toBeInTheDocument();
+    });
+
+    it("says a paused conversation is paused, and does not offer a pointless retry", async () => {
+      setupMocks({
+        sendMessageStreaming: (vi.spyOn(chatApi, "sendMessageStreaming") as any).mockImplementation(
+          () => {
+            // A 409 is the backend refusing the send WITHOUT consuming it.
+            throw Object.assign(new Error("conflict"), { status: 409, url: "/agents/x" });
+          },
+        ),
+      });
+      renderThread();
+      await waitForInit();
+      await send("While paused");
+
+      const error = await screen.findByTestId("thread-send-error");
+      expect(error).toHaveTextContent(/paused/i);
+      // Retrying cannot help until the pause is decided; the queue that decides
+      // it is one link away.
+      expect(screen.queryByTestId("thread-retry")).not.toBeInTheDocument();
+      expect(screen.getByTestId("thread-review-approvals")).toHaveAttribute(
+        "href",
+        "/manage/approvals",
+      );
+      // The message was never received, so it must not sit in the transcript
+      // looking sent.
+      expect(screen.queryByText("While paused")).not.toBeInTheDocument();
+    });
+
+    it("streams the reply as it arrives, and can be stopped", async () => {
+      setupMocks({
+        sendMessageStreaming: (vi.spyOn(chatApi, "sendMessageStreaming") as any).mockImplementation(
+          async function* (
+            _env: string,
+            _agentId: string,
+            _convId: string,
+            _input: unknown,
+            signal?: AbortSignal,
+          ) {
+            yield { type: "token", data: "Half " };
+            // Never completes on its own. The real generator reads from a fetch
+            // body, so aborting rejects its `reader.read()`; the double has to
+            // honour the signal the same way or it would prove nothing.
+            await new Promise((_resolve, reject) => {
+              signal?.addEventListener("abort", () =>
+                reject(new DOMException("aborted", "AbortError")),
+              );
+            });
+          },
+        ),
+      });
+      renderThread();
+      await waitForInit();
+      const user = await send("Long answer please");
+
+      // Text is on screen before the turn is over — the whole point of
+      // streaming, and what the blocking POST could never do.
+      expect(await screen.findByText(/Half/)).toBeInTheDocument();
+
+      await user.click(screen.getByTestId("thread-stop"));
+      await waitFor(() =>
+        expect(screen.queryByTestId("thread-stop")).not.toBeInTheDocument(),
+      );
+      // What arrived is kept.
+      expect(screen.getByText(/Half/)).toBeInTheDocument();
     });
   });
 });

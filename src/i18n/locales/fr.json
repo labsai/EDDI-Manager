@@ -3567,7 +3567,11 @@
       "sendError": "Désolé, une erreur s'est produite. Veuillez réessayer.",
       "startingConversation": "Démarrage de la conversation…",
       "toggleContext": "Afficher/masquer le contexte",
-      "placeholderNamed": "Message à {{name}}…"
+      "placeholderNamed": "Message à {{name}}…",
+      "pausedForApproval": "Ce tour est en pause dans l'attente d'une décision humaine. Il reprendra une fois la demande approuvée.",
+      "pausedRejected": "Cette conversation est en pause dans l'attente d'une décision humaine ; le message n'a donc pas été envoyé.",
+      "reviewApprovals": "Examiner les approbations en attente",
+      "stop": "Arrêter la génération"
     },
     "chat": {
       "agentDetails": "Détails de l agent",

@@ -3534,7 +3534,11 @@
       "sendError": "Sorry, I encountered an error. Please try again.",
       "startingConversation": "Starting conversation...",
       "toggleContext": "Toggle context",
-      "placeholderNamed": "Message {{name}}..."
+      "placeholderNamed": "Message {{name}}...",
+      "pausedForApproval": "This turn is paused waiting for a human decision. It resumes once the request is approved.",
+      "pausedRejected": "This conversation is paused waiting for a human decision, so the message was not sent.",
+      "reviewApprovals": "Review pending approvals",
+      "stop": "Stop generating"
     },
     "chat": {
       "agentDetails": "Agent Details",

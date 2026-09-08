@@ -3567,7 +3567,11 @@
       "sendError": "Lo sentimos, se produjo un error. Inténtalo de nuevo.",
       "startingConversation": "Iniciando conversación…",
       "toggleContext": "Alternar contexto",
-      "placeholderNamed": "Mensaje para {{name}}…"
+      "placeholderNamed": "Mensaje para {{name}}…",
+      "pausedForApproval": "Este turno está en pausa a la espera de una decisión humana. Se reanudará cuando se apruebe la solicitud.",
+      "pausedRejected": "Esta conversación está en pausa a la espera de una decisión humana, así que el mensaje no se envió.",
+      "reviewApprovals": "Revisar aprobaciones pendientes",
+      "stop": "Detener la generación"
     },
     "chat": {
       "agentDetails": "Detalles del agente",
