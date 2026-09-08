@@ -2702,7 +2702,8 @@
       "unparsedJudgment": "해석되지 않은 판정",
       "minorityReport": "소수 의견",
       "finalAnswer": "최종 답변"
-    }
+    },
+    "deleteMembersConfigFailed": "그룹 구성원을 읽지 못해 아무것도 삭제되지 않았습니다. 다시 시도해 주세요."
   },
   "taskBoard": {
     "title": "작업 보드",

@@ -2702,7 +2702,8 @@
       "unparsedJudgment": "解析できなかった判定",
       "minorityReport": "少数意見",
       "finalAnswer": "最終回答"
-    }
+    },
+    "deleteMembersConfigFailed": "グループのメンバーを読み取れなかったため、何も削除されていません。もう一度お試しください。"
   },
   "taskBoard": {
     "title": "タスクボード",

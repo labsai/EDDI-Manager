@@ -2818,7 +2818,8 @@
       "unparsedJudgment": "حكم غير مُحلَّل",
       "minorityReport": "رأي الأقلية",
       "finalAnswer": "الإجابة النهائية"
-    }
+    },
+    "deleteMembersConfigFailed": "تعذّرت قراءة أعضاء المجموعة، لذا لم يُحذف أي شيء. حاول مرة أخرى."
   },
   "taskBoard": {
     "title": "لوحة المهام",

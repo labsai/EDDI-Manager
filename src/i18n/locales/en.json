@@ -2755,7 +2755,8 @@
       "unparsedJudgment": "Unparsed judgment",
       "minorityReport": "Minority report",
       "finalAnswer": "Final answer"
-    }
+    },
+    "deleteMembersConfigFailed": "Could not read the group's members, so nothing was deleted. Try again."
   },
   "taskBoard": {
     "title": "Task Board",

@@ -13,7 +13,8 @@ import {
 import { GroupCard } from "@/components/groups/group-card";
 import { styleDisplay } from "@/lib/discussion-styles";
 import { CreateGroupDialog } from "@/components/groups/create-group-dialog";
-import type { AgentGroupConfiguration } from "@/lib/api/groups";
+import { getGroup, type AgentGroupConfiguration } from "@/lib/api/groups";
+import { getErrorMessage } from "@/lib/api-client";
 import { CreateOrWizardDialog } from "@/components/shared/create-or-wizard-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -119,44 +120,59 @@ export function GroupsPage() {
     setDeleteTarget({ id, version });
   }
 
-  function confirmDelete() {
-    if (deleteTarget) {
-      if (deleteMembers) {
-        const config = enrichedGroups?.find((g) => g.id === deleteTarget.id);
-        // Cascading needs the member list, which only the enriched descriptor
-        // carries. Without it there is nothing to cascade over, so fall through
-        // to the group-only delete rather than pretend.
-        if (config) {
-          deleteWithMembersMutation.mutate(
-            {
-              groupId: deleteTarget.id,
-              version: deleteTarget.version,
-              config: config as unknown as AgentGroupConfiguration,
-            },
-            {
-              onSuccess: () => {
-                toast.success(
-                  t(
-                    "groups.deleteWithMembersSuccess",
-                    "Group and all member agents deleted (soft-delete)",
-                  ),
-                );
-                closeDeleteDialog();
-              },
-              onError: () => toast.error(t("common.error")),
-            },
-          );
-          return;
-        }
+  /**
+   * Delete the group, and its member agents when the reader asked for that.
+   *
+   * The cascade reads the group's REAL configuration rather than the enriched
+   * descriptor behind this list. The descriptor carries a member list but no
+   * `moderatorAgentId`, and `deleteGroupWithMembers` deletes the moderator too
+   * — so cascading over the descriptor would have left exactly the orphan the
+   * checkbox exists to prevent. Its error path also yields an empty member
+   * list, which would have deleted nothing while reporting success.
+   */
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+
+    if (deleteMembers) {
+      let config: AgentGroupConfiguration;
+      try {
+        config = await getGroup(deleteTarget.id, deleteTarget.version);
+      } catch {
+        // Do not quietly downgrade to a group-only delete: keeping the agents
+        // is the one thing the reader said they did not want.
+        toast.error(
+          t(
+            "groups.deleteMembersConfigFailed",
+            "Could not read the group's members, so nothing was deleted. Try again.",
+          ),
+        );
+        return;
       }
-      deleteMutation.mutate(deleteTarget, {
-        onSuccess: () => {
-          toast.success(t("groups.deleteGroupOnlySuccess", "Group deleted (agents kept)"));
-          closeDeleteDialog();
+      deleteWithMembersMutation.mutate(
+        { groupId: deleteTarget.id, version: deleteTarget.version, config },
+        {
+          onSuccess: () => {
+            toast.success(
+              t(
+                "groups.deleteWithMembersSuccess",
+                "Group and all member agents deleted (soft-delete)",
+              ),
+            );
+            closeDeleteDialog();
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
-        onError: () => toast.error(t("common.error")),
-      });
+      );
+      return;
     }
+
+    deleteMutation.mutate(deleteTarget, {
+      onSuccess: () => {
+        toast.success(t("groups.deleteGroupOnlySuccess", "Group deleted (agents kept)"));
+        closeDeleteDialog();
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
   }
 
   function handleDuplicate(id: string, version: number) {
@@ -475,7 +491,7 @@ export function GroupsPage() {
         confirmLabel={t("common.delete")}
         cancelLabel={t("common.cancel")}
         variant="destructive"
-        onConfirm={confirmDelete}
+        onConfirm={() => void confirmDelete()}
         isPending={deleteMutation.isPending || deleteWithMembersMutation.isPending}
       >
         <label className="flex items-start gap-2 text-xs text-muted-foreground">

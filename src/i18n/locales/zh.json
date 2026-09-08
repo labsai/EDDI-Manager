@@ -2702,7 +2702,8 @@
       "unparsedJudgment": "未能解析的裁决",
       "minorityReport": "少数意见",
       "finalAnswer": "最终答案"
-    }
+    },
+    "deleteMembersConfigFailed": "无法读取该群组的成员，因此未删除任何内容。请重试。"
   },
   "taskBoard": {
     "title": "任务看板",

@@ -2731,7 +2731,8 @@
       "unparsedJudgment": "Verdict non interprété",
       "minorityReport": "Avis minoritaire",
       "finalAnswer": "Réponse finale"
-    }
+    },
+    "deleteMembersConfigFailed": "Impossible de lire les membres du groupe : rien n'a été supprimé. Réessayez."
   },
   "taskBoard": {
     "title": "Tableau des tâches",

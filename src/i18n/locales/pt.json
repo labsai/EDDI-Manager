@@ -2731,7 +2731,8 @@
       "unparsedJudgment": "Veredicto não interpretado",
       "minorityReport": "Voto de vencido",
       "finalAnswer": "Resposta final"
-    }
+    },
+    "deleteMembersConfigFailed": "Não foi possível ler os membros do grupo, por isso nada foi eliminado. Tente novamente."
   },
   "taskBoard": {
     "title": "Quadro de tarefas",

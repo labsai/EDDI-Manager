@@ -2702,7 +2702,8 @@
       "unparsedJudgment": "Nicht ausgewertetes Urteil",
       "minorityReport": "Minderheitsvotum",
       "finalAnswer": "Endgültige Antwort"
-    }
+    },
+    "deleteMembersConfigFailed": "Die Mitglieder der Gruppe konnten nicht gelesen werden — es wurde nichts gelöscht. Bitte erneut versuchen."
   },
   "taskBoard": {
     "title": "Aufgabenübersicht",

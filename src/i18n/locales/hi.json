@@ -2702,7 +2702,8 @@
       "unparsedJudgment": "अपठित निर्णय",
       "minorityReport": "अल्पमत मत",
       "finalAnswer": "अंतिम उत्तर"
-    }
+    },
+    "deleteMembersConfigFailed": "समूह के सदस्य पढ़े नहीं जा सके, इसलिए कुछ भी नहीं हटाया गया। फिर से प्रयास करें।"
   },
   "taskBoard": {
     "title": "कार्य बोर्ड",
