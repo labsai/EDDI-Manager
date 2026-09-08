@@ -141,8 +141,10 @@ export function generateMarkdown(
   // guarded this and the board's did not, so consolidating without the guard
   // wrote the same text twice, under two headings.
   const finalAnswer = readable(conversation.synthesizedAnswer);
+  // A SYNTHESIS entry with no body writes no heading and no text, so treating
+  // its mere presence as "already written" dropped the final answer entirely.
   const synthesisAlreadyWritten = (conversation.transcript ?? []).some(
-    (entry) => entry.type === "SYNTHESIS",
+    (entry) => entry.type === "SYNTHESIS" && readable(entry.content).trim().length > 0,
   );
   if (finalAnswer.trim() && !synthesisAlreadyWritten) {
     lines.push(`---`);

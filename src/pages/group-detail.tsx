@@ -535,31 +535,35 @@ export function GroupDetailPage() {
                     are not optional decoration: opacity-0 alone left these
                     controls invisible to a keyboard user and to touch, while
                     still being clickable. */}
-                <button
+                <Button
+                  variant="ghost"
+                  size="iconSm"
                   onClick={(e) => {
                     e.stopPropagation();
                     setDeleteTarget(conv.id);
                   }}
-                  className="ms-auto opacity-0 group-hover/item:opacity-100 group-focus-within/item:opacity-100 focus-visible:opacity-100 max-md:opacity-100 rounded p-0.5 text-muted-foreground hover:text-destructive transition-all"
+                  className="ms-auto opacity-0 group-hover/item:opacity-100 group-focus-within/item:opacity-100 focus-visible:opacity-100 max-md:opacity-100 text-muted-foreground hover:text-destructive"
                   title={t("common.delete")}
                   aria-label={t("common.delete")}
                   data-testid={`delete-discussion-${conv.id}`}
                 >
-                  <Trash2 className="h-3 w-3" />
-                </button>
+                  <Trash2 />
+                </Button>
                 {(conv.state === "AWAITING_APPROVAL" || conv.state === "AWAITING_HUMAN_INPUT" || conv.state === "IN_PROGRESS") && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="iconSm"
                     onClick={(e) => {
                       e.stopPropagation();
                       setCancelTarget(conv.id);
                     }}
-                    className="opacity-0 group-hover/item:opacity-100 group-focus-within/item:opacity-100 focus-visible:opacity-100 max-md:opacity-100 rounded p-0.5 text-muted-foreground hover:text-destructive transition-all"
+                    className="opacity-0 group-hover/item:opacity-100 group-focus-within/item:opacity-100 focus-visible:opacity-100 max-md:opacity-100 text-muted-foreground hover:text-destructive"
                     title={t("hitl.cancelDiscussion", "Cancel discussion")}
                     aria-label={t("hitl.cancelDiscussion", "Cancel discussion")}
                     disabled={cancelDiscussionMutation.isPending}
                   >
-                    <X className="h-3 w-3" />
-                  </button>
+                    <X />
+                  </Button>
                 )}
               </div>
             </div>

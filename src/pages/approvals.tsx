@@ -233,18 +233,20 @@ function ApprovalQueueRow({
           <div className="flex items-center justify-end gap-1">
             {isToolCall && (
               <>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setExpanded((v) => !v)}
                   aria-expanded={expanded}
-                  className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-600 hover:bg-amber-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="gap-1 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20"
                   data-testid={`review-${item.conversationId}`}
                 >
                   {expanded ? t("common.close", "Close") : t("hitl.review", "Review")}
                   <ChevronDown
-                    className={cn("h-3 w-3 transition-transform", expanded && "rotate-180")}
+                    className={cn("transition-transform", expanded && "rotate-180")}
                     aria-hidden="true"
                   />
-                </button>
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"

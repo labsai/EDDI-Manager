@@ -246,7 +246,10 @@ function WorkforceHistory() {
     () => boardDescriptors?.find((g) => g.id === boardId)?.version,
     [boardDescriptors, boardId],
   );
-  const { data: boardConfig } = useGroup(boardId ?? "", boardVersion ?? 1);
+  // Left unfetched until the descriptor names a version. Falling back to 1
+  // reads the group's FIRST version, so the export would be titled with the
+  // name the group was created under until the descriptors arrive.
+  const { data: boardConfig } = useGroup(boardVersion ? (boardId ?? "") : "", boardVersion);
   const { data: conversations, isLoading, isError } = useGroupConversations(
     boardId ?? "",
     PAGE_SIZE * (page + 1),

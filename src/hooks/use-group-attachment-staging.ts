@@ -118,15 +118,19 @@ export function useGroupAttachmentStaging(enabled: boolean): GroupAttachmentStag
    *
    * Reads and writes `stagedRef` rather than the `attachments` state so that
    * runs serialized behind each other observe one another's results.
+     *
+   * @param generation the staging generation at the moment this selection was
+   *   PICKED, not the one current when it reaches the front of the queue. Read
+   *   here, a selection queued behind a slow read and cleared while it waited
+   *   would capture the post-clear value and pass its own guard.
    */
   const stageFiles = useCallback(
     // Takes an ARRAY, not the live FileList. The caller resets `input.value` to
     // re-arm the change event, and that clears `input.files` — so the list has
     // to be materialized synchronously by the caller rather than read across an
     // `await` in here.
-    async (files: File[]) => {
+    async (files: File[], generation: number) => {
       if (!files.length) return;
-      const generation = generationRef.current;
       const tooMany = () =>
         t("groups.attachmentLimit", "At most {{max}} attachments per discussion", {
           max: MAX_GROUP_ATTACHMENTS,
@@ -209,11 +213,15 @@ export function useGroupAttachmentStaging(enabled: boolean): GroupAttachmentStag
   const addFiles = useCallback(
     (files: File[]) => {
       setIsStaging(true);
-      const run: Promise<void> = queueRef.current.then(() => stageFiles(files)).finally(() => {
-        // Only the tail of the chain clears the flag — an earlier run finishing
-        // must not re-enable the control while a later one is still reading.
-        if (queueRef.current === run) setIsStaging(false);
-      });
+      const generation = generationRef.current;
+      const run: Promise<void> = queueRef.current
+        .then(() => stageFiles(files, generation))
+        .finally(() => {
+          // Only the tail of the chain clears the flag — an earlier run
+          // finishing must not re-enable the control while a later one is
+          // still reading.
+          if (queueRef.current === run) setIsStaging(false);
+        });
       queueRef.current = run;
       return run;
     },
