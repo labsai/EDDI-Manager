@@ -2675,7 +2675,10 @@
       "inReturnFor": "im Gegenzug für {{received}}",
       "lessons_one": "{{count}} Erkenntnis für das Team",
       "lessons_other": "{{count}} Erkenntnisse für das Team"
-    }
+    },
+    "discussionDeleted": "Diskussion gelöscht",
+    "confirmDeleteDiscussionTitle": "Diese Diskussion löschen?",
+    "confirmDeleteDiscussionDescription": "Das Protokoll und alles darin werden dauerhaft entfernt. Das lässt sich nicht rückgängig machen."
   },
   "taskBoard": {
     "title": "Aufgabenübersicht",

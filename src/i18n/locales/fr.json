@@ -2702,7 +2702,10 @@
       "inReturnFor": "en échange de {{received}}",
       "lessons_one": "{{count}} enseignement pour l'équipe",
       "lessons_other": "{{count}} enseignements pour l'équipe"
-    }
+    },
+    "discussionDeleted": "Discussion supprimée",
+    "confirmDeleteDiscussionTitle": "Supprimer cette discussion ?",
+    "confirmDeleteDiscussionDescription": "La transcription et tout ce qu'elle contient sont supprimés définitivement. Cette action est irréversible."
   },
   "taskBoard": {
     "title": "Tableau des tâches",

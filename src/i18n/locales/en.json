@@ -2728,7 +2728,10 @@
       "inReturnFor": "in return for {{received}}",
       "lessons_one": "{{count}} lesson for the team",
       "lessons_other": "{{count}} lessons for the team"
-    }
+    },
+    "discussionDeleted": "Discussion deleted",
+    "confirmDeleteDiscussionTitle": "Delete this discussion?",
+    "confirmDeleteDiscussionDescription": "The transcript and everything in it are removed permanently. This cannot be undone."
   },
   "taskBoard": {
     "title": "Task Board",

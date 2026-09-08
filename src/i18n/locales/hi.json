@@ -2675,7 +2675,10 @@
       "inReturnFor": "{{received}} के बदले में",
       "lessons_one": "टीम के लिए {{count}} सीख",
       "lessons_other": "टीम के लिए {{count}} सीखें"
-    }
+    },
+    "discussionDeleted": "चर्चा हटाई गई",
+    "confirmDeleteDiscussionTitle": "यह चर्चा हटाएँ?",
+    "confirmDeleteDiscussionDescription": "प्रतिलेख और उसमें मौजूद सब कुछ स्थायी रूप से हट जाएगा। इसे पूर्ववत नहीं किया जा सकता।"
   },
   "taskBoard": {
     "title": "कार्य बोर्ड",

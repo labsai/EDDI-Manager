@@ -2675,7 +2675,10 @@
       "inReturnFor": "{{received}} と引き換えに",
       "lessons_one": "チームへの学び {{count}} 件",
       "lessons_other": "チームへの学び {{count}} 件"
-    }
+    },
+    "discussionDeleted": "ディスカッションを削除しました",
+    "confirmDeleteDiscussionTitle": "このディスカッションを削除しますか？",
+    "confirmDeleteDiscussionDescription": "記録とその内容はすべて完全に削除されます。元に戻すことはできません。"
   },
   "taskBoard": {
     "title": "タスクボード",

@@ -2783,7 +2783,10 @@
       "inReturnFor": "مقابل {{received}}",
       "lessons_one": "درس واحد للفريق",
       "lessons_other": "{{count}} دروس للفريق"
-    }
+    },
+    "discussionDeleted": "تم حذف النقاش",
+    "confirmDeleteDiscussionTitle": "حذف هذا النقاش؟",
+    "confirmDeleteDiscussionDescription": "سيُحذف السجل وكل ما فيه نهائيًا. لا يمكن التراجع عن ذلك."
   },
   "taskBoard": {
     "title": "لوحة المهام",

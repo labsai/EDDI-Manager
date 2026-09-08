@@ -2675,7 +2675,10 @@
       "inReturnFor": "แลกกับ {{received}}",
       "lessons_one": "บทเรียนสำหรับทีม {{count}} ข้อ",
       "lessons_other": "บทเรียนสำหรับทีม {{count}} ข้อ"
-    }
+    },
+    "discussionDeleted": "ลบการอภิปรายแล้ว",
+    "confirmDeleteDiscussionTitle": "ลบการอภิปรายนี้หรือไม่",
+    "confirmDeleteDiscussionDescription": "บันทึกการสนทนาและทุกอย่างในนั้นจะถูกลบอย่างถาวร และไม่สามารถกู้คืนได้"
   },
   "taskBoard": {
     "title": "บอร์ดงาน",

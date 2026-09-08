@@ -2702,7 +2702,10 @@
       "inReturnFor": "em troca de {{received}}",
       "lessons_one": "{{count}} lição para a equipa",
       "lessons_other": "{{count}} lições para a equipa"
-    }
+    },
+    "discussionDeleted": "Discussão eliminada",
+    "confirmDeleteDiscussionTitle": "Eliminar esta discussão?",
+    "confirmDeleteDiscussionDescription": "A transcrição e tudo o que contém são removidos permanentemente. Não é possível anular."
   },
   "taskBoard": {
     "title": "Quadro de tarefas",

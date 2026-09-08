@@ -2702,7 +2702,10 @@
       "inReturnFor": "a cambio de {{received}}",
       "lessons_one": "{{count}} lección para el equipo",
       "lessons_other": "{{count}} lecciones para el equipo"
-    }
+    },
+    "discussionDeleted": "Debate eliminado",
+    "confirmDeleteDiscussionTitle": "¿Eliminar este debate?",
+    "confirmDeleteDiscussionDescription": "La transcripción y todo su contenido se eliminan de forma permanente. Esto no se puede deshacer."
   },
   "taskBoard": {
     "title": "Tablero de tareas",

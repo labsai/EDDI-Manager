@@ -1,0 +1,121 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
+import { renderPage } from "@/test/test-utils";
+import { server } from "@/test/mocks/server";
+import { ApprovalsPage } from "@/pages/approvals";
+
+/**
+ * The cross-group inbox exists to answer "what is waiting for me?" in one
+ * place. For a group pause it previously answered "somewhere over there": no
+ * verdict could be given, and the link out dropped the reviewer on the group at
+ * version 1 with no idea which discussion was paused.
+ */
+
+const PAUSED = {
+  conversationId: "gc-paused",
+  groupId: "grp1",
+  userId: "u1",
+  pausedAt: "2026-06-01T10:00:00Z",
+  pauseReason: "Phase requires approval",
+  pauseType: "RULE",
+};
+
+const HUMAN_TURN = {
+  ...PAUSED,
+  conversationId: "gc-turn",
+  pauseType: "HUMAN_TURN",
+  pendingMemberId: "ana",
+};
+
+function serveGroupPendings(items: unknown[]) {
+  server.use(
+    http.get("*/groups/pending-approvals", () => HttpResponse.json(items)),
+    http.get("*/agents/pending-approvals", () => HttpResponse.json([])),
+  );
+}
+
+function render() {
+  return renderPage("/manage/approvals", <ApprovalsPage />);
+}
+
+describe("ApprovalsPage — group pauses", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("approves a group phase from the queue, without navigating away", async () => {
+    let body: { decision?: { verdict?: string } } | null = null;
+    serveGroupPendings([PAUSED]);
+    server.use(
+      http.post("*/groups/:groupId/conversations/:gcId/approve", async ({ request }) => {
+        body = (await request.json()) as typeof body;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+
+    render();
+    await userEvent.click(await screen.findByTestId("approve-gc-paused"));
+    // Irreversible, so it confirms first — the same rule the 1:1 rows follow.
+    await userEvent.click(await screen.findByRole("button", { name: /^approve$/i }));
+
+    await waitFor(() => expect(body).not.toBeNull());
+    expect(body!.decision!.verdict).toBe("APPROVED");
+  });
+
+  it("rejects a group phase from the queue", async () => {
+    let verdict: string | undefined;
+    serveGroupPendings([PAUSED]);
+    server.use(
+      http.post("*/groups/:groupId/conversations/:gcId/approve", async ({ request }) => {
+        verdict = ((await request.json()) as { decision: { verdict: string } }).decision.verdict;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+
+    render();
+    await userEvent.click(await screen.findByTestId("reject-gc-paused"));
+    await userEvent.click(await screen.findByRole("button", { name: /^reject$/i }));
+
+    await waitFor(() => expect(verdict).toBe("REJECTED"));
+  });
+
+  it("cancels a group discussion from the queue", async () => {
+    let cancelled: string | null = null;
+    serveGroupPendings([PAUSED]);
+    server.use(
+      http.post("*/groups/:groupId/conversations/:gcId/cancel", ({ params }) => {
+        cancelled = String(params.gcId);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+
+    render();
+    await userEvent.click(await screen.findByTestId("cancel-gc-paused"));
+    await userEvent.click(await screen.findByRole("button", { name: /cancel discussion|^cancel$/i }));
+
+    await waitFor(() => expect(cancelled).toBe("gc-paused"));
+  });
+
+  it("links to the paused discussion at the group's current version", async () => {
+    serveGroupPendings([PAUSED]);
+    render();
+
+    const link = await screen.findByTestId("view-gc-paused");
+    const href = link.getAttribute("href")!;
+    // Without the conversation the reviewer lands on the group and has to find
+    // the paused discussion; without the version they land on the original
+    // configuration of any group that has ever been edited.
+    expect(href).toContain("/manage/groups/grp1");
+    expect(href).toContain("conversation=gc-paused");
+    expect(href).toMatch(/version=\d+/);
+  });
+
+  it("offers no verdict on a member's turn, which is not a decision", async () => {
+    serveGroupPendings([HUMAN_TURN]);
+    render();
+
+    expect(await screen.findByTestId("view-gc-turn")).toBeInTheDocument();
+    expect(screen.queryByTestId("approve-gc-turn")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("reject-gc-turn")).not.toBeInTheDocument();
+  });
+});

@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,8 +28,12 @@ import {
   useAllGroupPendingApprovals,
   useResumeConversation,
   useCancelConversation,
+  useApproveGroupPhase,
+  useCancelGroupDiscussion,
   useApprovalStatus,
 } from "@/hooks/use-hitl";
+import { useGroupDescriptors } from "@/hooks/use-groups";
+import { groupGroupsByName } from "@/lib/api/groups";
 import { timeoutPolicyLabel } from "@/lib/hitl-labels";
 import { useHasRole } from "@/hooks/use-auth";
 import type { PendingApprovalSummary, HitlVerdict, ToolCallDecision, PendingToolCallView } from "@/lib/api/hitl";
@@ -54,6 +58,16 @@ type PendingConfirm = { item: PendingApprovalSummary; action: HitlVerdict | "CAN
 
 interface ApprovalQueueRowProps {
   item: PendingApprovalSummary;
+  /**
+   * Where this row's group discussion lives: its id, current version and the
+   * paused conversation.
+   *
+   * `PendingApprovalSummary` carries no version, and the group page requires
+   * one — omitting it defaulted every link to version 1, so any group that had
+   * ever been edited opened showing its original name and member list. The
+   * version comes from the descriptor list; the conversation from the row.
+   */
+  groupHref: string | null;
   onRequestConfirm: (item: PendingApprovalSummary, action: HitlVerdict | "CANCEL") => void;
   onToolDecide: (
     item: PendingApprovalSummary,
@@ -64,6 +78,8 @@ interface ApprovalQueueRowProps {
   onToolCancel: (item: PendingApprovalSummary) => void;
   resumeMutation: ReturnType<typeof useResumeConversation>;
   cancelMutation: ReturnType<typeof useCancelConversation>;
+  groupApproveMutation: ReturnType<typeof useApproveGroupPhase>;
+  groupCancelMutation: ReturnType<typeof useCancelGroupDiscussion>;
 }
 
 /**
@@ -79,11 +95,14 @@ interface ApprovalQueueRowProps {
  */
 function ApprovalQueueRow({
   item,
+  groupHref,
   onRequestConfirm,
   onToolDecide,
   onToolCancel,
   resumeMutation,
   cancelMutation,
+  groupApproveMutation,
+  groupCancelMutation,
 }: ApprovalQueueRowProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -100,6 +119,13 @@ function ApprovalQueueRow({
   const isSubmitting =
     (resumeMutation.isPending && resumeMutation.variables?.conversationId === item.conversationId) ||
     (cancelMutation.isPending && cancelMutation.variables === item.conversationId);
+
+  /** This row's own group decision, so one busy row does not disable the queue. */
+  const groupDecisionPending =
+    (groupApproveMutation.isPending &&
+      groupApproveMutation.variables?.gcId === item.conversationId) ||
+    (groupCancelMutation.isPending &&
+      groupCancelMutation.variables?.gcId === item.conversationId);
 
   // The same refusal the operator screen applies, enforced here too: this inbox
   // is precisely where an admin decides a pause WITHOUT the surrounding context
@@ -140,7 +166,7 @@ function ApprovalQueueRow({
         <td className="px-4 py-3">
           <Link
             to={item.groupId
-              ? `/manage/groups/${item.groupId}`
+              ? (groupHref ?? `/manage/groups/${item.groupId}`)
               : `/manage/conversationview/${item.conversationId}`}
             className="font-mono text-xs text-primary hover:underline"
           >
@@ -244,10 +270,43 @@ function ApprovalQueueRow({
                 </button>
               </>
             )}
+            {/* A group phase pause needs nothing but a verdict, so it is
+                decided here like a 1:1 pause. A HUMAN_TURN is not a decision —
+                a member owes the discussion their contribution — so it keeps
+                the link only, and the link now opens that discussion. */}
+            {item.groupId && !isHumanTurn && (
+              <>
+                <button
+                  onClick={() => onRequestConfirm(item, "APPROVED")}
+                  disabled={groupDecisionPending}
+                  className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                  data-testid={`approve-${item.conversationId}`}
+                >
+                  {t("hitl.approve", "Approve")}
+                </button>
+                <button
+                  onClick={() => onRequestConfirm(item, "REJECTED")}
+                  disabled={groupDecisionPending}
+                  className="rounded-md bg-destructive px-2.5 py-1 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50"
+                  data-testid={`reject-${item.conversationId}`}
+                >
+                  {t("hitl.reject", "Reject")}
+                </button>
+                <button
+                  onClick={() => onRequestConfirm(item, "CANCEL")}
+                  disabled={groupDecisionPending}
+                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                  data-testid={`cancel-${item.conversationId}`}
+                >
+                  {t("hitl.cancel", "Cancel")}
+                </button>
+              </>
+            )}
             {item.groupId && (
               <Link
-                to={`/manage/groups/${item.groupId}`}
+                to={groupHref ?? `/manage/groups/${item.groupId}`}
                 className="rounded-md border border-border px-2.5 py-1 text-xs text-primary hover:bg-muted transition-colors"
+                data-testid={`view-${item.conversationId}`}
               >
                 {t("common.view", "View")}
               </Link>
@@ -319,6 +378,40 @@ export function ApprovalsPage() {
   const { data: groupPendings, isLoading: groupsLoading, isError: groupsError, truncated: groupsTruncated } = useAllGroupPendingApprovals();
   const resumeMutation = useResumeConversation();
   const cancelMutation = useCancelConversation();
+  const groupApproveMutation = useApproveGroupPhase();
+  const groupCancelMutation = useCancelGroupDiscussion();
+
+  /**
+   * groupId → current version, for the links out.
+   *
+   * `PendingApprovalSummary` carries no version and the group page needs one,
+   * so every group link defaulted to version 1: a group that had ever been
+   * edited opened at its ORIGINAL configuration — old name, old member list —
+   * while the discussion underneath was the current one. One descriptor call
+   * for the whole page fixes every row.
+   */
+  const { data: groupDescriptors } = useGroupDescriptors(100);
+  const groupVersions = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const group of groupGroupsByName(groupDescriptors ?? [])) {
+      map.set(group.id, group.version);
+    }
+    return map;
+  }, [groupDescriptors]);
+
+  /** Where a row's View link should land: the group, at its current version,
+   *  with the paused discussion already selected. */
+  const groupHrefFor = useCallback(
+    (item: PendingApprovalSummary): string | null => {
+      if (!item.groupId) return null;
+      const version = groupVersions.get(item.groupId);
+      const params = new URLSearchParams();
+      if (version != null) params.set("version", String(version));
+      params.set("conversation", item.conversationId);
+      return `/manage/groups/${item.groupId}?${params.toString()}`;
+    },
+    [groupVersions],
+  );
 
   // Merge 1:1 (regular) and group-surface pendings into one queue. The regular
   // /agents/pending-approvals endpoint never carries a groupId, so group items
@@ -349,16 +442,26 @@ export function ApprovalsPage() {
   });
 
   const doQuickAction = (item: PendingApprovalSummary, verdict: HitlVerdict) => {
-    if (!item.groupId) {
-      // Regular conversation
-      resumeMutation.mutate(
-        { conversationId: item.conversationId, decision: { verdict } },
-        {
-          onSuccess: () => toast.success(verdict === "APPROVED" ? t("hitl.approved", "Approved") : t("hitl.rejected", "Rejected")),
-          onError: (err) => toast.error(getErrorMessage(err)),
-        }
+    const ok = () =>
+      toast.success(
+        verdict === "APPROVED" ? t("hitl.approved", "Approved") : t("hitl.rejected", "Rejected"),
       );
+    const fail = (err: unknown) => toast.error(getErrorMessage(err));
+
+    if (item.groupId) {
+      // The non-streaming approve endpoint, which existed with no caller. The
+      // group page uses the streaming variant because it has a transcript to
+      // play the resume into; a queue row has nowhere to put one.
+      groupApproveMutation.mutate(
+        { groupId: item.groupId, gcId: item.conversationId, request: { decision: { verdict } } },
+        { onSuccess: ok, onError: fail },
+      );
+      return;
     }
+    resumeMutation.mutate(
+      { conversationId: item.conversationId, decision: { verdict } },
+      { onSuccess: ok, onError: fail },
+    );
   };
 
   /**
@@ -391,12 +494,17 @@ export function ApprovalsPage() {
   };
 
   const doCancel = (item: PendingApprovalSummary) => {
-    if (!item.groupId) {
-      cancelMutation.mutate(item.conversationId, {
-        onSuccess: () => toast.success(t("hitl.cancelled", "Cancelled")),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      });
+    const ok = () => toast.success(t("hitl.cancelled", "Cancelled"));
+    const fail = (err: unknown) => toast.error(getErrorMessage(err));
+
+    if (item.groupId) {
+      groupCancelMutation.mutate(
+        { groupId: item.groupId, gcId: item.conversationId },
+        { onSuccess: ok, onError: fail },
+      );
+      return;
     }
+    cancelMutation.mutate(item.conversationId, { onSuccess: ok, onError: fail });
   };
 
   // Only fired after the reviewer confirms in the AlertDialog.
@@ -417,7 +525,7 @@ export function ApprovalsPage() {
           description: t("hitl.confirmApproveDescription", "Approve and resume this conversation?"),
           confirmLabel: t("hitl.approve", "Approve"),
           variant: "warning" as const,
-          isPending: resumeMutation.isPending,
+          isPending: resumeMutation.isPending || groupApproveMutation.isPending,
         };
       case "REJECTED":
         return {
@@ -425,16 +533,30 @@ export function ApprovalsPage() {
           description: t("hitl.confirmRejectDescription", "Reject this request? The conversation will not proceed."),
           confirmLabel: t("hitl.reject", "Reject"),
           variant: "destructive" as const,
-          isPending: resumeMutation.isPending,
+          isPending: resumeMutation.isPending || groupApproveMutation.isPending,
         };
       case "CANCEL":
-        return {
-          title: t("hitl.confirmCancelTitle", "Cancel conversation?"),
-          description: t("hitl.confirmCancelDescription", "Cancel this conversation? Any in-progress work is aborted."),
-          confirmLabel: t("hitl.confirmCancelButton", "Cancel conversation"),
-          variant: "destructive" as const,
-          isPending: cancelMutation.isPending,
-        };
+        // A group row cancels a discussion, not a conversation. Reusing the
+        // group page's own wording keeps the two surfaces saying the same
+        // thing about the same action.
+        return confirm.item.groupId
+          ? {
+              title: t("hitl.confirmCancelGroupTitle", "Cancel discussion?"),
+              description: t(
+                "hitl.confirmCancelGroupDescription",
+                "Cancel this discussion? Any in-progress work is aborted.",
+              ),
+              confirmLabel: t("hitl.confirmCancelGroupButton", "Cancel discussion"),
+              variant: "destructive" as const,
+              isPending: groupCancelMutation.isPending,
+            }
+          : {
+              title: t("hitl.confirmCancelTitle", "Cancel conversation?"),
+              description: t("hitl.confirmCancelDescription", "Cancel this conversation? Any in-progress work is aborted."),
+              confirmLabel: t("hitl.confirmCancelButton", "Cancel conversation"),
+              variant: "destructive" as const,
+              isPending: cancelMutation.isPending,
+            };
     }
   })();
 
@@ -583,11 +705,14 @@ export function ApprovalsPage() {
                 <ApprovalQueueRow
                   key={item.conversationId}
                   item={item}
+                  groupHref={groupHrefFor(item)}
                   onRequestConfirm={(row, action) => setConfirm({ item: row, action })}
                   onToolDecide={decideToolCall}
                   onToolCancel={doCancel}
                   resumeMutation={resumeMutation}
                   cancelMutation={cancelMutation}
+                  groupApproveMutation={groupApproveMutation}
+                  groupCancelMutation={groupCancelMutation}
                 />
               ))}
             </tbody>

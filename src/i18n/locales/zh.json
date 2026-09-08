@@ -2675,7 +2675,10 @@
       "inReturnFor": "以换取 {{received}}",
       "lessons_one": "为团队总结 {{count}} 条经验",
       "lessons_other": "为团队总结 {{count}} 条经验"
-    }
+    },
+    "discussionDeleted": "已删除讨论",
+    "confirmDeleteDiscussionTitle": "删除该讨论？",
+    "confirmDeleteDiscussionDescription": "记录及其中的全部内容将被永久删除，且无法撤销。"
   },
   "taskBoard": {
     "title": "任务看板",
