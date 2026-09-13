@@ -201,6 +201,41 @@ describe("SecretKeyPicker with a connection reference", () => {
     ).toBeInTheDocument();
   });
 
+  it("offers a Retry that refetches the list after a failure", async () => {
+    // A 400 is not retried by the query itself, so the failed state is shown at
+    // once; the Retry action is the only way back, and it must really refetch.
+    let listed = 0;
+    server.use(
+      http.get("*/connectionstore/connections/descriptors", () => {
+        listed += 1;
+        return listed === 1
+          ? new HttpResponse(null, { status: 400 })
+          : HttpResponse.json([
+              {
+                resource: "eddi://ai.labs.connection/connectionstore/connections/aaaaaaaaaaaaaaaaaaaaaaaa?version=1",
+                name: "jira",
+                description: "",
+              },
+            ]);
+      }),
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<SecretKeyPicker value="" onChange={onChange} connections />);
+
+    await user.click(screen.getByTestId("secret-key-picker-connection-btn"));
+    expect(
+      await screen.findByTestId("secret-key-picker-connection-btn-failed"),
+    ).toBeInTheDocument();
+    expect(listed).toBe(1);
+
+    await user.click(screen.getByTestId("secret-key-picker-connection-btn-retry"));
+
+    await waitFor(() => expect(listed).toBe(2));
+    expect(
+      screen.queryByTestId("secret-key-picker-connection-btn-failed"),
+    ).not.toBeInTheDocument();
+  });
+
   it("does not fetch the list until the popup opens", async () => {
     let listed = 0;
     server.use(

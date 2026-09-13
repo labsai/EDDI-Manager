@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, ChevronDown, Loader2, Plug, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useConnectionDescriptors } from "@/hooks/use-connections";
 import { isApiError } from "@/lib/api-client";
 import { bindingLabel } from "@/lib/connection-labels";
@@ -164,13 +165,18 @@ export function ConnectionReferenceButton({
             ) : isError ? (
               <Hint testId={`${testId}-failed`}>
                 {t("secretPicker.connectionFailed", "Could not load connections.")}{" "}
-                <button
+                <Button
                   type="button"
+                  variant="link"
+                  size="sm"
                   onClick={() => void refetch()}
-                  className="text-primary hover:underline"
+                  // Inline in a sentence: the link variant without its standalone height
+                  // and padding, so it sits on the text's baseline.
+                  className="h-auto p-0 text-xs"
+                  data-testid={`${testId}-retry`}
                 >
                   {t("common.retry", "Retry")}
-                </button>
+                </Button>
               </Hint>
             ) : rows.length === 0 ? (
               <Hint testId={`${testId}-empty`}>
