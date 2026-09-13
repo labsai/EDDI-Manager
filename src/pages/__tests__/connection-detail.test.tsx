@@ -211,6 +211,58 @@ describe("ConnectionDetailPage", () => {
     expect(sent[0]!.binding).toBe("PER_USER");
   });
 
+  it("round-trips a caller-supplied connection without rewriting its binding", async () => {
+    // The contract drift this pins: `binding` used to be derived from the type
+    // alone, so an unrelated edit to a CALLER_SUPPLIED document saved it back
+    // as SERVICE — with an empty valueTemplate the backend refuses on that
+    // binding, and had it accepted, a shared-key connection that stored nothing.
+    const user = userEvent.setup();
+    const sent = captureSave();
+    renderDetail("conn6"); // STATIC / CALLER_SUPPLIED
+    await screen.findByTestId("connection-name-input");
+
+    // The page says what it is, and offers no value field to fill in.
+    expect(
+      screen.getByTestId("connection-binding-explainer-CALLER_SUPPLIED"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("connection-caller-supplied-header")).toHaveTextContent(
+      "X-EDDI-Connection-Credential: gnowbe <value>",
+    );
+    expect(screen.queryByTestId("connection-header-value")).not.toBeInTheDocument();
+
+    const description = screen.getByTestId("connection-description-input");
+    await user.clear(description);
+    await user.type(description, "edited description");
+    await user.click(screen.getByTestId("save-connection-btn"));
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]!.binding).toBe("CALLER_SUPPLIED");
+    expect(sent[0]!.description).toBe("edited description");
+    expect(sent[0]!.staticAuth).toEqual({ headerName: "x-api-key" });
+  });
+
+  it("switches a shared key to caller-supplied and stops sending the template", async () => {
+    const user = userEvent.setup();
+    const sent = captureSave();
+    renderDetail("conn3"); // STATIC / SERVICE, with a Bearer template
+    await screen.findByTestId("connection-name-input");
+
+    await user.click(screen.getByTestId("connection-binding-choice-CALLER_SUPPLIED"));
+    // The header value field is gone, replaced by what the caller must send.
+    await waitFor(() =>
+      expect(screen.queryByTestId("connection-header-value")).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.getByTestId("connection-binding-explainer-CALLER_SUPPLIED"),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("save-connection-btn"));
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]!.binding).toBe("CALLER_SUPPLIED");
+    expect(sent[0]!.staticAuth).toEqual({ headerName: "Authorization" });
+  });
+
   it("sends only the auth block its type uses", async () => {
     // Both blocks live in the draft so a mis-clicked type switch is reversible;
     // only one is stored, or a STATIC connection keeps a client-secret

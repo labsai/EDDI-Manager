@@ -4427,7 +4427,8 @@
     },
     "binding": {
       "perUser": "ユーザーごと",
-      "service": "共有"
+      "service": "共有",
+      "callerSupplied": "呼び出し元が提供"
     },
     "bindingPerUserTitle": "利用者ごとに解決されます",
     "bindingServiceTitle": "共有アカウント 1 つで解決されます",
@@ -4533,7 +4534,9 @@
       "endpointNotHttps": "https である必要があります — クライアントシークレットがこの URL に送られます。",
       "endpointUserInfo": "URL から資格情報を取り除いてください。リクエストの実際の送信先が変わってしまいます。",
       "endpointNotAbsolute": "ホストを含む完全な URL を入力してください。例：https://auth.example.com/oauth/token。",
-      "paramCredentialShaped": "これらのパラメーターの 1 つが資格情報のような名前です。ここに置けるのは秘密でないプロトコルパラメーター（prompt、audience など）だけです。"
+      "paramCredentialShaped": "これらのパラメーターの 1 つが資格情報のような名前です。ここに置けるのは秘密でないプロトコルパラメーター（prompt、audience など）だけです。",
+      "bindingMismatch": "このバインディングはこの認証タイプと組み合わせられません。「呼び出し元が提供」には API キー、「ユーザーごと」には OAuth ユーザーログインが必要で、それ以外はすべて共有です。",
+      "callerSuppliedRefused": "呼び出し元が提供する接続は資格情報を保存しません。呼び出し元システムがリクエストごとに送ります。このフィールドを空にしてください。"
     },
     "backToList": "接続一覧に戻る",
     "headerSecret": "保存済みシークレット",
@@ -4541,7 +4544,17 @@
     "discardNewBody": "ここまで入力した内容は失われます。まだ何も作成されていません。",
     "confirmReconnect": "このアカウントを連携し直しますか？",
     "confirmReconnectDesc": "このアカウントは正常に動作しているため、直すものはありません。続けると EDDI を離れてプロバイダーのサインイン画面に移動し、以前許可したアクセスが置き換わります。",
-    "paramDuplicate": "この名前は別のパラメーターがすでに使用しています。保存されるのは最後の 1 つだけです。"
+    "paramDuplicate": "この名前は別のパラメーターがすでに使用しています。保存されるのは最後の 1 つだけです。",
+    "bindingChooser": "キーの出どころ",
+    "bindingChoice": {
+      "serviceBody": "ボールト内の 1 つのキーを全員に送信します。シンプルですが、エージェントはそのキーで届く範囲すべてにアクセスできます。",
+      "callerSuppliedBody": "EDDI は何も保存しません。EDDI を呼び出すシステムがリクエストごとに各ユーザー自身の資格情報を送るため、エージェントはそのユーザーができることしかできません。境界となるのは送信先の権限です。"
+    },
+    "callerSuppliedHeaderTitle": "呼び出し元システムが送るもの",
+    "callerSuppliedHeaderBody": "リクエストごとにヘッダーを 1 つ: 接続名、スペース、続いて {{header}} として送る値全体です。スキームも含めるので「Bearer abc」にエスケープは不要です。資格情報はそのリクエストの間だけ存在し、保存されることはありません。",
+    "callerSuppliedNeedsAuth": "呼び出し元は EDDI にサインインしている必要があります。資格情報のないリクエストは、未認証のまま送信されるのではなく失敗します。一時停止したツール呼び出しの再開時も同様で、この接続は MCP と A2A の検出からは除外されます。",
+    "bindingCallerSuppliedTitle": "呼び出している本人として解決",
+    "bindingCallerSuppliedBody": "呼び出し元システムがリクエストと一緒に各ユーザー自身の資格情報を渡し、EDDI は何も保存しません。エージェントは送信先でそのユーザーができることしかできず、この接続は MCP と A2A の検出からは除外されます。"
   },
   "extensionTypes": {
     "parser": "入力パーサー",

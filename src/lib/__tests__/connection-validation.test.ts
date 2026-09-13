@@ -2,8 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   bindingFor,
   isCredentialParamName,
+  isLegalBinding,
   isOAuthType,
   isSecretReference,
+  legalBindings,
   validateConnection,
   validateCredentialEndpoint,
   validateHeaderTemplate,
@@ -164,10 +166,34 @@ describe("bindingFor — the coupling that runs both ways", () => {
     expect(bindingFor("OAUTH2_AUTHORIZATION_CODE")).toBe("PER_USER");
   });
 
-  it("gives every other type SERVICE", () => {
+  it("gives every other type SERVICE by default", () => {
     expect(bindingFor("STATIC")).toBe("SERVICE");
     expect(bindingFor("BASIC")).toBe("SERVICE");
     expect(bindingFor("OAUTH2_CLIENT_CREDENTIALS")).toBe("SERVICE");
+  });
+
+  it("honours CALLER_SUPPLIED on STATIC, the one type with a real choice", () => {
+    // A connection loaded from the API must keep the binding it was stored
+    // with; deriving it blindly rewrote every caller-supplied document to
+    // SERVICE on the first unrelated edit.
+    expect(bindingFor("STATIC", "CALLER_SUPPLIED")).toBe("CALLER_SUPPLIED");
+    expect(bindingFor("STATIC", "SERVICE")).toBe("SERVICE");
+  });
+
+  it("corrects a requested binding the type cannot carry", () => {
+    expect(bindingFor("BASIC", "CALLER_SUPPLIED")).toBe("SERVICE");
+    expect(bindingFor("STATIC", "PER_USER")).toBe("SERVICE");
+    expect(bindingFor("OAUTH2_AUTHORIZATION_CODE", "SERVICE")).toBe("PER_USER");
+    expect(bindingFor("OAUTH2_CLIENT_CREDENTIALS", "PER_USER")).toBe("SERVICE");
+  });
+
+  it("lists exactly the pairs the backend saves", () => {
+    expect(legalBindings("STATIC")).toEqual(["SERVICE", "CALLER_SUPPLIED"]);
+    expect(legalBindings("BASIC")).toEqual(["SERVICE"]);
+    expect(legalBindings("OAUTH2_CLIENT_CREDENTIALS")).toEqual(["SERVICE"]);
+    expect(legalBindings("OAUTH2_AUTHORIZATION_CODE")).toEqual(["PER_USER"]);
+    expect(isLegalBinding("STATIC", "CALLER_SUPPLIED")).toBe(true);
+    expect(isLegalBinding("BASIC", "CALLER_SUPPLIED")).toBe(false);
   });
 });
 
@@ -365,6 +391,21 @@ describe("validateConnection", () => {
     ]);
   });
 
+  it("refuses a binding the auth type cannot carry", () => {
+    // Both directions of the backend's coupling, on the field that broke it.
+    expect(
+      validateConnection({ ...STATIC_OK, authType: "BASIC", binding: "CALLER_SUPPLIED" })
+        .binding,
+    ).toBe("bindingMismatch");
+    expect(validateConnection({ ...STATIC_OK, binding: "PER_USER" }).binding).toBe(
+      "bindingMismatch",
+    );
+    expect(validateConnection({ ...OAUTH_OK, binding: "SERVICE" }).binding).toBe(
+      "bindingMismatch",
+    );
+    expect(validateConnection({ ...STATIC_OK, binding: "SERVICE" }).binding).toBeUndefined();
+  });
+
   it("does not look at the OAuth block of a static connection, or the reverse", () => {
     // Both blocks are kept in the editor's draft so a mis-clicked type switch is
     // reversible; only the relevant one is validated and sent.
@@ -379,5 +420,61 @@ describe("validateConnection", () => {
       staticAuth: { headerName: "", valueTemplate: "plaintext" },
     });
     expect(oauthWithStaleStatic).toEqual({});
+  });
+});
+
+// ─── CALLER_SUPPLIED — EDDI stores nothing ──────────────────────
+
+const CALLER_SUPPLIED_OK = {
+  name: "gnowbe",
+  authType: "STATIC",
+  binding: "CALLER_SUPPLIED",
+  baseUrlAllowlist: ["https://api.gnowbe.com"],
+  staticAuth: { headerName: "x-api-key" },
+};
+
+describe("validateConnection — a caller-supplied connection", () => {
+  it("passes with only a header name — no template is required", () => {
+    // The whole point of the binding: the value arrives with each request, so
+    // the STATIC "template required" rule must not fire.
+    expect(validateConnection(CALLER_SUPPLIED_OK)).toEqual({});
+  });
+
+  it("still requires the header name — the connection owns it whoever supplies the value", () => {
+    expect(
+      validateConnection({ ...CALLER_SUPPLIED_OK, staticAuth: { headerName: " " } })[
+        "staticAuth.headerName"
+      ],
+    ).toBe("headerNameRequired");
+  });
+
+  it("refuses a stored template, which would race the caller's value", () => {
+    const errors = validateConnection({
+      ...CALLER_SUPPLIED_OK,
+      staticAuth: { headerName: "x-api-key", valueTemplate: "Bearer ${vault:k}" },
+    });
+    expect(errors["staticAuth.valueTemplate"]).toBe("callerSuppliedRefused");
+  });
+
+  it("refuses a username and a password reference for the same reason", () => {
+    const errors = validateConnection({
+      ...CALLER_SUPPLIED_OK,
+      staticAuth: {
+        headerName: "x-api-key",
+        username: "svc",
+        passwordRef: "${vault:pw}",
+      },
+    });
+    expect(errors["staticAuth.username"]).toBe("callerSuppliedRefused");
+    expect(errors["staticAuth.passwordRef"]).toBe("callerSuppliedRefused");
+  });
+
+  it("treats a blank template as absent, as the backend does", () => {
+    expect(
+      validateConnection({
+        ...CALLER_SUPPLIED_OK,
+        staticAuth: { headerName: "x-api-key", valueTemplate: "  " },
+      }),
+    ).toEqual({});
   });
 });

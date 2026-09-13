@@ -55,6 +55,16 @@ function messageFor(
         "connections.validation.nameFormat",
         "Use letters, digits, dots, dashes or underscores. Other characters make ${connection:…} silently fail to resolve.",
       );
+    case "bindingMismatch":
+      return t(
+        "connections.validation.bindingMismatch",
+        "This binding does not go with this authentication type: caller-supplied needs an API key, per user needs an OAuth user login, and everything else is shared.",
+      );
+    case "callerSuppliedRefused":
+      return t(
+        "connections.validation.callerSuppliedRefused",
+        "A caller-supplied connection stores no credential — the calling system sends it with every request. Clear this field.",
+      );
     case "allowlistRequired":
       return t(
         "connections.validation.allowlistRequired",

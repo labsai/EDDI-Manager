@@ -26,6 +26,7 @@ import {
 export type ConnectionField =
   | "name"
   | "authType"
+  | "binding"
   | "baseUrlAllowlist"
   | "staticAuth.headerName"
   | "staticAuth.valueTemplate"
@@ -47,6 +48,8 @@ export type ConnectionField =
 export type ValidationCode =
   | "nameRequired"
   | "nameFormat"
+  | "bindingMismatch"
+  | "callerSuppliedRefused"
   | "allowlistRequired"
   | "originNotBare"
   | "originScheme"
@@ -211,17 +214,55 @@ export function validateHeaderTemplate(
   return sawReference ? null : "templateNoReference";
 }
 
+/** The three values the backend's `Binding` enum has. */
+export type ConnectionBinding = "SERVICE" | "PER_USER" | "CALLER_SUPPLIED";
+
 /**
- * The binding a given auth type is allowed to carry — which is exactly one.
+ * The bindings a given auth type may carry.
  *
- * The rule runs both ways in the backend: `PER_USER` requires
- * `OAUTH2_AUTHORIZATION_CODE`, and `OAUTH2_AUTHORIZATION_CODE` requires
- * `PER_USER`. Two one-way rules that between them leave a single legal value,
- * so the Manager derives the field instead of offering it — see
- * `connection-detail.tsx`. Exported so the derivation has one home.
+ * The backend couples the two fields in both directions: `PER_USER` requires
+ * `OAUTH2_AUTHORIZATION_CODE` and vice versa (the flow files its grant under
+ * whoever completed the consent screen, so a `SERVICE`-bound one would look for
+ * a grant nothing can ever create), and `CALLER_SUPPLIED` requires `STATIC`
+ * (the caller hands over a finished header value, so there is nothing to
+ * encode, exchange or refresh). That leaves exactly one legal value for every
+ * type except `STATIC`, which has two — and the only real choice.
  */
-export function bindingFor(authType: string): "SERVICE" | "PER_USER" {
-  return authType === "OAUTH2_AUTHORIZATION_CODE" ? "PER_USER" : "SERVICE";
+export function legalBindings(authType: string): readonly ConnectionBinding[] {
+  switch (authType) {
+    case "OAUTH2_AUTHORIZATION_CODE":
+      return ["PER_USER"];
+    case "STATIC":
+      return ["SERVICE", "CALLER_SUPPLIED"];
+    default:
+      return ["SERVICE"];
+  }
+}
+
+/**
+ * The binding to store for an auth type, honouring a requested one where the
+ * type permits it.
+ *
+ * Derived, not trusted: a draft that says `PER_USER` on a `BASIC` connection
+ * — a stale field after a type switch, or an imported document — is corrected
+ * to the one value the backend accepts rather than sent to fail. For `STATIC`
+ * the requested value decides between `SERVICE` and `CALLER_SUPPLIED`, so a
+ * connection loaded from the API keeps the binding it was stored with.
+ */
+export function bindingFor(
+  authType: string,
+  requested?: string | null,
+): ConnectionBinding {
+  const legal = legalBindings(authType);
+  if (requested && (legal as readonly string[]).includes(requested)) {
+    return requested as ConnectionBinding;
+  }
+  return legal[0]!;
+}
+
+/** Whether the pair is one the backend will save. */
+export function isLegalBinding(authType: string, binding: string): boolean {
+  return (legalBindings(authType) as readonly string[]).includes(binding);
 }
 
 /** Whether this auth type completes an OAuth flow (mirrors `AuthType.isOAuth`). */
@@ -236,6 +277,7 @@ export function isOAuthType(authType: string): boolean {
 export interface ValidatableConnection {
   name?: string;
   authType?: string;
+  binding?: string | null;
   baseUrlAllowlist?: string[] | null;
   staticAuth?: {
     headerName?: string;
@@ -286,6 +328,14 @@ export function validateConnection(config: ValidatableConnection): ConnectionErr
   }
 
   const authType = config.authType ?? "STATIC";
+  // Judged only when present. A caller that carries no binding (the backend
+  // defaults it) is not making a claim the pairing rule can refuse; the
+  // documents this form sends always carry one, via `toStoredConnection`.
+  const binding = config.binding ?? null;
+  if (binding !== null && !isLegalBinding(authType, binding)) {
+    errors.binding = "bindingMismatch";
+  }
+
   if (authType === "STATIC" || authType === "BASIC") {
     const staticAuth = config.staticAuth ?? {};
     if (!(staticAuth.headerName ?? "").trim()) {
@@ -297,6 +347,20 @@ export function validateConnection(config: ValidatableConnection): ConnectionErr
       }
       if (!isReference(staticAuth.passwordRef)) {
         errors["staticAuth.passwordRef"] = "secretMustBeReference";
+      }
+    } else if (binding === "CALLER_SUPPLIED") {
+      // The inverse of the STATIC rule below. The value arrives with each
+      // request, so a stored template is either dead config or a second
+      // credential racing the supplied one — the backend refuses all three
+      // fields rather than picking a winner by resolution order.
+      if ((staticAuth.valueTemplate ?? "").trim()) {
+        errors["staticAuth.valueTemplate"] = "callerSuppliedRefused";
+      }
+      if ((staticAuth.username ?? "").trim()) {
+        errors["staticAuth.username"] = "callerSuppliedRefused";
+      }
+      if ((staticAuth.passwordRef ?? "").trim()) {
+        errors["staticAuth.passwordRef"] = "callerSuppliedRefused";
       }
     } else {
       const problem = validateHeaderTemplate(staticAuth.valueTemplate);

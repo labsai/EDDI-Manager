@@ -144,6 +144,49 @@ describe("toStoredConnection — the document sent, built from the type", () => 
     });
     expect(stored.allowUnverifiedPrincipal).toBe(false);
   });
+
+  it("keeps a loaded CALLER_SUPPLIED binding and sends only the header name", () => {
+    // The drift this pins: deriving the binding from the type alone rewrote
+    // every caller-supplied document to SERVICE — and then sent an empty
+    // valueTemplate the backend refuses on that binding.
+    const stored = toStoredConnection({
+      ...base,
+      authType: "STATIC",
+      binding: "CALLER_SUPPLIED",
+      staticAuth: {
+        headerName: "x-api-key",
+        valueTemplate: null,
+        username: null,
+        passwordRef: null,
+      },
+    });
+    expect(stored.binding).toBe("CALLER_SUPPLIED");
+    expect(stored.staticAuth).toEqual({ headerName: "x-api-key" });
+    expect(stored.staticAuth).not.toHaveProperty("valueTemplate");
+    expect(stored.oauth).toBeNull();
+  });
+
+  it("drops a template the draft still holds once the binding is caller-supplied", () => {
+    // The editor keeps the typed template so a mis-click is reversible; the
+    // document must not carry it.
+    const stored = toStoredConnection({
+      ...base,
+      authType: "STATIC",
+      binding: "CALLER_SUPPLIED",
+      staticAuth: { headerName: "x-api-key", valueTemplate: "Bearer ${vault:k}" },
+    });
+    expect(stored.staticAuth).toEqual({ headerName: "x-api-key" });
+  });
+
+  it("corrects CALLER_SUPPLIED to SERVICE on a type that cannot carry it", () => {
+    const stored = toStoredConnection({
+      ...base,
+      authType: "BASIC",
+      binding: "CALLER_SUPPLIED",
+      staticAuth: { headerName: "A", username: "svc", passwordRef: "${vault:pw}" },
+    });
+    expect(stored.binding).toBe("SERVICE");
+  });
 });
 
 describe("emptyConnection", () => {
@@ -152,6 +195,14 @@ describe("emptyConnection", () => {
     expect(emptyConnection("OAUTH2_CLIENT_CREDENTIALS").binding).toBe("SERVICE");
     expect(emptyConnection("STATIC").binding).toBe("SERVICE");
     expect(emptyConnection("BASIC").binding).toBe("SERVICE");
+  });
+
+  it("builds a caller-supplied STATIC connection with a header name and no value slot", () => {
+    const conn = emptyConnection("STATIC", "CALLER_SUPPLIED");
+    expect(conn.binding).toBe("CALLER_SUPPLIED");
+    expect(conn.staticAuth).toEqual({ headerName: "Authorization" });
+    // And refuses the pairing on a type that cannot carry it.
+    expect(emptyConnection("BASIC", "CALLER_SUPPLIED").binding).toBe("SERVICE");
   });
 
   it("carries only the auth block its type uses", () => {

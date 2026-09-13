@@ -4465,7 +4465,8 @@
     },
     "binding": {
       "perUser": "Por persona",
-      "service": "Compartida"
+      "service": "Compartida",
+      "callerSupplied": "Proporcionado por el llamante"
     },
     "bindingPerUserTitle": "Se resuelve para cada usuario",
     "bindingServiceTitle": "Se resuelve con una cuenta compartida",
@@ -4571,7 +4572,9 @@
       "endpointNotHttps": "Debe ser https — el secreto de cliente se envía a esta URL.",
       "endpointUserInfo": "Quite las credenciales de la URL; cambian a dónde va realmente la petición.",
       "endpointNotAbsolute": "Escriba una URL completa con el host, p. ej. https://auth.example.com/oauth/token.",
-      "paramCredentialShaped": "Uno de estos parámetros tiene nombre de credencial. Aquí solo caben parámetros de protocolo no secretos (prompt, audience, …)."
+      "paramCredentialShaped": "Uno de estos parámetros tiene nombre de credencial. Aquí solo caben parámetros de protocolo no secretos (prompt, audience, …).",
+      "bindingMismatch": "Esta vinculación no corresponde a este tipo de autenticación: «proporcionado por el llamante» necesita una clave de API, «por usuario» necesita un inicio de sesión OAuth de usuario y todo lo demás es compartido.",
+      "callerSuppliedRefused": "Una conexión proporcionada por el llamante no almacena ninguna credencial: el sistema que llama la envía con cada solicitud. Vacíe este campo."
     },
     "backToList": "Volver a Conexiones",
     "headerSecret": "Secreto guardado",
@@ -4579,7 +4582,17 @@
     "discardNewBody": "Se perderá lo que haya rellenado hasta ahora. Todavía no se ha creado nada.",
     "confirmReconnect": "¿Volver a conectar esta cuenta?",
     "confirmReconnectDesc": "Esta cuenta funciona, así que no hay nada que reparar. Si continúa, saldrá de EDDI a la página de inicio de sesión del proveedor y se reemplazará el acceso que concedió antes.",
-    "paramDuplicate": "Otro parámetro ya usa este nombre. Solo se guarda el último."
+    "paramDuplicate": "Otro parámetro ya usa este nombre. Solo se guarda el último.",
+    "bindingChooser": "De dónde procede la clave",
+    "bindingChoice": {
+      "serviceBody": "Una clave en la bóveda, enviada para todos. Sencillo, pero el agente puede llegar a todo lo que esa clave alcanza.",
+      "callerSuppliedBody": "EDDI no almacena nada. El sistema que llama a EDDI envía la credencial de cada usuario con cada solicitud, así que el agente solo puede hacer lo que ese usuario puede hacer: los permisos del destino son el límite."
+    },
+    "callerSuppliedHeaderTitle": "Lo que envía el sistema que llama",
+    "callerSuppliedHeaderBody": "Una cabecera por solicitud: el nombre de la conexión, un espacio y después el valor completo que se enviará como {{header}}, esquema incluido, así que «Bearer abc» no necesita escaparse. La credencial existe solo durante esa solicitud y nunca se almacena.",
+    "callerSuppliedNeedsAuth": "El llamante debe haber iniciado sesión en EDDI. Una solicitud sin la credencial falla en lugar de salir sin autenticar, incluso al reanudar una llamada a herramienta en pausa, y esta conexión se excluye del descubrimiento MCP y A2A.",
+    "bindingCallerSuppliedTitle": "Se resuelve como quien llama",
+    "bindingCallerSuppliedBody": "El sistema que llama entrega la credencial de cada usuario con la solicitud y EDDI no almacena nada. El agente solo puede hacer lo que ese usuario puede hacer en el destino, y esta conexión se excluye del descubrimiento MCP y A2A."
   },
   "extensionTypes": {
     "parser": "Analizador de entrada",

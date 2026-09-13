@@ -43,6 +43,7 @@ import {
   parseConnectionResourceUri,
   toStoredConnection,
   type AuthType,
+  type Binding,
   type ConnectionConfiguration,
   type OAuthConfig,
   type StaticAuth,
@@ -62,9 +63,12 @@ import {
  * fields. Three of this document's rules are ones a generated form could not
  * express anyway:
  *
- *  - **`binding` is derived, not chosen.** The backend couples it to `authType`
- *    in both directions, which leaves exactly one legal value per type. Offering
- *    it as a select would offer three broken combinations and one working one.
+ *  - **`binding` is derived for every type but one.** The backend couples it to
+ *    `authType` in both directions, which leaves exactly one legal value for
+ *    BASIC and both OAuth flows. Offering a select would offer broken
+ *    combinations beside the working one. STATIC is the exception — `SERVICE`
+ *    or `CALLER_SUPPLIED` is a real decision — and gets a two-way chooser
+ *    inside the credential fields instead.
  *  - **`name` is immutable.** Every grant is filed under `(tenant, name)`, so a
  *    rename orphans them — and the next connection created under the old name
  *    inherits them. The backend refuses; the input is disabled and says why.
@@ -236,21 +240,30 @@ export function ConnectionDetailPage() {
     setDraft((prev) => {
       if (!prev) return prev;
       const blank = emptyConnection(authType);
+      // Honoured where the new type allows the current binding, corrected
+      // otherwise — so STATIC keeps a caller-supplied binding across a
+      // mis-click and back, and BASIC never carries one.
+      const binding = bindingFor(authType, prev.binding);
       return {
         ...prev,
         authType,
-        binding: bindingFor(authType),
+        binding,
         // The flag is only legal on a per-user binding, and the backend refuses
         // it elsewhere rather than ignoring it — a relaxation sitting on a
         // document where it does nothing reads as a decision already in force.
         allowUnverifiedPrincipal:
-          authType === "OAUTH2_AUTHORIZATION_CODE"
-            ? prev.allowUnverifiedPrincipal
-            : false,
+          binding === "PER_USER" ? prev.allowUnverifiedPrincipal : false,
         staticAuth: prev.staticAuth ?? blank.staticAuth,
         oauth: prev.oauth ?? blank.oauth,
       };
     });
+  }, []);
+
+  /** The STATIC-only choice between a shared key and a caller-supplied one. */
+  const changeBinding = useCallback((binding: Binding) => {
+    setDraft((prev) =>
+      prev ? { ...prev, binding: bindingFor(prev.authType, binding) } : prev,
+    );
   }, []);
 
   const handleSave = async () => {
@@ -357,6 +370,8 @@ export function ConnectionDetailPage() {
   }
 
   const perUser = draft.authType === "OAUTH2_AUTHORIZATION_CODE";
+  const callerSupplied =
+    draft.authType === "STATIC" && draft.binding === "CALLER_SUPPLIED";
   const fieldError = (field: keyof typeof errors) =>
     showErrors ? errors[field] : undefined;
 
@@ -471,14 +486,23 @@ export function ConnectionDetailPage() {
           </select>
         </div>
 
-        {/* Binding is shown, not chosen — see the file comment. */}
-        <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
+        {/* Binding is shown, not chosen, except for STATIC — see the file
+            comment. The chooser itself sits inside the credential fields. */}
+        <div
+          className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3"
+          data-testid={`connection-binding-explainer-${draft.binding}`}
+        >
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           <div className="space-y-1 text-xs">
             <p className="font-medium text-foreground">
               {perUser
                 ? t("connections.bindingPerUserTitle", "Resolves as each end user")
-                : t("connections.bindingServiceTitle", "Resolves as one shared account")}
+                : callerSupplied
+                  ? t(
+                      "connections.bindingCallerSuppliedTitle",
+                      "Resolves as whoever is calling",
+                    )
+                  : t("connections.bindingServiceTitle", "Resolves as one shared account")}
             </p>
             <p className="text-muted-foreground">
               {perUser
@@ -486,10 +510,15 @@ export function ConnectionDetailPage() {
                     "connections.bindingPerUserBody",
                     "Everyone links their own account and the agent acts as them. This follows from the authentication type — a user login is the only flow that produces a grant per person.",
                   )
-                : t(
-                    "connections.bindingServiceBody",
-                    "One credential, the same for everybody. This follows from the authentication type — a fixed key is the same key for everyone however it is bound.",
-                  )}
+                : callerSupplied
+                  ? t(
+                      "connections.bindingCallerSuppliedBody",
+                      "The calling system hands over each user's own credential with the request and EDDI stores nothing. The agent can do only what that user can do at the target, and this connection is withheld from MCP and A2A discovery.",
+                    )
+                  : t(
+                      "connections.bindingServiceBody",
+                      "One credential, the same for everybody. This follows from the authentication type — a fixed key is the same key for everyone however it is bound.",
+                    )}
             </p>
             {perUser && (
               <p className="text-muted-foreground">
@@ -552,6 +581,7 @@ export function ConnectionDetailPage() {
           draft={draft}
           onPatchStatic={patchStatic}
           onPatchOAuth={patchOAuth}
+          onBindingChange={changeBinding}
           errors={showErrors ? errors : {}}
           idPrefix="connection"
           dense

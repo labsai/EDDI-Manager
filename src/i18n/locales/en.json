@@ -4427,7 +4427,8 @@
     },
     "binding": {
       "perUser": "Per user",
-      "service": "Shared"
+      "service": "Shared",
+      "callerSupplied": "Caller-supplied"
     },
     "bindingPerUserTitle": "Resolves as each end user",
     "bindingServiceTitle": "Resolves as one shared account",
@@ -4533,7 +4534,9 @@
       "endpointNotHttps": "Must be https — the client secret is sent to this URL.",
       "endpointUserInfo": "Remove the credentials from the URL; they change where the request actually goes.",
       "endpointNotAbsolute": "Enter a full URL including the host, e.g. https://auth.example.com/oauth/token.",
-      "paramCredentialShaped": "One of these parameters is named like a credential. Only non-secret protocol parameters (prompt, audience, …) belong here."
+      "paramCredentialShaped": "One of these parameters is named like a credential. Only non-secret protocol parameters (prompt, audience, …) belong here.",
+      "bindingMismatch": "This binding does not go with this authentication type: caller-supplied needs an API key, per user needs an OAuth user login, and everything else is shared.",
+      "callerSuppliedRefused": "A caller-supplied connection stores no credential — the calling system sends it with every request. Clear this field."
     },
     "backToList": "Back to Connections",
     "headerSecret": "Stored secret",
@@ -4541,7 +4544,17 @@
     "discardNewBody": "What you have filled in so far will be lost. Nothing has been created yet.",
     "confirmReconnect": "Connect this account again?",
     "confirmReconnectDesc": "This account is working, so there is nothing to repair. Continuing takes you out of EDDI to the provider's sign-in page and replaces the access you granted before.",
-    "paramDuplicate": "Another parameter already uses this name. Only the last one is saved."
+    "paramDuplicate": "Another parameter already uses this name. Only the last one is saved.",
+    "bindingChooser": "Where the key comes from",
+    "bindingChoice": {
+      "serviceBody": "One key in the vault, sent for everyone. Simple — but the agent can reach everything that key can.",
+      "callerSuppliedBody": "EDDI stores nothing. The system calling EDDI sends each user's own credential with every request, so the agent can do only what that user can do — the target's own permissions are the boundary."
+    },
+    "callerSuppliedHeaderTitle": "What the calling system sends",
+    "callerSuppliedHeaderBody": "One header per request: the connection name, a space, then the whole value to send as {{header}} — scheme included, so “Bearer abc” needs no escaping. The credential lives for that request only and is never stored.",
+    "callerSuppliedNeedsAuth": "The caller must be signed in to EDDI. A request without the credential fails rather than going out unauthenticated — including when a paused tool call is resumed — and this connection is withheld from MCP and A2A discovery.",
+    "bindingCallerSuppliedTitle": "Resolves as whoever is calling",
+    "bindingCallerSuppliedBody": "The calling system hands over each user's own credential with the request and EDDI stores nothing. The agent can do only what that user can do at the target, and this connection is withheld from MCP and A2A discovery."
   },
   "extensionTypes": {
     "parser": "Input Parser",

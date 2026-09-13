@@ -26,7 +26,9 @@ import {
   AUTH_TYPES,
   emptyConnection,
   parseConnectionResourceUri,
+  toStoredConnection,
   type AuthType,
+  type Binding,
   type ConnectionConfiguration,
   type OAuthConfig,
   type StaticAuth,
@@ -81,12 +83,21 @@ export function CreateConnectionDialog({
   const [touched, setTouched] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
-  /** What will actually be sent — the draft with any uncommitted text folded in. */
+  /**
+   * What will actually be sent — the draft with any uncommitted text folded
+   * in, reduced to the fields its type and binding use.
+   *
+   * Through `toStoredConnection`, the same door the editor uses. Sending the
+   * raw draft let a header value typed before switching to "caller-supplied"
+   * ride along on a document whose binding refuses one: the field was no
+   * longer on screen, and the 400 named it anyway.
+   */
   const effectiveDraft = useMemo<ConnectionConfiguration>(
-    () => ({
-      ...draft,
-      baseUrlAllowlist: commitPending(draft.baseUrlAllowlist, pendingOrigin),
-    }),
+    () =>
+      toStoredConnection({
+        ...draft,
+        baseUrlAllowlist: commitPending(draft.baseUrlAllowlist, pendingOrigin),
+      }),
     [draft, pendingOrigin],
   );
 
@@ -100,10 +111,11 @@ export function CreateConnectionDialog({
     (draft.description ?? "").trim() !== "" ||
     draft.baseUrlAllowlist.length > 0 ||
     pendingOrigin.trim() !== "" ||
+    draft.binding !== emptyConnection(draft.authType).binding ||
     JSON.stringify(draft.staticAuth) !==
-      JSON.stringify(emptyConnection(draft.authType).staticAuth) ||
+      JSON.stringify(emptyConnection(draft.authType, draft.binding).staticAuth) ||
     JSON.stringify(draft.oauth) !==
-      JSON.stringify(emptyConnection(draft.authType).oauth);
+      JSON.stringify(emptyConnection(draft.authType, draft.binding).oauth);
 
   const reset = useCallback(() => {
     setStep("basics");
@@ -147,6 +159,16 @@ export function CreateConnectionDialog({
       baseUrlAllowlist: prev.baseUrlAllowlist,
     }));
   };
+
+  /**
+   * Shared key or caller-supplied — the STATIC-only choice.
+   *
+   * The header value already typed is kept in the draft, so a mis-click is
+   * reversible; `toStoredConnection` leaves it out of what is sent whenever
+   * the binding refuses it.
+   */
+  const changeBinding = (binding: Binding) =>
+    setDraft((prev) => ({ ...prev, binding }));
 
   const patchStatic = (patch: Partial<StaticAuth>) =>
     setDraft((prev) => ({
@@ -309,6 +331,7 @@ export function CreateConnectionDialog({
               draft={draft}
               onPatchStatic={patchStatic}
               onPatchOAuth={patchOAuth}
+              onBindingChange={changeBinding}
               errors={touched ? errors : {}}
               idPrefix="create-connection"
             />
