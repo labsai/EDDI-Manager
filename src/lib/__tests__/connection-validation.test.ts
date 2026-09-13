@@ -307,13 +307,40 @@ describe("validateParamValue — the map is plain text in a URL", () => {
     expect(validateParamValue("a b ".repeat(128))).toBeNull();
   });
 
-  it("refuses a value that is one long token-alphabet run — a pasted key", () => {
-    expect(validateParamValue("sk_live_" + "a".repeat(40))).toBe(
-      "paramValueCredentialShaped",
-    );
-    expect(validateParamValue("A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6")).toBe(
-      "paramValueCredentialShaped",
-    );
+  it("refuses a value that starts like a credential — the backend's prefix list, exactly", () => {
+    // OpenAI/Stripe keys, Slack tokens, GitHub tokens, AWS key ids, JWTs, and
+    // a pasted Authorization header. A prefix test, like the backend's: the
+    // length of what follows is irrelevant.
+    for (const value of [
+      "sk-live-x",
+      "xoxb-1234",
+      "xoxp-1234",
+      "ghp_abcdef",
+      "gho_abcdef",
+      "github_pat_abc",
+      "AKIAIOSFODNN7EXAMPLE",
+      "eyJhbGciOiJIUzI1NiJ9",
+      "Bearer abc",
+      "bearer abc",
+      "Basic dXNlcjpwYXNz",
+    ]) {
+      expect(validateParamValue(value), value).toBe("paramValueCredentialShaped");
+    }
+  });
+
+  it("accepts a long opaque value the backend accepts — no run-length heuristic", () => {
+    // The mirror used to refuse any 32+ run of the token alphabet, which the
+    // backend never did: a UUID audience or a 40-character opaque tenant id
+    // was blocked here and saved there. And the prefixes are exact — `sk_`
+    // is not `sk-`, and `Bearer` without a following space is a word.
+    expect(validateParamValue("A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6")).toBeNull();
+    expect(validateParamValue("6ba7b810-9dad-11d1-80b4-00c04fd430c8")).toBeNull();
+    expect(validateParamValue("sk_live_" + "a".repeat(40))).toBeNull();
+    expect(validateParamValue("Bearer")).toBeNull();
+    expect(validateParamValue("basicauth")).toBeNull();
+    // Not trimmed first: the backend anchors at the raw start, so a leading
+    // space hides the prefix from both sides equally.
+    expect(validateParamValue(" sk-live-x")).toBeNull();
   });
 });
 
@@ -491,8 +518,9 @@ describe("validateConnection", () => {
       })["oauth.extraAuthParams"];
     expect(withValue("${vault:secret}")).toBe("paramValueReference");
     expect(withValue("x".repeat(513))).toBe("paramValueTooLong");
-    expect(withValue("A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6")).toBe("paramValueCredentialShaped");
+    expect(withValue("sk-live-abcdef")).toBe("paramValueCredentialShaped");
     expect(withValue("api.atlassian.com")).toBeUndefined();
+    expect(withValue("A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6")).toBeUndefined();
   });
 
   it("reports every broken field at once, not just the first", () => {

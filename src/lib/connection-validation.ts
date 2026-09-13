@@ -175,26 +175,33 @@ export function isReservedOAuthParamName(name: string): boolean {
 const PARAM_VALUE_MAX_LENGTH = 512;
 
 /**
- * A value that is nothing but one long run of the token alphabet — the shape
- * of a pasted key or bearer token, and of nothing a provider documents as a
- * protocol parameter. Deliberately narrow: an audience like `api.example.com`
- * or a resource URL carries dots, colons and slashes and must pass.
+ * Value prefixes no protocol parameter legitimately starts with and every
+ * common credential format does: OpenAI/Stripe keys, Slack tokens, GitHub
+ * tokens, AWS access key ids, JWTs, and a pasted `Authorization` header.
+ *
+ * The backend's `CREDENTIAL_SHAPED_VALUE`, character for character (the
+ * inline `(?i:…)` spelled out, since JavaScript has no scoped flag). It is a
+ * prefix test on the raw value — not an entropy or run-length heuristic — so
+ * an opaque 36-character audience passes here exactly as it passes there,
+ * and `sk-live-x` is refused here before the backend refuses it.
  */
-const PARAM_VALUE_TOKEN_SHAPED = /^[A-Za-z0-9_\-+/=]{32,}$/;
+const PARAM_VALUE_CREDENTIAL_SHAPED =
+  /^(?:sk-|xox[abpsre]-|gh[pousr]_|github_pat_|AKIA|eyJ|(?:[Bb][Ee][Aa][Rr][Ee][Rr]|[Bb][Aa][Ss][Ii][Cc])\s)/;
 
 /**
  * An extra authorization parameter's VALUE, as the backend judges it.
  *
  * The map is stored in plain text and appended to a URL the browser sees, so
- * three things are refused: a `${…}` reference (nothing resolves it there, and
- * a vault pointer in a query string is a vault pointer in a proxy log), a value
- * past 512 characters, and a value shaped like a credential.
+ * three things are refused: a `${…}` reference (it would be resolved into the
+ * authorization URL, and a secret in a query string is a secret in a proxy
+ * log), a value past 512 characters, and a value that starts like a
+ * credential.
  */
 export function validateParamValue(value: string | null | undefined): ValidationCode | null {
   const candidate = value ?? "";
   if (candidate.includes("${")) return "paramValueReference";
   if (candidate.length > PARAM_VALUE_MAX_LENGTH) return "paramValueTooLong";
-  if (PARAM_VALUE_TOKEN_SHAPED.test(candidate.trim())) return "paramValueCredentialShaped";
+  if (PARAM_VALUE_CREDENTIAL_SHAPED.test(candidate)) return "paramValueCredentialShaped";
   return null;
 }
 
