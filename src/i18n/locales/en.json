@@ -3404,7 +3404,19 @@
     "placeholder": "API key or ${vault:key-name}",
     "vaultDown": "Vault is not configured — set up a secret provider in the EDDI backend",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "This field takes a reference — ${vault:key} or ${vars:key} — not the secret itself. Pick a key, or store the value in the vault first."
+    "mustBeReference": "This field takes a reference — ${vault:key} or ${vars:key} — not the secret itself. Pick a key, or store the value in the vault first.",
+    "connectionChip": "Connection",
+    "connectionChipTitle": "A connection reference — EDDI resolves it to the credential on every request",
+    "clearConnection": "Clear connection reference",
+    "pickConnection": "Insert a connection reference",
+    "connectionFilterPlaceholder": "Search connections…",
+    "connectionLoading": "Loading connections…",
+    "connectionEmpty": "No connections yet. An administrator creates them under Connections.",
+    "connectionNoMatch": "No connections matching \"{{filter}}\"",
+    "connectionForbidden": "Your role cannot list connections. If you know its name, type ${connection:name} by hand.",
+    "connectionUnavailable": "This backend does not offer connections.",
+    "connectionFailed": "Could not load connections.",
+    "connectionHint": "Inserts ${connection:name} as the whole value. EDDI resolves it to the credential on every request."
   },
   "snippetEditor": {
     "category": "Category",
@@ -4657,5 +4669,11 @@
       "cascade_one": "Owner changed on {{count}} resource",
       "cascade_other": "Owner changed on {{count}} resources"
     }
+  },
+  "connectionRef": {
+    "wrapped": "A connection supplies the whole header value, scheme included. Use ${connection:name} on its own and put “Bearer ” in the connection's header value instead.",
+    "headerMismatch": "This connection sends its credential as “{{expected}}”, so the header must be named that — otherwise the config shows one name and the request carries another.",
+    "refusedInRequest": "${connection:…} is refused in a path, query parameter or body — a credential in a URL lands in every proxy log, and one in a body is not read. Reference the connection from a header instead.",
+    "refusedInModel": "Language models, embeddings and vector stores do not accept ${connection:…}: a connection resolves to a whole header, and these need a bare credential. Use ${vault:…} here."
   }
 }

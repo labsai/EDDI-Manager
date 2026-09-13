@@ -3492,7 +3492,19 @@
     "placeholder": "مفتاح API أو ${vault:key-name}",
     "vaultDown": "الخزنة غير مُهيّأة — أعدّ مزوّد أسرار في خلفية EDDI",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "يقبل هذا الحقل مرجعًا — ‎${vault:key}‎ أو ‎${vars:key}‎ — لا السر نفسه. اختر مفتاحًا، أو احفظ القيمة في الخزنة أولًا."
+    "mustBeReference": "يقبل هذا الحقل مرجعًا — ‎${vault:key}‎ أو ‎${vars:key}‎ — لا السر نفسه. اختر مفتاحًا، أو احفظ القيمة في الخزنة أولًا.",
+    "connectionChip": "اتصال",
+    "connectionChipTitle": "مرجع اتصال — يحلّه EDDI إلى بيانات الاعتماد مع كل طلب",
+    "clearConnection": "مسح مرجع الاتصال",
+    "pickConnection": "إدراج مرجع اتصال",
+    "connectionFilterPlaceholder": "البحث في الاتصالات…",
+    "connectionLoading": "جارٍ تحميل الاتصالات…",
+    "connectionEmpty": "لا توجد اتصالات بعد. ينشئها المسؤول ضمن «الاتصالات».",
+    "connectionNoMatch": "لا توجد اتصالات مطابقة لـ «{{filter}}»",
+    "connectionForbidden": "لا يسمح دورك بعرض الاتصالات. إن كنت تعرف الاسم، فاكتب ${connection:name} يدويًا.",
+    "connectionUnavailable": "لا يوفّر هذا الخادم الخلفي الاتصالات.",
+    "connectionFailed": "تعذّر تحميل الاتصالات.",
+    "connectionHint": "يدرج ${connection:name} كقيمة كاملة. يحلّه EDDI إلى بيانات الاعتماد مع كل طلب."
   },
   "snippetEditor": {
     "category": "الفئة",
@@ -4829,5 +4841,11 @@
       "cascade_many": "تغيّر المالك على {{count}} مورداً.",
       "cascade_other": "تغيّر المالك على {{count}} مورد."
     }
+  },
+  "connectionRef": {
+    "wrapped": "يوفّر الاتصال قيمة الترويسة كاملة بما فيها النوع. استخدم ${connection:name} وحده وضع «Bearer » في قيمة ترويسة الاتصال بدلًا من ذلك.",
+    "headerMismatch": "يرسل هذا الاتصال بيانات اعتماده باسم «{{expected}}»، لذا يجب أن تحمل الترويسة هذا الاسم — وإلا أظهرت الإعدادات اسمًا وحمل الطلب اسمًا آخر.",
+    "refusedInRequest": "يُرفض ${connection:…} في المسار أو معامل الاستعلام أو المتن — بيانات الاعتماد في عنوان URL تصل إلى كل سجلات الوكيل، وفي المتن لا تُقرأ. أشر إلى الاتصال من ترويسة بدلًا من ذلك.",
+    "refusedInModel": "نماذج اللغة والتضمينات ومخازن المتجهات لا تقبل ${connection:…}: يُحلّ الاتصال إلى ترويسة كاملة، بينما تحتاج هذه إلى بيانات اعتماد مجردة. استخدم ${vault:…} هنا."
   }
 }

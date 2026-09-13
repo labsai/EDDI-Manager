@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ChevronDown,
@@ -27,7 +27,11 @@ import {
   LiteralCredentialError,
   type DiscoverEndpointsResult,
 } from "@/lib/api/openapi-discover";
-import { isAuthReference } from "@/lib/secret-reference";
+import { containsConnectionReference, isAuthReference } from "@/lib/secret-reference";
+import { expectedHeaderFor } from "@/lib/connection-placement";
+import { useConnectionDescriptors } from "@/hooks/use-connections";
+import { ConnectionReferenceButton } from "@/components/shared/connection-reference-picker";
+import { ConnectionReferenceWarning } from "@/components/shared/connection-reference-warning";
 import { isValidUrl } from "@/lib/utils";
 import { EditorSection } from "./editor-section";
 
@@ -220,6 +224,10 @@ function KvEditor({
   valuePlaceholder = "Value",
   addLabel = "Add",
   readOnly,
+  connections,
+  refusesConnections,
+  headerNameFor,
+  testIdPrefix = "kv",
 }: {
   entries: Record<string, string>;
   onChange: (e: Record<string, string>) => void;
@@ -227,6 +235,13 @@ function KvEditor({
   valuePlaceholder?: string;
   addLabel?: string;
   readOnly?: boolean;
+  /** Offer a `${connection:name}` insert on each value — headers only. */
+  connections?: boolean;
+  /** Warn when a value carries `${connection:` — query parameters, where it is refused. */
+  refusesConnections?: boolean;
+  /** The header name a value's connection requires when it differs, or null. */
+  headerNameFor?: (key: string, value: string) => string | null;
+  testIdPrefix?: string;
 }) {
   const pairs = Object.entries(entries ?? {});
 
@@ -253,33 +268,52 @@ function KvEditor({
   return (
     <div className="space-y-1.5">
       {pairs.map(([k, v], i) => (
-        <div key={i} className="flex items-center gap-1.5">
-          <input
-            type="text"
-            value={k}
-            onChange={(e) => update(k, e.target.value, v)}
-            readOnly={readOnly}
-            placeholder={keyPlaceholder}
-            className="h-7 w-36 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-          />
-          <span className="text-xs text-muted-foreground">:</span>
-          <input
-            type="text"
+        <div key={i}>
+          <div className="flex items-center gap-1.5">
+            <input
+              type="text"
+              value={k}
+              onChange={(e) => update(k, e.target.value, v)}
+              readOnly={readOnly}
+              placeholder={keyPlaceholder}
+              className="h-7 w-36 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+            <span className="text-xs text-muted-foreground">:</span>
+            <div className="flex flex-1 items-stretch">
+              <input
+                type="text"
+                value={v}
+                onChange={(e) => update(k, k, e.target.value)}
+                readOnly={readOnly}
+                placeholder={valuePlaceholder}
+                className={`h-7 w-full border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring ${
+                  connections && !readOnly ? "rounded-s rounded-e-none" : "rounded"
+                }`}
+                data-testid={`${testIdPrefix}-value-${i}`}
+              />
+              {connections && !readOnly && (
+                <ConnectionReferenceButton
+                  onInsert={(reference) => update(k, k, reference)}
+                  testId={`${testIdPrefix}-connection-${i}`}
+                />
+              )}
+            </div>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={() => remove(k)}
+                className="rounded p-1 text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+          <ConnectionReferenceWarning
             value={v}
-            onChange={(e) => update(k, k, e.target.value)}
-            readOnly={readOnly}
-            placeholder={valuePlaceholder}
-            className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            refused={refusesConnections ? "request" : undefined}
+            expectedHeaderName={headerNameFor?.(k, v)}
+            testId={`${testIdPrefix}-connection-warning-${i}`}
           />
-          {!readOnly && (
-            <button
-              type="button"
-              onClick={() => remove(k)}
-              className="rounded p-1 text-muted-foreground hover:text-destructive transition-colors"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          )}
         </div>
       ))}
       {!readOnly && (
@@ -1266,6 +1300,38 @@ function HttpCallEditor({
     [call, onChange]
   );
 
+  /**
+   * The header-name rule needs the referenced connection's document, which
+   * only the descriptor list carries. Fetched only once a header actually
+   * references a connection, so an editor with none costs nothing; a viewer
+   * whose role cannot list connections gets no mismatch warnings rather than
+   * a wrong one — the lookup returns nothing and `expectedHeaderFor` stays
+   * silent on an unknown name.
+   */
+  const anyHeaderReferencesConnection = Object.values(call.request.headers ?? {}).some(
+    (value) => containsConnectionReference(value)
+  );
+  const { data: connectionRows } = useConnectionDescriptors(
+    100,
+    0,
+    "",
+    anyHeaderReferencesConnection
+  );
+  const connectionByName = useMemo(
+    () =>
+      new Map(
+        (connectionRows ?? [])
+          .filter((row) => row.config)
+          .map((row) => [row.connectionName, row.config!] as const)
+      ),
+    [connectionRows]
+  );
+  const headerNameFor = useCallback(
+    (headerName: string, value: string) =>
+      expectedHeaderFor(headerName, value, (name) => connectionByName.get(name)),
+    [connectionByName]
+  );
+
   return (
     <div
       className="rounded-xl border border-border bg-card shadow-sm"
@@ -1378,8 +1444,14 @@ function HttpCallEditor({
                   "/api/endpoint"
                 )}
                 className="h-8 flex-1 rounded-md border border-input bg-background px-3 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                data-testid="httpcall-path-input"
               />
             </div>
+            <ConnectionReferenceWarning
+              value={call.request.path}
+              refused="request"
+              testId="httpcall-path-connection-warning"
+            />
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
                 {t("apiCallsEditor.contentType", "Content Type")}
@@ -1402,6 +1474,8 @@ function HttpCallEditor({
               Object.keys(call.request.headers ?? {}).length > 0
             }
           >
+            {/* The one httpcall placement that resolves ${connection:…}: as
+                the whole value, under the header the connection names. */}
             <KvEditor
               entries={call.request.headers ?? {}}
               onChange={(h) => updateRequest({ headers: h })}
@@ -1409,6 +1483,9 @@ function HttpCallEditor({
               valuePlaceholder="Header value"
               addLabel={t("apiCallsEditor.addHeader", "Add Header")}
               readOnly={readOnly}
+              connections
+              headerNameFor={headerNameFor}
+              testIdPrefix="header"
             />
           </EditorSection>
 
@@ -1426,6 +1503,8 @@ function HttpCallEditor({
               valuePlaceholder="Param value"
               addLabel={t("apiCallsEditor.addQueryParam", "Add Query Param")}
               readOnly={readOnly}
+              refusesConnections
+              testIdPrefix="query"
             />
           </EditorSection>
 
@@ -1445,6 +1524,11 @@ function HttpCallEditor({
                 "JSON body template..."
               )}
               testId="request-body-editor"
+            />
+            <ConnectionReferenceWarning
+              value={call.request.body}
+              refused="request"
+              testId="request-body-connection-warning"
             />
           </EditorSection>
 

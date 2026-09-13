@@ -3364,7 +3364,19 @@
     "placeholder": "API-Schlüssel oder ${vault:key-name}",
     "vaultDown": "Vault ist nicht konfiguriert — richten Sie einen Secret-Provider im EDDI-Backend ein",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "Dieses Feld nimmt eine Referenz auf — ${vault:key} oder ${vars:key} —, nicht das Geheimnis selbst. Wählen Sie einen Schlüssel oder legen Sie den Wert zuerst im Vault ab."
+    "mustBeReference": "Dieses Feld nimmt eine Referenz auf — ${vault:key} oder ${vars:key} —, nicht das Geheimnis selbst. Wählen Sie einen Schlüssel oder legen Sie den Wert zuerst im Vault ab.",
+    "connectionChip": "Verbindung",
+    "connectionChipTitle": "Eine Verbindungsreferenz – EDDI löst sie bei jeder Anfrage in die Zugangsdaten auf",
+    "clearConnection": "Verbindungsreferenz entfernen",
+    "pickConnection": "Verbindungsreferenz einfügen",
+    "connectionFilterPlaceholder": "Verbindungen durchsuchen …",
+    "connectionLoading": "Verbindungen werden geladen …",
+    "connectionEmpty": "Noch keine Verbindungen. Ein Administrator legt sie unter „Verbindungen“ an.",
+    "connectionNoMatch": "Keine Verbindungen passen zu „{{filter}}“",
+    "connectionForbidden": "Ihre Rolle darf keine Verbindungen auflisten. Wenn Sie den Namen kennen, tippen Sie ${connection:name} von Hand ein.",
+    "connectionUnavailable": "Dieses Backend bietet keine Verbindungen an.",
+    "connectionFailed": "Verbindungen konnten nicht geladen werden.",
+    "connectionHint": "Fügt ${connection:name} als gesamten Wert ein. EDDI löst ihn bei jeder Anfrage in die Zugangsdaten auf."
   },
   "snippetEditor": {
     "category": "Kategorie",
@@ -4657,5 +4669,11 @@
       "cascade_one": "Eigentümer bei {{count}} Ressource geändert",
       "cascade_other": "Eigentümer bei {{count}} Ressourcen geändert"
     }
+  },
+  "connectionRef": {
+    "wrapped": "Eine Verbindung liefert den gesamten Header-Wert inklusive Schema. Verwenden Sie ${connection:name} allein und setzen Sie „Bearer “ stattdessen in den Header-Wert der Verbindung.",
+    "headerMismatch": "Diese Verbindung sendet ihre Zugangsdaten als „{{expected}}“, also muss der Header so heißen – sonst zeigt die Konfiguration einen Namen und die Anfrage trägt einen anderen.",
+    "refusedInRequest": "${connection:…} wird in Pfad, Query-Parameter oder Body abgelehnt – Zugangsdaten in einer URL landen in jedem Proxy-Log, und im Body werden sie nicht gelesen. Verweisen Sie stattdessen aus einem Header auf die Verbindung.",
+    "refusedInModel": "Sprachmodelle, Embeddings und Vektorspeicher akzeptieren kein ${connection:…}: Eine Verbindung wird in einen ganzen Header aufgelöst, diese brauchen aber ein nacktes Geheimnis. Verwenden Sie hier ${vault:…}."
   }
 }

@@ -3396,7 +3396,19 @@
     "placeholder": "Clé API ou ${vault:key-name}",
     "vaultDown": "Le vault n'est pas configuré — configurez un fournisseur de secrets dans le backend EDDI",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "Ce champ attend une référence — ${vault:clé} ou ${vars:clé} — et non le secret lui-même. Choisissez une clé, ou enregistrez d'abord la valeur dans le coffre."
+    "mustBeReference": "Ce champ attend une référence — ${vault:clé} ou ${vars:clé} — et non le secret lui-même. Choisissez une clé, ou enregistrez d'abord la valeur dans le coffre.",
+    "connectionChip": "Connexion",
+    "connectionChipTitle": "Une référence de connexion — EDDI la résout en identifiant à chaque requête",
+    "clearConnection": "Effacer la référence de connexion",
+    "pickConnection": "Insérer une référence de connexion",
+    "connectionFilterPlaceholder": "Rechercher des connexions…",
+    "connectionLoading": "Chargement des connexions…",
+    "connectionEmpty": "Aucune connexion pour l'instant. Un administrateur les crée sous Connexions.",
+    "connectionNoMatch": "Aucune connexion ne correspond à « {{filter}} »",
+    "connectionForbidden": "Votre rôle ne peut pas lister les connexions. Si vous connaissez son nom, saisissez ${connection:name} à la main.",
+    "connectionUnavailable": "Ce backend ne propose pas de connexions.",
+    "connectionFailed": "Impossible de charger les connexions.",
+    "connectionHint": "Insère ${connection:name} comme valeur entière. EDDI la résout en identifiant à chaque requête."
   },
   "snippetEditor": {
     "category": "Catégorie",
@@ -4700,5 +4712,11 @@
       "cascade_other": "Propriétaire modifié sur {{count}} ressources",
       "cascade_many": "Propriétaire modifié sur {{count}} ressources"
     }
+  },
+  "connectionRef": {
+    "wrapped": "Une connexion fournit la valeur complète de l'en-tête, schéma compris. Utilisez ${connection:name} seul et placez « Bearer » dans la valeur d'en-tête de la connexion.",
+    "headerMismatch": "Cette connexion envoie son identifiant sous « {{expected}} », l'en-tête doit donc porter ce nom — sinon la configuration affiche un nom et la requête en porte un autre.",
+    "refusedInRequest": "${connection:…} est refusé dans un chemin, un paramètre de requête ou un corps — un identifiant dans une URL finit dans chaque journal de proxy, et dans un corps il n'est pas lu. Référencez plutôt la connexion depuis un en-tête.",
+    "refusedInModel": "Les modèles de langage, les embeddings et les bases vectorielles n'acceptent pas ${connection:…} : une connexion se résout en un en-tête complet, alors qu'ils ont besoin d'un identifiant brut. Utilisez ${vault:…} ici."
   }
 }

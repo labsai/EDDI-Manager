@@ -3364,7 +3364,19 @@
     "placeholder": "API 密钥或 ${vault:key-name}",
     "vaultDown": "保管库尚未配置——请在 EDDI 后端设置 Secret 提供程序",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "此字段接受引用 —— ${vault:key} 或 ${vars:key} —— 而不是密钥本身。请选择一个密钥，或先把值存入保险库。"
+    "mustBeReference": "此字段接受引用 —— ${vault:key} 或 ${vars:key} —— 而不是密钥本身。请选择一个密钥，或先把值存入保险库。",
+    "connectionChip": "连接",
+    "connectionChipTitle": "连接引用——EDDI 在每个请求中将其解析为凭据",
+    "clearConnection": "清除连接引用",
+    "pickConnection": "插入连接引用",
+    "connectionFilterPlaceholder": "搜索连接…",
+    "connectionLoading": "正在加载连接…",
+    "connectionEmpty": "还没有连接。管理员可在“连接”下创建。",
+    "connectionNoMatch": "没有匹配“{{filter}}”的连接",
+    "connectionForbidden": "您的角色无法列出连接。如果知道名称，请手动输入 ${connection:name}。",
+    "connectionUnavailable": "此后端不提供连接功能。",
+    "connectionFailed": "无法加载连接。",
+    "connectionHint": "将 ${connection:name} 作为完整值插入。EDDI 在每个请求中将其解析为凭据。"
   },
   "snippetEditor": {
     "category": "类别",
@@ -4657,5 +4669,11 @@
       "cascade_other": "已更改 {{count}} 项资源的所有者",
       "cascade_one": "已更改 {{count}} 项资源的所有者"
     }
+  },
+  "connectionRef": {
+    "wrapped": "连接提供完整的标头值（含方案）。请单独使用 ${connection:name}，并把“Bearer ”放到连接的标头值中。",
+    "headerMismatch": "此连接以“{{expected}}”发送其凭据，因此标头必须使用该名称——否则配置显示一个名称而请求携带另一个。",
+    "refusedInRequest": "${connection:…} 在路径、查询参数或请求体中会被拒绝——URL 中的凭据会进入每个代理日志，请求体中的凭据不会被读取。请改为在标头中引用连接。",
+    "refusedInModel": "语言模型、嵌入和向量存储不接受 ${connection:…}：连接会解析为完整标头，而它们需要裸凭据。请在此使用 ${vault:…}。"
   }
 }

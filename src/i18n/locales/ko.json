@@ -3364,7 +3364,19 @@
     "placeholder": "API 키 또는 ${vault:key-name}",
     "vaultDown": "볼트가 구성되지 않았습니다 — EDDI 백엔드에서 시크릿 제공자를 설정하세요",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "이 항목에는 비밀 값 자체가 아니라 참조 — ${vault:key} 또는 ${vars:key} — 를 넣습니다. 키를 고르거나, 값을 먼저 볼트에 저장하세요."
+    "mustBeReference": "이 항목에는 비밀 값 자체가 아니라 참조 — ${vault:key} 또는 ${vars:key} — 를 넣습니다. 키를 고르거나, 값을 먼저 볼트에 저장하세요.",
+    "connectionChip": "연결",
+    "connectionChipTitle": "연결 참조 — EDDI가 요청마다 자격 증명으로 확인합니다",
+    "clearConnection": "연결 참조 지우기",
+    "pickConnection": "연결 참조 삽입",
+    "connectionFilterPlaceholder": "연결 검색…",
+    "connectionLoading": "연결 불러오는 중…",
+    "connectionEmpty": "아직 연결이 없습니다. 관리자가 연결 메뉴에서 만듭니다.",
+    "connectionNoMatch": "“{{filter}}”과(와) 일치하는 연결이 없습니다",
+    "connectionForbidden": "현재 역할로는 연결 목록을 볼 수 없습니다. 이름을 안다면 ${connection:name}을 직접 입력하세요.",
+    "connectionUnavailable": "이 백엔드는 연결 기능을 제공하지 않습니다.",
+    "connectionFailed": "연결을 불러올 수 없습니다.",
+    "connectionHint": "${connection:name}을 전체 값으로 삽입합니다. EDDI가 요청마다 자격 증명으로 확인합니다."
   },
   "snippetEditor": {
     "category": "카테고리",
@@ -4657,5 +4669,11 @@
       "cascade_other": "리소스 {{count}}개의 소유자를 변경했습니다",
       "cascade_one": "리소스 {{count}}개의 소유자를 변경했습니다"
     }
+  },
+  "connectionRef": {
+    "wrapped": "연결은 스킴을 포함한 전체 헤더 값을 제공합니다. ${connection:name}만 단독으로 쓰고 “Bearer ”는 연결의 헤더 값에 넣으세요.",
+    "headerMismatch": "이 연결은 자격 증명을 “{{expected}}”로 보내므로 헤더 이름도 그래야 합니다. 그렇지 않으면 설정에는 한 이름이, 요청에는 다른 이름이 실립니다.",
+    "refusedInRequest": "${connection:…}은 경로, 쿼리 매개변수, 본문에서는 거부됩니다. URL의 자격 증명은 모든 프록시 로그에 남고 본문의 것은 읽히지 않습니다. 대신 헤더에서 연결을 참조하세요.",
+    "refusedInModel": "언어 모델, 임베딩, 벡터 저장소는 ${connection:…}을 받지 않습니다. 연결은 전체 헤더로 확인되지만 이들은 순수 자격 증명이 필요합니다. 여기서는 ${vault:…}을 사용하세요."
   }
 }

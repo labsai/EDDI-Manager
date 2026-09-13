@@ -3364,7 +3364,19 @@
     "placeholder": "API キーまたは ${vault:key-name}",
     "vaultDown": "Vault が設定されていません — EDDI バックエンドでシークレットプロバイダーを設定してください",
     "referencePlaceholder": "${vault:key-name}",
-    "mustBeReference": "この項目にはシークレットそのものではなく参照 — ${vault:key} または ${vars:key} — を入力します。キーを選ぶか、先に値を Vault に保存してください。"
+    "mustBeReference": "この項目にはシークレットそのものではなく参照 — ${vault:key} または ${vars:key} — を入力します。キーを選ぶか、先に値を Vault に保存してください。",
+    "connectionChip": "接続",
+    "connectionChipTitle": "接続参照 — EDDI がリクエストごとに資格情報へ解決します",
+    "clearConnection": "接続参照をクリア",
+    "pickConnection": "接続参照を挿入",
+    "connectionFilterPlaceholder": "接続を検索…",
+    "connectionLoading": "接続を読み込み中…",
+    "connectionEmpty": "接続はまだありません。管理者が「接続」で作成します。",
+    "connectionNoMatch": "「{{filter}}」に一致する接続はありません",
+    "connectionForbidden": "あなたのロールでは接続を一覧できません。名前が分かる場合は ${connection:name} を手入力してください。",
+    "connectionUnavailable": "このバックエンドは接続機能を提供していません。",
+    "connectionFailed": "接続を読み込めませんでした。",
+    "connectionHint": "${connection:name} を値全体として挿入します。EDDI がリクエストごとに資格情報へ解決します。"
   },
   "snippetEditor": {
     "category": "カテゴリ",
@@ -4657,5 +4669,11 @@
       "cascade_other": "{{count}} 件のリソースの所有者を変更しました",
       "cascade_one": "{{count}} 件のリソースの所有者を変更しました"
     }
+  },
+  "connectionRef": {
+    "wrapped": "接続はスキームを含むヘッダー値全体を供給します。${connection:name} を単独で使い、「Bearer 」は接続のヘッダー値側に置いてください。",
+    "headerMismatch": "この接続は資格情報を「{{expected}}」として送るため、ヘッダー名もそれにする必要があります。そうでないと設定上の名前と実際のリクエストのヘッダーが食い違います。",
+    "refusedInRequest": "${connection:…} はパス、クエリパラメーター、ボディでは拒否されます。URL 内の資格情報はすべてのプロキシログに残り、ボディ内のものは読まれません。代わりにヘッダーから接続を参照してください。",
+    "refusedInModel": "言語モデル、埋め込み、ベクターストアは ${connection:…} を受け付けません。接続はヘッダー全体に解決されますが、これらには生の資格情報が必要です。ここでは ${vault:…} を使ってください。"
   }
 }

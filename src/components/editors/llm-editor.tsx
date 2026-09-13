@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { ContentEditor } from "./content-editor";
 import { SecretKeyPicker } from "@/components/shared/secret-key-picker";
+import { ConnectionReferenceWarning } from "@/components/shared/connection-reference-warning";
 import {
   PropertyInstructionsEditor,
   OutputBuildInstructionsEditor,
@@ -419,45 +420,55 @@ function TaskEditor({
                 .map(([k, v]) => {
                   const isSensitive = SENSITIVE_LLM_PARAM_KEYS.has(k.toLowerCase());
                   return (
-                    <div key={k} className="flex items-center gap-1.5">
-                      <input
-                        type="text"
-                        value={k}
-                        readOnly
-                        className="h-7 w-28 rounded border border-input bg-muted px-2 text-xs text-foreground"
-                      />
-                      {isSensitive ? (
-                        <div className="flex-1">
-                          <SecretKeyPicker
-                            value={v}
-                            onChange={(val) => updateParam(k, val)}
-                            readOnly={readOnly}
-                            placeholder={"${vault:...}"}
-                            testId={`llm-param-${k}`}
-                          />
-                        </div>
-                      ) : (
+                    <div key={k}>
+                      <div className="flex items-center gap-1.5">
                         <input
                           type="text"
-                          value={v}
-                          onChange={(e) => updateParam(k, e.target.value)}
-                          readOnly={readOnly}
-                          className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                          value={k}
+                          readOnly
+                          className="h-7 w-28 rounded border border-input bg-muted px-2 text-xs text-foreground"
                         />
-                      )}
-                      {!readOnly && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const next = { ...task.parameters };
-                            delete next[k];
-                            onChange({ ...task, parameters: next });
-                          }}
-                          className="rounded p-1 text-muted-foreground hover:text-destructive transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      )}
+                        {isSensitive ? (
+                          <div className="flex-1">
+                            {/* No `connections` here: a model needs a bare
+                                credential, and the backend refuses a
+                                connection reference in every model parameter. */}
+                            <SecretKeyPicker
+                              value={v}
+                              onChange={(val) => updateParam(k, val)}
+                              readOnly={readOnly}
+                              placeholder={"${vault:...}"}
+                              testId={`llm-param-${k}`}
+                            />
+                          </div>
+                        ) : (
+                          <input
+                            type="text"
+                            value={v}
+                            onChange={(e) => updateParam(k, e.target.value)}
+                            readOnly={readOnly}
+                            className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                          />
+                        )}
+                        {!readOnly && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = { ...task.parameters };
+                              delete next[k];
+                              onChange({ ...task, parameters: next });
+                            }}
+                            className="rounded p-1 text-muted-foreground hover:text-destructive transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                      <ConnectionReferenceWarning
+                        value={v}
+                        refused="model"
+                        testId={`llm-param-connection-warning-${k}`}
+                      />
                     </div>
                   );
                 })}
@@ -864,17 +875,28 @@ function TaskEditor({
                           placeholder={t("llmEditor.a2aName", "Display Name")}
                           className="h-7 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                         />
-                        <SecretKeyPicker
-                          value={agent.apiKey ?? ""}
-                          onChange={(v) => {
-                            const agents = [...(task.a2aAgents ?? [])];
-                            agents[ai] = { ...agent, apiKey: v };
-                            onChange({ ...task, a2aAgents: agents });
-                          }}
-                          readOnly={readOnly}
-                          placeholder={t("llmEditor.a2aApiKey", "${vault:my-a2a-key}")}
-                          testId={`a2a-apikey-${ai}`}
-                        />
+                        <div>
+                          {/* An A2A apiKey is one of the three places the
+                              backend resolves ${connection:…} — as the whole
+                              value, and withheld from the agent-card fetch on
+                              a per-user or caller-supplied binding. */}
+                          <SecretKeyPicker
+                            value={agent.apiKey ?? ""}
+                            onChange={(v) => {
+                              const agents = [...(task.a2aAgents ?? [])];
+                              agents[ai] = { ...agent, apiKey: v };
+                              onChange({ ...task, a2aAgents: agents });
+                            }}
+                            readOnly={readOnly}
+                            placeholder={t("llmEditor.a2aApiKey", "${vault:my-a2a-key}")}
+                            testId={`a2a-apikey-${ai}`}
+                            connections
+                          />
+                          <ConnectionReferenceWarning
+                            value={agent.apiKey}
+                            testId={`a2a-apikey-connection-warning-${ai}`}
+                          />
+                        </div>
                         <input
                           type="number"
                           value={agent.timeoutMs ?? 30000}
