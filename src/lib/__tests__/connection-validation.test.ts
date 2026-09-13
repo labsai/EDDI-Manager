@@ -268,13 +268,23 @@ describe("isReservedOAuthParamName — parameters EDDI writes itself", () => {
     expect(isReservedOAuthParamName("STATE")).toBe(true);
     expect(isReservedOAuthParamName("codeChallenge")).toBe(true);
     expect(isReservedOAuthParamName("response.type")).toBe(true);
-    expect(isReservedOAuthParamName("scope")).toBe(true);
+    expect(isReservedOAuthParamName("client_secret")).toBe(true);
+    expect(isReservedOAuthParamName("code_verifier")).toBe(true);
   });
 
   it("leaves provider-specific parameters alone", () => {
     expect(isReservedOAuthParamName("prompt")).toBe(false);
     expect(isReservedOAuthParamName("audience")).toBe(false);
     expect(isReservedOAuthParamName("login_hint")).toBe(false);
+  });
+
+  it("is no wider than the backend's list — scope, code and grant_type are accepted there", () => {
+    // The mirror used to refuse these three, so a document the backend saves
+    // was blocked before it left the browser. A mirror may under-refuse (the
+    // backend's 400 still arrives); it must never over-refuse.
+    expect(isReservedOAuthParamName("scope")).toBe(false);
+    expect(isReservedOAuthParamName("code")).toBe(false);
+    expect(isReservedOAuthParamName("grant_type")).toBe(false);
   });
 });
 

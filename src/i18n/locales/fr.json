@@ -4590,7 +4590,7 @@
       "nameTooLong": "Un nom fait au plus 64 caractères.",
       "timeoutRange": "Le délai doit être un nombre entier entre 1 et 60000 millisecondes. Laissez vide pour la valeur par défaut.",
       "templateLiteralCredential": "Le texte autour de la référence ressemble lui-même à un identifiant. Seul un court préfixe de schéma comme « Bearer » a sa place hors de ${vault:…} — stockez le reste dans le coffre.",
-      "paramReserved": "L'un de ces paramètres est défini par EDDI lui-même (client_id, redirect_uri, response_type, scope, state, code_challenge…). Le remplacer casserait le flux.",
+      "paramReserved": "L'un de ces paramètres est défini par EDDI lui-même (client_id, redirect_uri, response_type, state, code_challenge…). Le remplacer casserait le flux.",
       "paramValueReference": "Les valeurs de paramètres sont envoyées telles quelles — une référence ${…} n'est pas résolue ici et placerait un pointeur de coffre dans une URL. N'utilisez que des valeurs de protocole simples.",
       "paramValueTooLong": "Une valeur de paramètre fait au plus 512 caractères.",
       "paramValueCredentialShaped": "L'une de ces valeurs ressemble à une clé ou à un jeton. Cette table est stockée en clair et envoyée dans une URL — seuls des paramètres de protocole non secrets ont leur place ici."

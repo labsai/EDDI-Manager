@@ -4590,7 +4590,7 @@
       "nameTooLong": "Un nombre tiene como máximo 64 caracteres.",
       "timeoutRange": "El tiempo de espera debe ser un número entero entre 1 y 60000 milisegundos. Déjelo vacío para usar el valor predeterminado.",
       "templateLiteralCredential": "El texto alrededor de la referencia parece una credencial en sí mismo. Fuera de ${vault:…} solo cabe un prefijo de esquema corto como «Bearer »; guarde el resto en la bóveda.",
-      "paramReserved": "Uno de estos parámetros lo establece el propio EDDI (client_id, redirect_uri, response_type, scope, state, code_challenge…). Sobrescribirlo rompería el flujo.",
+      "paramReserved": "Uno de estos parámetros lo establece el propio EDDI (client_id, redirect_uri, response_type, state, code_challenge…). Sobrescribirlo rompería el flujo.",
       "paramValueReference": "Los valores de los parámetros se envían tal cual: una referencia ${…} aquí no se resuelve y pondría un puntero de la bóveda en una URL. Use solo valores de protocolo simples.",
       "paramValueTooLong": "Un valor de parámetro tiene como máximo 512 caracteres.",
       "paramValueCredentialShaped": "Uno de estos valores parece una clave o un token. Este mapa se almacena en texto plano y se envía en una URL: aquí solo caben parámetros de protocolo no secretos."

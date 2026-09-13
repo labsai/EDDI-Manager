@@ -4552,7 +4552,7 @@
       "nameTooLong": "名前は 64 文字以内です。",
       "timeoutRange": "タイムアウトは 1 ～ 60000 ミリ秒の整数で指定してください。デフォルトにするには空のままにします。",
       "templateLiteralCredential": "参照の前後のテキスト自体が資格情報のように見えます。${vault:…} の外に置けるのは「Bearer 」のような短いスキーム接頭辞だけです。残りはボールトに保存してください。",
-      "paramReserved": "これらのパラメーターのいずれかは EDDI 自身が設定します（client_id、redirect_uri、response_type、scope、state、code_challenge…）。上書きするとフローが壊れます。",
+      "paramReserved": "これらのパラメーターのいずれかは EDDI 自身が設定します（client_id、redirect_uri、response_type、state、code_challenge…）。上書きするとフローが壊れます。",
       "paramValueReference": "パラメーター値は書かれたとおりに送信されます。ここでの ${…} 参照は解決されず、ボールトへのポインターが URL に載ってしまいます。プレーンなプロトコル値のみを使用してください。",
       "paramValueTooLong": "パラメーター値は 512 文字以内です。",
       "paramValueCredentialShaped": "これらの値のいずれかがキーまたはトークンのように見えます。このマップは平文で保存され URL で送信されます。ここに置けるのは秘密でないプロトコルパラメーターだけです。"

@@ -146,6 +146,12 @@ export function isCredentialParamName(name: string): boolean {
  * will not match, a `state` the callback cannot verify. Compared stripped of
  * case and separators, like the credential list, so `Redirect-URI` is refused
  * as surely as `redirect_uri`.
+ *
+ * Exactly the backend's `RESERVED_OAUTH_PARAM_NAMES`, no wider. `scope`,
+ * `code` and `grant_type` are deliberately NOT here: the backend does not
+ * refuse them, and a mirror that did was blocking a document the save would
+ * have accepted — the one failure mode the file comment says is worse than
+ * having no mirror at all.
  */
 const RESERVED_OAUTH_PARAM_NAMES = new Set(
   [
@@ -153,13 +159,10 @@ const RESERVED_OAUTH_PARAM_NAMES = new Set(
     "client_secret",
     "redirect_uri",
     "response_type",
-    "scope",
     "state",
-    "code",
     "code_challenge",
     "code_challenge_method",
     "code_verifier",
-    "grant_type",
   ].map(stripSeparators),
 );
 
