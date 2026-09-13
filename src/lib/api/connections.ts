@@ -552,6 +552,11 @@ export function toStoredConnection(
     extraAuthParams: oauth.extraAuthParams ?? {},
     clientAuthMethod: oauth.clientAuthMethod ?? "client_secret_basic",
     discoveryUrl: oauth.discoveryUrl ?? null,
+    // Inert on a client-credentials connection, but part of the document the
+    // backend stores (its default is true) and reads back. Round-tripped so
+    // an unrelated edit does not send a document that differs from the one
+    // loaded; the user-login branch below overrides it to true regardless.
+    usePkce: oauth.usePkce ?? true,
   };
 
   if (draft.authType === "OAUTH2_AUTHORIZATION_CODE") {

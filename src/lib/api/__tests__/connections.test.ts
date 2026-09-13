@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/mocks/server";
 import {
@@ -408,6 +408,33 @@ describe("authorizeConnection", () => {
       code: undefined,
       status: 503,
     });
+  });
+
+  it("never sends the authorize request with credentials omitted — the nonce cookie depends on it", async () => {
+    // The response carries a `Set-Cookie` nonce binding the flow to this
+    // browser, and the callback refuses without it. `fetch` stores that cookie
+    // under the default "same-origin" mode (or "include"); a `credentials:
+    // "omit"` added to the shared client for any other reason would drop it
+    // silently, and every link attempt would then fail at the callback with
+    // `invalid_state` and nothing explaining why. Pinned here rather than in
+    // the client's own tests because this is the one call that cares.
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    server.use(
+      http.post("*/connections/:name/authorize", () =>
+        HttpResponse.json({ authorizationUrl: "https://provider.example/auth" }),
+      ),
+    );
+    try {
+      await authorizeConnection("jira", "/manage/connections");
+      const call = fetchSpy.mock.calls.find(([input]) =>
+        String(input).includes("/connections/jira/authorize"),
+      );
+      expect(call).toBeDefined();
+      const init = call![1] as RequestInit | undefined;
+      expect(init?.credentials ?? "same-origin").not.toBe("omit");
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 
   it("encodes a connection name that needs it", async () => {
