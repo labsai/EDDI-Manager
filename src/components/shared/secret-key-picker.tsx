@@ -581,17 +581,25 @@ export function SecretKeyPicker({
   // Showing it for `vault:key` would tell the user the field is fine and then
   // fail the save.
   const isCanonicalRef = isSecretReference(value);
-  const hasVaultRef = referenceOnly ? isCanonicalRef : isVaultRef(value);
   /**
    * A connection reference is a reference, but not a vault one: there is no
    * key to look up, no secret to mask, and nothing to offer storing. It gets
    * its own chip below. In reference-only mode it is not admissible at all
    * and falls through to the literal warning like any other non-secret.
+   *
+   * The chip is for a *finished* reference only. Keying it off the prefix
+   * swapped the input for a chip the moment `${connection:` was typed, so the
+   * name and the closing brace could never be typed after it. An unfinished or
+   * malformed one (`${connection:bad name}`) stays an editable input, unmasked.
    */
-  const connectionRef = !referenceOnly && hasConnectionPrefix(value);
-  const connectionName = connectionRef
-    ? (parseConnectionReference(value)?.name ?? referenceLabel(value))
-    : "";
+  const connectionPrefix = !referenceOnly && hasConnectionPrefix(value);
+  const connection = connectionPrefix ? parseConnectionReference(value) : null;
+  const connectionRef = connection !== null;
+  const connectionInProgress = connectionPrefix && !connectionRef;
+  const connectionName = connection?.name ?? "";
+  // `hasReferencePrefix` also matches the connection prefix, so an unfinished
+  // connection reference must be excluded here or it lands in the vault chip.
+  const hasVaultRef = referenceOnly ? isCanonicalRef : isVaultRef(value) && !connectionPrefix;
   const currentVaultKey = hasVaultRef ? referenceLabel(value) : "";
   /** A non-empty value that is not (yet) an admissible reference. */
   const literalRejected = referenceOnly && value.trim() !== "" && !isCanonicalRef;
@@ -883,7 +891,8 @@ export function SecretKeyPicker({
             id={id}
             // Nothing to mask: in reference-only mode the only admissible value
             // is a pointer, and masking it hides the one thing worth reading.
-            type={referenceOnly || showPassword ? "text" : "password"}
+            // The same holds for a connection reference still being typed.
+            type={referenceOnly || connectionInProgress || showPassword ? "text" : "password"}
             value={value}
             onChange={(e) => handleDirectChange(e.target.value)}
             onKeyDown={handleInputKeyDown}

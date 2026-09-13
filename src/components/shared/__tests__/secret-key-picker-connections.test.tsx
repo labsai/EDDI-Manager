@@ -1,9 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/mocks/server";
 import { renderWithProviders, userEvent } from "@/test/test-utils";
 import { SecretKeyPicker } from "../secret-key-picker";
+
+/** A picker that owns its value, so typing into it behaves as it does in an editor. */
+function ControlledPicker({ initial = "" }: { initial?: string }) {
+  const [value, setValue] = useState(initial);
+  return <SecretKeyPicker value={value} onChange={setValue} connections />;
+}
 
 /**
  * `${connection:name}` in the picker.
@@ -39,6 +46,41 @@ describe("SecretKeyPicker with a connection reference", () => {
     expect(
       screen.queryByTitle("This key was not found in the vault"),
     ).not.toBeInTheDocument();
+  });
+
+  it("stays an editable input while a reference is typed, and becomes a chip at the closing brace", async () => {
+    // The chip used to appear the moment `${connection:` was typed — a prefix
+    // check — which unmounted the input before the name or the brace could be
+    // typed. Only a finished, valid reference is a chip.
+    const user = userEvent.setup();
+    renderWithProviders(<ControlledPicker />);
+
+    const reference = "${connection:jira}";
+    for (let i = 0; i < reference.length - 1; i += 1) {
+      const char = reference[i]!;
+      // user-event reads `{` as the start of a key descriptor; `{{` is a literal brace.
+      await user.type(screen.getByTestId("secret-key-picker-input"), char === "{" ? "{{" : char);
+
+      const input = screen.getByTestId("secret-key-picker-input");
+      expect(input).toHaveValue(reference.slice(0, i + 1));
+      expect(screen.queryByTestId("secret-key-picker-connection-chip")).not.toBeInTheDocument();
+    }
+    // Unmasked while in progress: a connection reference is not a secret.
+    const input = screen.getByTestId("secret-key-picker-input");
+    expect(input).toHaveAttribute("type", "text");
+
+    await user.type(input, "}");
+
+    expect(screen.getByTestId("secret-key-picker-connection-chip")).toHaveTextContent("jira");
+    expect(screen.queryByTestId("secret-key-picker-input")).not.toBeInTheDocument();
+  });
+
+  it("does not render an unfinished connection reference as a vault key", () => {
+    renderWithProviders(<SecretKeyPicker value="${connection:jir" onChange={onChange} connections />);
+
+    expect(screen.getByTestId("secret-key-picker-input")).toHaveValue("${connection:jir");
+    expect(screen.queryByTestId("secret-key-picker-connection-chip")).not.toBeInTheDocument();
+    expect(screen.queryByTitle("This key was not found in the vault")).not.toBeInTheDocument();
   });
 
   it("clears the reference like any other chip", async () => {
