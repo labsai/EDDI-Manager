@@ -37,7 +37,8 @@ export type ConnectionField =
   | "oauth.discoveryUrl"
   | "oauth.clientId"
   | "oauth.clientSecret"
-  | "oauth.extraAuthParams";
+  | "oauth.extraAuthParams"
+  | "timeoutMs";
 
 /**
  * A stable code for one broken rule. The UI turns it into a sentence.
@@ -48,6 +49,7 @@ export type ConnectionField =
 export type ValidationCode =
   | "nameRequired"
   | "nameFormat"
+  | "nameTooLong"
   | "bindingMismatch"
   | "callerSuppliedRefused"
   | "allowlistRequired"
@@ -58,6 +60,7 @@ export type ValidationCode =
   | "templateRequired"
   | "templateNoReference"
   | "templateBadSegment"
+  | "templateLiteralCredential"
   | "usernameRequired"
   | "secretMustBeReference"
   | "clientIdRequired"
@@ -65,7 +68,12 @@ export type ValidationCode =
   | "endpointNotHttps"
   | "endpointUserInfo"
   | "endpointNotAbsolute"
-  | "paramCredentialShaped";
+  | "paramCredentialShaped"
+  | "paramReserved"
+  | "paramValueReference"
+  | "paramValueTooLong"
+  | "paramValueCredentialShaped"
+  | "timeoutRange";
 
 export type ConnectionErrors = Partial<Record<ConnectionField, ValidationCode>>;
 
@@ -116,17 +124,10 @@ const stripSeparators = (name: string) => name.toLowerCase().replace(/[-._]/g, "
 /**
  * The denylist with the same normalisation applied to it as to the input.
  *
- * The backend strips `-`, `.` and `_` from the *key* and then looks it up in a
- * set that still contains underscored entries — so every entry existing only in
- * underscored form can never match its own normalised key. `code_verifier` is
- * exactly that: it normalises to `codeverifier`, which is in neither of the two
- * sets the backend consults, so its check misses it (filed upstream).
- *
- * Normalising both sides closes that on this side. It makes the mirror slightly
- * *stricter* than the backend currently is, and only for `code_verifier` — a
- * name the backend plainly means to refuse. Stricter is the safe direction to
- * differ in: the cost is refusing a parameter nobody should be sending, where
- * looser would promise a save that then fails.
+ * The backend compares a key stripped of case and separators against a set
+ * written in that same stripped form, so `code_verifier`, `Code-Verifier` and
+ * `codeverifier` are one name there. Normalising both sides here keeps this
+ * mirror equal to that rule whichever spelling the list above is written in.
  */
 const NORMALIZED_CREDENTIAL_PARAM_NAMES = new Set(
   [...CREDENTIAL_PARAM_NAMES].map(stripSeparators),
@@ -135,6 +136,102 @@ const NORMALIZED_CREDENTIAL_PARAM_NAMES = new Set(
 /** Whether `name` would be refused as credential-shaped in `extraAuthParams`. */
 export function isCredentialParamName(name: string): boolean {
   return NORMALIZED_CREDENTIAL_PARAM_NAMES.has(stripSeparators(name));
+}
+
+/**
+ * Parameters EDDI writes onto the authorization URL itself.
+ *
+ * An `extraAuthParams` entry with one of these names would either be dropped
+ * or override the value the flow depends on — a `redirect_uri` the provider
+ * will not match, a `state` the callback cannot verify. Compared stripped of
+ * case and separators, like the credential list, so `Redirect-URI` is refused
+ * as surely as `redirect_uri`.
+ */
+const RESERVED_OAUTH_PARAM_NAMES = new Set(
+  [
+    "client_id",
+    "client_secret",
+    "redirect_uri",
+    "response_type",
+    "scope",
+    "state",
+    "code",
+    "code_challenge",
+    "code_challenge_method",
+    "code_verifier",
+    "grant_type",
+  ].map(stripSeparators),
+);
+
+/** Whether `name` is a protocol parameter EDDI sets itself. */
+export function isReservedOAuthParamName(name: string): boolean {
+  return RESERVED_OAUTH_PARAM_NAMES.has(stripSeparators(name));
+}
+
+/** Longest value an extra authorization parameter may carry. */
+const PARAM_VALUE_MAX_LENGTH = 512;
+
+/**
+ * A value that is nothing but one long run of the token alphabet — the shape
+ * of a pasted key or bearer token, and of nothing a provider documents as a
+ * protocol parameter. Deliberately narrow: an audience like `api.example.com`
+ * or a resource URL carries dots, colons and slashes and must pass.
+ */
+const PARAM_VALUE_TOKEN_SHAPED = /^[A-Za-z0-9_\-+/=]{32,}$/;
+
+/**
+ * An extra authorization parameter's VALUE, as the backend judges it.
+ *
+ * The map is stored in plain text and appended to a URL the browser sees, so
+ * three things are refused: a `${…}` reference (nothing resolves it there, and
+ * a vault pointer in a query string is a vault pointer in a proxy log), a value
+ * past 512 characters, and a value shaped like a credential.
+ */
+export function validateParamValue(value: string | null | undefined): ValidationCode | null {
+  const candidate = value ?? "";
+  if (candidate.includes("${")) return "paramValueReference";
+  if (candidate.length > PARAM_VALUE_MAX_LENGTH) return "paramValueTooLong";
+  if (PARAM_VALUE_TOKEN_SHAPED.test(candidate.trim())) return "paramValueCredentialShaped";
+  return null;
+}
+
+/**
+ * The backend's name grammar: a leading letter or digit, then up to 63 of
+ * letters, digits, dots, dashes and underscores. A name is what
+ * `${connection:name}` carries, and a brace, a slash or a space in it produces
+ * a reference that silently never resolves.
+ */
+const NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+const NAME_MAX_LENGTH = 64;
+
+/** The token-endpoint timeout's bounds, in milliseconds — the backend's. */
+export const TIMEOUT_MS_MIN = 1;
+export const TIMEOUT_MS_MAX = 60_000;
+
+/**
+ * Longest literal text allowed between references in a header template, and
+ * the run that marks a shorter literal as a credential anyway.
+ *
+ * `Bearer ` is seven characters and passes; `sk-live-abcdef${vault:x}` is a
+ * literal key with a reference stapled on, and `sk-live-abcdef` is a run of
+ * fourteen from the alphabet keys are written in. The check is on the literal
+ * halves only, so a long vault key NAME inside the braces is never mistaken
+ * for a leaked value.
+ */
+const TEMPLATE_LITERAL_MAX_LENGTH = 32;
+const CREDENTIAL_RUN = /[A-Za-z0-9_\-+/=.]{12,}/;
+
+/** The text between (and around) the interpolated segments, in order. */
+function literalSegments(template: string): string[] {
+  const literals: string[] = [];
+  let rest = template;
+  for (const segment of interpolatedSegments(template)) {
+    const at = rest.indexOf(segment);
+    literals.push(rest.slice(0, at));
+    rest = rest.slice(at + segment.length);
+  }
+  literals.push(rest);
+  return literals;
 }
 
 /**
@@ -197,8 +294,11 @@ export function validateCredentialEndpoint(
  * A header value template — literal text is fine, every `${…}` segment must be
  * a reference, and there has to be at least one.
  *
- * The last clause is the one worth keeping: a template with no interpolation at
- * all is a plaintext credential wearing a template's clothes.
+ * Two clauses carry the weight. A template with no interpolation at all is a
+ * plaintext credential wearing a template's clothes; and a literal half that
+ * is long, or that carries a run from the alphabet keys are written in, is a
+ * plaintext credential with a reference stapled on. Only a short scheme
+ * prefix belongs outside the braces.
  */
 export function validateHeaderTemplate(
   template: string | null | undefined,
@@ -211,7 +311,14 @@ export function validateHeaderTemplate(
     if (!isReference(segment)) return "templateBadSegment";
     sawReference = true;
   }
-  return sawReference ? null : "templateNoReference";
+  if (!sawReference) return "templateNoReference";
+
+  for (const literal of literalSegments(value)) {
+    if (literal.length > TEMPLATE_LITERAL_MAX_LENGTH || CREDENTIAL_RUN.test(literal)) {
+      return "templateLiteralCredential";
+    }
+  }
+  return null;
 }
 
 /** The three values the backend's `Binding` enum has. */
@@ -293,6 +400,7 @@ export interface ValidatableConnection {
     clientSecret?: string | null;
     extraAuthParams?: Record<string, string> | null;
   } | null;
+  timeoutMs?: number | null;
 }
 
 /**
@@ -307,11 +415,22 @@ export function validateConnection(config: ValidatableConnection): ConnectionErr
   const name = (config.name ?? "").trim();
   if (!name) {
     errors.name = "nameRequired";
-  } else if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name)) {
-    // Not a backend rule — a connection is referenced as `${connection:name}`,
-    // and a name carrying a brace, a slash or a space produces a reference that
-    // silently never resolves. Advisory, and phrased as such in the copy.
+  } else if (name.length > NAME_MAX_LENGTH) {
+    errors.name = "nameTooLong";
+  } else if (!NAME_PATTERN.test(name)) {
     errors.name = "nameFormat";
+  }
+
+  // Null means "the resolver's default" and is fine; a number has to be a
+  // whole millisecond count inside the backend's bounds. Zero is the value
+  // worth refusing loudly — it would fail every token call.
+  const timeout = config.timeoutMs;
+  if (
+    timeout !== null &&
+    timeout !== undefined &&
+    (!Number.isInteger(timeout) || timeout < TIMEOUT_MS_MIN || timeout > TIMEOUT_MS_MAX)
+  ) {
+    errors.timeoutMs = "timeoutRange";
   }
 
   const allowlist = (config.baseUrlAllowlist ?? []).filter((o) => o.trim());
@@ -382,9 +501,14 @@ export function validateConnection(config: ValidatableConnection): ConnectionErr
       const authorizationUrl = validateCredentialEndpoint(oauth.authorizationUrl, true);
       if (authorizationUrl) errors["oauth.authorizationUrl"] = authorizationUrl;
     }
-    for (const key of Object.keys(oauth.extraAuthParams ?? {})) {
-      if (isCredentialParamName(key)) {
-        errors["oauth.extraAuthParams"] = "paramCredentialShaped";
+    for (const [key, value] of Object.entries(oauth.extraAuthParams ?? {})) {
+      const problem = isCredentialParamName(key)
+        ? "paramCredentialShaped"
+        : isReservedOAuthParamName(key)
+          ? "paramReserved"
+          : validateParamValue(value);
+      if (problem) {
+        errors["oauth.extraAuthParams"] = problem;
         break;
       }
     }

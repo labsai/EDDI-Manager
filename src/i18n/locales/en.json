@@ -4536,7 +4536,14 @@
       "endpointNotAbsolute": "Enter a full URL including the host, e.g. https://auth.example.com/oauth/token.",
       "paramCredentialShaped": "One of these parameters is named like a credential. Only non-secret protocol parameters (prompt, audience, …) belong here.",
       "bindingMismatch": "This binding does not go with this authentication type: caller-supplied needs an API key, per user needs an OAuth user login, and everything else is shared.",
-      "callerSuppliedRefused": "A caller-supplied connection stores no credential — the calling system sends it with every request. Clear this field."
+      "callerSuppliedRefused": "A caller-supplied connection stores no credential — the calling system sends it with every request. Clear this field.",
+      "nameTooLong": "A name is at most 64 characters.",
+      "timeoutRange": "The timeout must be a whole number between 1 and 60000 milliseconds. Leave it empty for the default.",
+      "templateLiteralCredential": "The text around the reference looks like a credential itself. Only a short scheme prefix such as “Bearer ” belongs outside ${vault:…} — store the rest in the vault.",
+      "paramReserved": "One of these parameters is set by EDDI itself (client_id, redirect_uri, response_type, scope, state, code_challenge…). Overriding it would break the flow.",
+      "paramValueReference": "Parameter values are sent exactly as written — a ${…} reference here is not resolved, and would put a vault pointer in a URL. Use plain protocol values only.",
+      "paramValueTooLong": "A parameter value is at most 512 characters.",
+      "paramValueCredentialShaped": "One of these values looks like a key or a token. This map is stored in plain text and sent in a URL — only non-secret protocol parameters belong here."
     },
     "backToList": "Back to Connections",
     "headerSecret": "Stored secret",

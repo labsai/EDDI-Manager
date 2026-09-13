@@ -4536,7 +4536,14 @@
       "endpointNotAbsolute": "Geben Sie eine vollständige URL samt Host an, z. B. https://auth.example.com/oauth/token.",
       "paramCredentialShaped": "Einer dieser Parameter ist wie Zugangsdaten benannt. Hierher gehören nur nicht geheime Protokollparameter (prompt, audience, …).",
       "bindingMismatch": "Diese Bindung passt nicht zum Authentifizierungstyp: „Vom Aufrufer mitgegeben“ braucht einen API-Schlüssel, „Pro Person“ eine OAuth-Nutzeranmeldung, alles andere ist gemeinsam.",
-      "callerSuppliedRefused": "Eine vom Aufrufer mitgegebene Verbindung speichert keine Zugangsdaten – das aufrufende System sendet sie mit jeder Anfrage. Leeren Sie dieses Feld."
+      "callerSuppliedRefused": "Eine vom Aufrufer mitgegebene Verbindung speichert keine Zugangsdaten – das aufrufende System sendet sie mit jeder Anfrage. Leeren Sie dieses Feld.",
+      "nameTooLong": "Ein Name hat höchstens 64 Zeichen.",
+      "timeoutRange": "Das Timeout muss eine ganze Zahl zwischen 1 und 60000 Millisekunden sein. Leer lassen für den Standardwert.",
+      "templateLiteralCredential": "Der Text um die Referenz herum sieht selbst wie ein Geheimnis aus. Außerhalb von ${vault:…} gehört nur ein kurzes Schema-Präfix wie „Bearer “ – speichern Sie den Rest im Tresor.",
+      "paramReserved": "Einen dieser Parameter setzt EDDI selbst (client_id, redirect_uri, response_type, scope, state, code_challenge …). Ihn zu überschreiben würde den Ablauf zerstören.",
+      "paramValueReference": "Parameterwerte werden genau so gesendet, wie sie geschrieben sind – eine ${…}-Referenz wird hier nicht aufgelöst und würde einen Tresorverweis in eine URL setzen. Verwenden Sie nur einfache Protokollwerte.",
+      "paramValueTooLong": "Ein Parameterwert hat höchstens 512 Zeichen.",
+      "paramValueCredentialShaped": "Einer dieser Werte sieht wie ein Schlüssel oder Token aus. Diese Zuordnung wird im Klartext gespeichert und in einer URL gesendet – hierher gehören nur nicht geheime Protokollparameter."
     },
     "backToList": "Zurück zu den Verbindungen",
     "headerSecret": "Gespeichertes Geheimnis",

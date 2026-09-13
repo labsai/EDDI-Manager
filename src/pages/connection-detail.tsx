@@ -51,6 +51,8 @@ import {
 import {
   bindingFor,
   isOAuthType,
+  TIMEOUT_MS_MAX,
+  TIMEOUT_MS_MIN,
   validateConnection,
   type ValidationCode,
 } from "@/lib/connection-validation";
@@ -695,7 +697,9 @@ export function ConnectionDetailPage() {
             id="connection-timeout"
             data-testid="connection-timeout"
             type="number"
-            min={0}
+            min={TIMEOUT_MS_MIN}
+            max={TIMEOUT_MS_MAX}
+            step={1}
             value={draft.timeoutMs ?? ""}
             onChange={(e) =>
               setDraft({
@@ -706,6 +710,13 @@ export function ConnectionDetailPage() {
               })
             }
             placeholder={t("connections.timeoutDefault", "Default")}
+            aria-invalid={fieldError("timeoutMs") !== undefined || undefined}
+            aria-describedby="connection-timeout-error"
+          />
+          <ValidationMessage
+            code={fieldError("timeoutMs")}
+            id="connection-timeout-error"
+            testId="connection-timeout-error"
           />
         </div>
       </section>

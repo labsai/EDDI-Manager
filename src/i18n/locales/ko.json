@@ -4536,7 +4536,14 @@
       "endpointNotAbsolute": "호스트를 포함한 전체 URL을 입력하세요. 예: https://auth.example.com/oauth/token.",
       "paramCredentialShaped": "이 매개변수 중 하나가 자격 증명 같은 이름입니다. 여기에는 비밀이 아닌 프로토콜 매개변수(prompt, audience 등)만 넣을 수 있습니다.",
       "bindingMismatch": "이 바인딩은 이 인증 유형과 맞지 않습니다. “호출자 제공”은 API 키가, “사용자별”은 OAuth 사용자 로그인이 필요하며 나머지는 모두 공유입니다.",
-      "callerSuppliedRefused": "호출자 제공 연결은 자격 증명을 저장하지 않습니다. 호출 시스템이 요청마다 보냅니다. 이 필드를 비우세요."
+      "callerSuppliedRefused": "호출자 제공 연결은 자격 증명을 저장하지 않습니다. 호출 시스템이 요청마다 보냅니다. 이 필드를 비우세요.",
+      "nameTooLong": "이름은 최대 64자입니다.",
+      "timeoutRange": "시간 제한은 1에서 60000밀리초 사이의 정수여야 합니다. 기본값을 쓰려면 비워 두세요.",
+      "templateLiteralCredential": "참조 주변의 텍스트 자체가 자격 증명처럼 보입니다. ${vault:…} 바깥에는 “Bearer ” 같은 짧은 스킴 접두사만 두고 나머지는 볼트에 저장하세요.",
+      "paramReserved": "이 매개변수 중 하나는 EDDI가 직접 설정합니다(client_id, redirect_uri, response_type, scope, state, code_challenge…). 덮어쓰면 흐름이 깨집니다.",
+      "paramValueReference": "매개변수 값은 쓴 그대로 전송됩니다. 여기의 ${…} 참조는 해석되지 않으며 볼트 포인터가 URL에 실리게 됩니다. 일반 프로토콜 값만 사용하세요.",
+      "paramValueTooLong": "매개변수 값은 최대 512자입니다.",
+      "paramValueCredentialShaped": "이 값 중 하나가 키나 토큰처럼 보입니다. 이 맵은 평문으로 저장되고 URL로 전송됩니다. 비밀이 아닌 프로토콜 매개변수만 여기에 둘 수 있습니다."
     },
     "backToList": "연결 목록으로 돌아가기",
     "headerSecret": "저장된 비밀 값",

@@ -4,12 +4,14 @@ import {
   isCredentialParamName,
   isLegalBinding,
   isOAuthType,
+  isReservedOAuthParamName,
   isSecretReference,
   legalBindings,
   validateConnection,
   validateCredentialEndpoint,
   validateHeaderTemplate,
   validateOrigin,
+  validateParamValue,
 } from "@/lib/connection-validation";
 
 /**
@@ -156,6 +158,31 @@ describe("validateHeaderTemplate — literal text is fine, secrets are not", () 
     expect(validateHeaderTemplate("")).toBe("templateRequired");
     expect(validateHeaderTemplate(null)).toBe("templateRequired");
   });
+
+  it("rejects a literal key with a reference stapled on", () => {
+    // The backend's rule on the literal halves: a run of twelve or more from
+    // the alphabet keys are written in is a key, whatever surrounds it.
+    expect(validateHeaderTemplate("sk-live-abcdef${vault:x}")).toBe(
+      "templateLiteralCredential",
+    );
+    expect(validateHeaderTemplate("${vault:x}.eyJhbGciOiJIUzI1NiJ9")).toBe(
+      "templateLiteralCredential",
+    );
+  });
+
+  it("rejects a literal half longer than 32 characters even without a run", () => {
+    expect(
+      validateHeaderTemplate("this is a very long prefix with spaces ${vault:x}"),
+    ).toBe("templateLiteralCredential");
+  });
+
+  it("still accepts the scheme prefixes people actually write", () => {
+    expect(validateHeaderTemplate("Bearer ${vault:k}")).toBeNull();
+    expect(validateHeaderTemplate("Basic ${vault:k}")).toBeNull();
+    expect(validateHeaderTemplate("Token token=${vault:k}")).toBeNull();
+    // A long vault key NAME is inside the braces, not a literal half.
+    expect(validateHeaderTemplate("Bearer ${vault:acme/prod/amplitude-api-key-2026}")).toBeNull();
+  });
 });
 
 describe("bindingFor — the coupling that runs both ways", () => {
@@ -219,12 +246,9 @@ describe("isCredentialParamName — extraAuthParams is not a place for keys", ()
     expect(isCredentialParamName("refreshToken")).toBe(true);
   });
 
-  it("catches an entry that only exists in underscored form", () => {
-    // The backend strips `_` before its own lookup, so `code_verifier` — whose
-    // only set entry keeps the underscore — normalises to `codeverifier` and
-    // matches nothing. Filed upstream; this mirror checks the raw key too, so it
-    // stays at least as strict as the backend rather than promising a save the
-    // backend would (once fixed) refuse.
+  it("catches code_verifier in every spelling — the PKCE secret must never reach a URL", () => {
+    // The backend normalises the key and consults a set written in the same
+    // stripped form, so all three spellings are one name there and here.
     expect(isCredentialParamName("code_verifier")).toBe(true);
     expect(isCredentialParamName("Code-Verifier")).toBe(true);
     expect(isCredentialParamName("CODE_VERIFIER")).toBe(true);
@@ -234,6 +258,52 @@ describe("isCredentialParamName — extraAuthParams is not a place for keys", ()
     expect(isCredentialParamName("prompt")).toBe(false);
     expect(isCredentialParamName("audience")).toBe(false);
     expect(isCredentialParamName("access_type")).toBe(false);
+  });
+});
+
+describe("isReservedOAuthParamName — parameters EDDI writes itself", () => {
+  it("refuses the ones the flow depends on, whatever the case or separator", () => {
+    expect(isReservedOAuthParamName("redirect_uri")).toBe(true);
+    expect(isReservedOAuthParamName("Redirect-URI")).toBe(true);
+    expect(isReservedOAuthParamName("STATE")).toBe(true);
+    expect(isReservedOAuthParamName("codeChallenge")).toBe(true);
+    expect(isReservedOAuthParamName("response.type")).toBe(true);
+    expect(isReservedOAuthParamName("scope")).toBe(true);
+  });
+
+  it("leaves provider-specific parameters alone", () => {
+    expect(isReservedOAuthParamName("prompt")).toBe(false);
+    expect(isReservedOAuthParamName("audience")).toBe(false);
+    expect(isReservedOAuthParamName("login_hint")).toBe(false);
+  });
+});
+
+describe("validateParamValue — the map is plain text in a URL", () => {
+  it("accepts the values providers actually document", () => {
+    expect(validateParamValue("consent")).toBeNull();
+    expect(validateParamValue("offline")).toBeNull();
+    expect(validateParamValue("api.atlassian.com")).toBeNull();
+    expect(validateParamValue("https://graph.microsoft.com")).toBeNull();
+    expect(validateParamValue("")).toBeNull();
+  });
+
+  it("refuses a reference — nothing resolves it there", () => {
+    expect(validateParamValue("${vault:client-secret}")).toBe("paramValueReference");
+    expect(validateParamValue("x${vars:y}")).toBe("paramValueReference");
+  });
+
+  it("refuses a value past 512 characters", () => {
+    expect(validateParamValue("a b ".repeat(200))).toBe("paramValueTooLong");
+    expect(validateParamValue("a b ".repeat(128))).toBeNull();
+  });
+
+  it("refuses a value that is one long token-alphabet run — a pasted key", () => {
+    expect(validateParamValue("sk_live_" + "a".repeat(40))).toBe(
+      "paramValueCredentialShaped",
+    );
+    expect(validateParamValue("A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6")).toBe(
+      "paramValueCredentialShaped",
+    );
   });
 });
 
@@ -275,12 +345,35 @@ describe("validateConnection", () => {
     expect(validateConnection({ ...STATIC_OK, name: "  " }).name).toBe("nameRequired");
   });
 
-  it("warns about a name a ${connection:…} reference could not carry", () => {
+  it("refuses a name a ${connection:…} reference could not carry", () => {
     expect(validateConnection({ ...STATIC_OK, name: "my connection" }).name).toBe(
       "nameFormat",
     );
     expect(validateConnection({ ...STATIC_OK, name: "acme/jira" }).name).toBe(
       "nameFormat",
+    );
+    // The backend's grammar starts with a letter or digit.
+    expect(validateConnection({ ...STATIC_OK, name: "-jira" }).name).toBe("nameFormat");
+    expect(validateConnection({ ...STATIC_OK, name: "jira_v2.prod-eu" }).name).toBeUndefined();
+  });
+
+  it("refuses a name past 64 characters", () => {
+    expect(validateConnection({ ...STATIC_OK, name: "a".repeat(64) }).name).toBeUndefined();
+    expect(validateConnection({ ...STATIC_OK, name: "a".repeat(65) }).name).toBe(
+      "nameTooLong",
+    );
+  });
+
+  it("bounds the token-endpoint timeout, and lets null mean the default", () => {
+    expect(validateConnection({ ...STATIC_OK, timeoutMs: null }).timeoutMs).toBeUndefined();
+    expect(validateConnection({ ...STATIC_OK, timeoutMs: 8000 }).timeoutMs).toBeUndefined();
+    expect(validateConnection({ ...STATIC_OK, timeoutMs: 60000 }).timeoutMs).toBeUndefined();
+    expect(validateConnection({ ...STATIC_OK, timeoutMs: 0 }).timeoutMs).toBe("timeoutRange");
+    expect(validateConnection({ ...STATIC_OK, timeoutMs: 60001 }).timeoutMs).toBe(
+      "timeoutRange",
+    );
+    expect(validateConnection({ ...STATIC_OK, timeoutMs: 1.5 }).timeoutMs).toBe(
+      "timeoutRange",
     );
   });
 
@@ -370,6 +463,26 @@ describe("validateConnection", () => {
       oauth: { ...OAUTH_OK.oauth, extraAuthParams: { api_key: "abc" } },
     });
     expect(errors["oauth.extraAuthParams"]).toBe("paramCredentialShaped");
+  });
+
+  it("rejects an extra parameter EDDI sets itself, case-insensitively", () => {
+    const errors = validateConnection({
+      ...OAUTH_OK,
+      oauth: { ...OAUTH_OK.oauth, extraAuthParams: { "Redirect-Uri": "https://evil.example" } },
+    });
+    expect(errors["oauth.extraAuthParams"]).toBe("paramReserved");
+  });
+
+  it("rejects an extra parameter VALUE that is a reference, too long, or a key", () => {
+    const withValue = (value: string) =>
+      validateConnection({
+        ...OAUTH_OK,
+        oauth: { ...OAUTH_OK.oauth, extraAuthParams: { audience: value } },
+      })["oauth.extraAuthParams"];
+    expect(withValue("${vault:secret}")).toBe("paramValueReference");
+    expect(withValue("x".repeat(513))).toBe("paramValueTooLong");
+    expect(withValue("A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6")).toBe("paramValueCredentialShaped");
+    expect(withValue("api.atlassian.com")).toBeUndefined();
   });
 
   it("reports every broken field at once, not just the first", () => {

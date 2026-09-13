@@ -4574,7 +4574,14 @@
       "endpointNotAbsolute": "Informe uma URL completa com o host, por ex. https://auth.example.com/oauth/token.",
       "paramCredentialShaped": "Um destes parâmetros tem nome de credencial. Aqui só cabem parâmetros de protocolo não secretos (prompt, audience, …).",
       "bindingMismatch": "Esta vinculação não combina com este tipo de autenticação: «fornecido pelo chamador» precisa de uma chave de API, «por utilizador» precisa de um início de sessão OAuth de utilizador, e tudo o resto é partilhado.",
-      "callerSuppliedRefused": "Uma ligação fornecida pelo chamador não armazena credenciais — o sistema chamador envia-a com cada pedido. Limpe este campo."
+      "callerSuppliedRefused": "Uma ligação fornecida pelo chamador não armazena credenciais — o sistema chamador envia-a com cada pedido. Limpe este campo.",
+      "nameTooLong": "Um nome tem no máximo 64 caracteres.",
+      "timeoutRange": "O tempo limite tem de ser um número inteiro entre 1 e 60000 milissegundos. Deixe vazio para o valor predefinido.",
+      "templateLiteralCredential": "O texto à volta da referência parece ele próprio uma credencial. Fora de ${vault:…} só cabe um prefixo de esquema curto como “Bearer ” — guarde o resto no cofre.",
+      "paramReserved": "Um destes parâmetros é definido pelo próprio EDDI (client_id, redirect_uri, response_type, scope, state, code_challenge…). Substituí-lo quebraria o fluxo.",
+      "paramValueReference": "Os valores dos parâmetros são enviados exatamente como escritos — uma referência ${…} aqui não é resolvida e colocaria um ponteiro do cofre num URL. Use apenas valores de protocolo simples.",
+      "paramValueTooLong": "Um valor de parâmetro tem no máximo 512 caracteres.",
+      "paramValueCredentialShaped": "Um destes valores parece uma chave ou um token. Este mapa é guardado em texto simples e enviado num URL — só parâmetros de protocolo não secretos pertencem aqui."
     },
     "backToList": "Voltar para Conexões",
     "headerSecret": "Segredo guardado",

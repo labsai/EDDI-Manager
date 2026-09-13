@@ -1,10 +1,14 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient } from "@tanstack/react-query";
 import { screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
+import { toast } from "sonner";
 import { server } from "@/test/mocks/server";
 import { renderPage, userEvent } from "@/test/test-utils";
 import { ConnectionDetailPage } from "@/pages/connection-detail";
+
+const toastError = vi.spyOn(toast, "error");
+beforeEach(() => toastError.mockClear());
 
 /**
  * The editor, and the three rules a generated form could not express:
@@ -495,6 +499,43 @@ describe("ConnectionDetailPage", () => {
     // And the guard still considers the page dirty.
     await user.click(screen.getByTestId("back-to-list"));
     expect(await screen.findByTestId("unsaved-confirm")).toBeInTheDocument();
+  });
+
+  it("puts the backend's own 400 sentence in the toast, verbatim", async () => {
+    // The rules this form cannot mirror — an origin outside the operator's
+    // credential-endpoint allowlist, a duplicate name, PER_USER without OIDC —
+    // arrive as a 400 whose body is the message. That sentence is the fix, and
+    // it must reach the person looking at the form without being paraphrased.
+    const user = userEvent.setup();
+    const refusal =
+      "oauth.tokenUrl origin https://auth.example.com is not on eddi.connections.credential-endpoint-allowlist";
+    server.use(
+      http.put(
+        "*/connectionstore/connections/:id",
+        () => new HttpResponse(refusal, { status: 400 }),
+      ),
+    );
+    renderDetail("conn1");
+    await screen.findByTestId("connection-name-input");
+
+    await user.click(screen.getByTestId("save-connection-btn"));
+
+    await waitFor(() => expect(toastError).toHaveBeenCalled());
+    expect(toastError.mock.calls[0]![0]).toContain(refusal);
+  });
+
+  it("refuses a timeout outside the backend's bounds before it leaves the page", async () => {
+    const user = userEvent.setup();
+    const sent = captureSave();
+    renderDetail("conn3");
+    await screen.findByTestId("connection-name-input");
+
+    await user.type(screen.getByTestId("connection-timeout"), "600000");
+    await user.click(screen.getByTestId("save-connection-btn"));
+
+    expect(sent).toHaveLength(0);
+    expect(screen.getByTestId("connection-timeout-error")).toBeInTheDocument();
+    expect(screen.getByTestId("connection-timeout")).toHaveAttribute("aria-invalid", "true");
   });
 
   it("shows the saved document instead of a skeleton after a save", async () => {
