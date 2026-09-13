@@ -1316,7 +1316,7 @@ function WorkforceThread() {
               className={cn(
                 "flex items-start gap-2 rounded-xl border p-3 text-sm",
                 sendError.paused
-                  ? "border-amber-500/30 bg-amber-500/5"
+                  ? "border-warning/30 bg-warning/5"
                   : "border-destructive/30 bg-destructive/5",
               )}
               role="alert"
@@ -1325,7 +1325,7 @@ function WorkforceThread() {
               <AlertTriangle
                 className={cn(
                   "mt-0.5 h-4 w-4 shrink-0",
-                  sendError.paused ? "text-amber-500" : "text-destructive",
+                  sendError.paused ? "text-warning" : "text-destructive",
                 )}
                 aria-hidden="true"
               />
@@ -1337,7 +1337,7 @@ function WorkforceThread() {
                     // the queue that decides it is a screen away.
                     <Link
                       to="/manage/approvals"
-                      className="text-xs font-medium text-amber-600 underline-offset-2 hover:underline dark:text-amber-400"
+                      className="text-xs font-medium text-warning underline-offset-2 hover:underline"
                       data-testid="thread-review-approvals"
                     >
                       {t("Workforce.thread.reviewApprovals", "Review pending approvals")}

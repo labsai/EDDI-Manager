@@ -238,7 +238,7 @@ function ApprovalQueueRow({
                   size="sm"
                   onClick={() => setExpanded((v) => !v)}
                   aria-expanded={expanded}
-                  className="gap-1 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20"
+                  className="gap-1 bg-warning/10 text-warning hover:bg-warning/20"
                   data-testid={`review-${item.conversationId}`}
                 >
                   {expanded ? t("common.close", "Close") : t("hitl.review", "Review")}
