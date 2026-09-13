@@ -280,6 +280,79 @@ describe("ConnectionDetailPage", () => {
     expect(sent[0]!.staticAuth).toEqual({ headerName: "Authorization" });
   });
 
+  it("keeps a caller-supplied binding across a type mis-click and back", async () => {
+    // Switching to BASIC corrects the draft's binding to SERVICE (BASIC has
+    // no other); switching back to STATIC is a return to the stored type and
+    // needs no confirmation — so it used to arrive as SERVICE, a shared-key
+    // connection with no key, and the save sent a binding nobody chose.
+    const user = userEvent.setup();
+    const sent = captureSave();
+    renderDetail("conn6"); // STATIC / CALLER_SUPPLIED
+    await screen.findByTestId("connection-name-input");
+
+    await user.selectOptions(screen.getByTestId("connection-auth-type-select"), "BASIC");
+    await confirmAuthChange(user);
+    await user.selectOptions(screen.getByTestId("connection-auth-type-select"), "STATIC");
+
+    expect(screen.queryByText(/stop resolving/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId("connection-binding-explainer-CALLER_SUPPLIED"),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("save-connection-btn"));
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]!.binding).toBe("CALLER_SUPPLIED");
+    expect(sent[0]!.staticAuth).toEqual({ headerName: "x-api-key" });
+  });
+
+  it("restores a stored proxy-trust flag when the type returns to a user login", async () => {
+    // The flag is forced off on any other binding; coming back to PER_USER
+    // must not leave it off, or a mis-click would tighten a saved posture
+    // on the next save and stop every proxied user resolving.
+    const user = userEvent.setup();
+    const sent = captureSave();
+    server.use(
+      http.get("*/connectionstore/connections/:id", ({ request }) => {
+        if (new URL(request.url).pathname.endsWith("/descriptors")) return;
+        return HttpResponse.json({
+          name: "google-drive",
+          authType: "OAUTH2_AUTHORIZATION_CODE",
+          binding: "PER_USER",
+          allowUnverifiedPrincipal: true,
+          staticAuth: null,
+          oauth: {
+            authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+            tokenUrl: "https://oauth2.googleapis.com/token",
+            clientId: "id",
+            clientSecret: "${vault:google-client-secret}",
+            scopes: [],
+            extraAuthParams: {},
+            usePkce: true,
+            clientAuthMethod: "client_secret_basic",
+            discoveryUrl: null,
+          },
+          baseUrlAllowlist: ["https://www.googleapis.com"],
+          timeoutMs: null,
+        });
+      }),
+    );
+    renderDetail("proxied");
+    await screen.findByTestId("connection-name-input");
+    expect(screen.getByTestId("allow-unverified-principal")).toBeChecked();
+
+    await user.selectOptions(screen.getByTestId("connection-auth-type-select"), "STATIC");
+    await confirmAuthChange(user);
+    await user.selectOptions(
+      screen.getByTestId("connection-auth-type-select"),
+      "OAUTH2_AUTHORIZATION_CODE",
+    );
+
+    expect(screen.getByTestId("allow-unverified-principal")).toBeChecked();
+    await user.click(screen.getByTestId("save-connection-btn"));
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]!.allowUnverifiedPrincipal).toBe(true);
+  });
+
   it("asks before the auth type of an existing connection is changed", async () => {
     // A grant belongs to the flow that produced it, so a type change strands
     // every account linked through the connection — and the backend refuses

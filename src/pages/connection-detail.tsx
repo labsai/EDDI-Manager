@@ -261,19 +261,36 @@ export function ConnectionDetailPage() {
     setDraft((prev) => {
       if (!prev) return prev;
       const blank = emptyConnection(authType);
-      // Honoured where the new type allows the current binding, corrected
-      // otherwise — so STATIC keeps a caller-supplied binding across a
-      // mis-click and back, and BASIC never carries one.
-      const binding = bindingFor(authType, prev.binding);
+      const stored = baselineDocRef.current;
+      // Returning to the STORED type restores the stored binding and flag;
+      // any other type derives them from the draft. The draft alone is not
+      // enough: a caller-supplied connection mis-clicked to BASIC is
+      // corrected to SERVICE there, and SERVICE is also legal for STATIC —
+      // so honouring the draft on the way back (which needs no
+      // confirmation, being the stored type) arrived as a shared-key
+      // connection with no key, and the save sent a binding nobody chose.
+      // The proxy-trust flag follows for the same reason: a detour through
+      // STATIC and back must not quietly switch off a setting that was
+      // saved on, which would stop every proxied user resolving on save.
+      const returningToStored = stored !== null && authType === stored.authType;
+      const binding = bindingFor(
+        authType,
+        returningToStored ? stored?.binding : prev.binding,
+      );
+      // Only legal on a per-user binding; the backend refuses it elsewhere
+      // rather than ignoring it — a relaxation sitting on a document where it
+      // does nothing reads as a decision already in force.
+      const allowUnverifiedPrincipal =
+        binding !== "PER_USER"
+          ? false
+          : returningToStored
+            ? (stored?.allowUnverifiedPrincipal ?? false)
+            : prev.allowUnverifiedPrincipal;
       return {
         ...prev,
         authType,
         binding,
-        // The flag is only legal on a per-user binding, and the backend refuses
-        // it elsewhere rather than ignoring it — a relaxation sitting on a
-        // document where it does nothing reads as a decision already in force.
-        allowUnverifiedPrincipal:
-          binding === "PER_USER" ? prev.allowUnverifiedPrincipal : false,
+        allowUnverifiedPrincipal,
         staticAuth: prev.staticAuth ?? blank.staticAuth,
         oauth: prev.oauth ?? blank.oauth,
       };
