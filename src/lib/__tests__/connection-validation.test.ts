@@ -394,6 +394,15 @@ describe("validateConnection", () => {
     expect(validateConnection({ ...STATIC_OK, name: "jira_v2.prod-eu" }).name).toBeUndefined();
   });
 
+  it("refuses surrounding whitespace, as the backend does — it is not trimmed away", () => {
+    // The backend matches its grammar against the raw name and says so in its
+    // own source ("Not trimmed"). The mirror used to trim first, so " jira"
+    // passed here and was refused there.
+    expect(validateConnection({ ...STATIC_OK, name: " jira" }).name).toBe("nameFormat");
+    expect(validateConnection({ ...STATIC_OK, name: "jira " }).name).toBe("nameFormat");
+    expect(validateConnection({ ...STATIC_OK, name: "jira" }).name).toBeUndefined();
+  });
+
   it("refuses a name past 64 characters", () => {
     expect(validateConnection({ ...STATIC_OK, name: "a".repeat(64) }).name).toBeUndefined();
     expect(validateConnection({ ...STATIC_OK, name: "a".repeat(65) }).name).toBe(

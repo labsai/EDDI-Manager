@@ -422,8 +422,15 @@ export interface ValidatableConnection {
 export function validateConnection(config: ValidatableConnection): ConnectionErrors {
   const errors: ConnectionErrors = {};
 
-  const name = (config.name ?? "").trim();
-  if (!name) {
+  // Judged untrimmed, as the backend judges it: a name saved with whitespace
+  // the author cannot see would resolve for nobody, so the backend refuses it
+  // rather than silently storing something other than what was sent. The
+  // documents this validates have already been through `toStoredConnection`,
+  // which trims the name on the way out — so a trailing space the wizard's
+  // user typed never reaches here, and one that somehow does is refused
+  // exactly where the backend would refuse it.
+  const name = config.name ?? "";
+  if (!name.trim()) {
     errors.name = "nameRequired";
   } else if (name.length > NAME_MAX_LENGTH) {
     errors.name = "nameTooLong";

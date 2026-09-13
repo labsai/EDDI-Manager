@@ -505,6 +505,11 @@ export function toStoredConnection(
   const binding = bindingFor(draft.authType, draft.binding);
   const base: ConnectionConfiguration = {
     ...draft,
+    // The backend matches the name against its grammar UNTRIMMED and refuses
+    // surrounding whitespace outright; a stored name therefore never has any,
+    // so trimming is a no-op on a loaded document and the only thing that
+    // keeps a wizard user's trailing space from becoming a 400.
+    name: draft.name.trim(),
     binding,
     // Only legal on a per-user binding; the backend refuses it elsewhere rather
     // than ignoring it.

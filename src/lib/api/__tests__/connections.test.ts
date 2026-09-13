@@ -145,6 +145,13 @@ describe("toStoredConnection — the document sent, built from the type", () => 
     expect(stored.allowUnverifiedPrincipal).toBe(false);
   });
 
+  it("trims the name, so a trailing space typed into the wizard is not sent to be refused", () => {
+    // The backend judges the name untrimmed and refuses whitespace; a stored
+    // name never carries any, so this is a no-op on every loaded document.
+    expect(toStoredConnection({ ...base, name: "  jira " }).name).toBe("jira");
+    expect(toStoredConnection({ ...base, name: "jira" }).name).toBe("jira");
+  });
+
   it("keeps a loaded CALLER_SUPPLIED binding and sends only the header name", () => {
     // The drift this pins: deriving the binding from the type alone rewrote
     // every caller-supplied document to SERVICE — and then sent an empty

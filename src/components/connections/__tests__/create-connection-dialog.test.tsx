@@ -121,6 +121,41 @@ describe("CreateConnectionDialog — uncommitted input", () => {
   });
 });
 
+describe("CreateConnectionDialog — the name", () => {
+  it("sends the name without the whitespace around it", async () => {
+    // The backend refuses a name with surrounding whitespace rather than
+    // trimming it, and the mirror used to trim before validating — so a
+    // trailing space passed every client-side check and came back as a 400
+    // about a character the author could not see.
+    const user = userEvent.setup();
+    let sent: Record<string, unknown> | null = null;
+    server.use(
+      http.post("*/connectionstore/connections", async ({ request }) => {
+        sent = (await request.json()) as Record<string, unknown>;
+        return new HttpResponse(null, { status: 201 });
+      }),
+    );
+    await renderDialog();
+
+    await user.type(screen.getByTestId("create-connection-name"), " notion ");
+    await user.click(screen.getByTestId("create-connection-next"));
+    await screen.findByTestId("create-connection-header-name");
+    await user.type(
+      screen.getByTestId("create-connection-header-value-secret-input"),
+      "${{vault:notion-key}",
+    );
+    await user.click(screen.getByTestId("create-connection-next"));
+    await user.type(
+      screen.getByTestId("create-connection-origins-input"),
+      "https://api.notion.com",
+    );
+    await user.click(screen.getByTestId("create-connection-submit"));
+
+    await waitFor(() => expect(sent).not.toBeNull());
+    expect(sent!.name).toBe("notion");
+  });
+});
+
 describe("CreateConnectionDialog — a caller-supplied key", () => {
   it("creates a CALLER_SUPPLIED connection with a header name and no template", async () => {
     // The binding that stores nothing: the wizard must not demand a header
