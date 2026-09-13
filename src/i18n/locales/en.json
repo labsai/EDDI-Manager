@@ -4573,7 +4573,10 @@
     "callerSuppliedHeaderBody": "One header per request: the connection name, a space, then the whole value to send as {{header}} — scheme included, so “Bearer abc” needs no escaping. The credential lives for that request only and is never stored.",
     "callerSuppliedNeedsAuth": "The caller must be signed in to EDDI. A request without the credential fails rather than going out unauthenticated — including when a paused tool call is resumed — and this connection is withheld from MCP and A2A discovery.",
     "bindingCallerSuppliedTitle": "Resolves as whoever is calling",
-    "bindingCallerSuppliedBody": "The calling system hands over each user's own credential with the request and EDDI stores nothing. The agent can do only what that user can do at the target, and this connection is withheld from MCP and A2A discovery."
+    "bindingCallerSuppliedBody": "The calling system hands over each user's own credential with the request and EDDI stores nothing. The agent can do only what that user can do at the target, and this connection is withheld from MCP and A2A discovery.",
+    "confirmAuthChange": "Change how this connection authenticates?",
+    "confirmAuthChangeDesc": "Accounts linked through this connection will stop resolving — a grant belongs to the flow that produced it. EDDI refuses the change while any account is still linked and says how many; unlink them first, or create a new connection and let people link that instead.",
+    "confirmAuthChangeAccept": "Change it"
   },
   "extensionTypes": {
     "parser": "Input Parser",

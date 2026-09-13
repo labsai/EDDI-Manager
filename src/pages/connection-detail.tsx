@@ -99,6 +99,20 @@ export function ConnectionDetailPage() {
   const [draft, setDraft] = useState<ConnectionConfiguration | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [unverifiedConfirmOpen, setUnverifiedConfirmOpen] = useState(false);
+  /**
+   * A change of auth type or binding away from the STORED one, awaiting the
+   * user's confirmation.
+   *
+   * Either changes what a linked account means: a grant belongs to the flow
+   * that produced it, so accounts linked through this connection stop
+   * resolving, and the backend refuses the save with a 409 while any are
+   * still linked. Asking first is what turns that 409 from a surprise after
+   * ten minutes of edits into a decision made before them. Returning to the
+   * stored value needs no ceremony and is applied directly.
+   */
+  const [pendingAuthChange, setPendingAuthChange] = useState<
+    { authType: AuthType } | { binding: Binding } | null
+  >(null);
   const [rawOpen, setRawOpen] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   /** Chip text typed but not committed — held here so a save can fold it in. */
@@ -115,6 +129,8 @@ export function ConnectionDetailPage() {
    * it would feed its own seeding effect and loop.
    */
   const baselineRef = useRef<string | null>(null);
+  /** The same baseline, parsed — read by the confirm-on-change logic. */
+  const baselineDocRef = useRef<ConnectionConfiguration | null>(null);
   const draftRef = useRef<ConnectionConfiguration | null>(null);
   draftRef.current = draft;
 
@@ -143,10 +159,12 @@ export function ConnectionDetailPage() {
    */
   useEffect(() => {
     baselineRef.current = null;
+    baselineDocRef.current = null;
     setDraft(null);
     setShowErrors(false);
     setPendingScope("");
     setPendingOrigin("");
+    setPendingAuthChange(null);
   }, [id, version]);
 
   /**
@@ -176,6 +194,7 @@ export function ConnectionDetailPage() {
       JSON.stringify(current) !== baselineRef.current;
     if (dirty) return;
     baselineRef.current = JSON.stringify(config);
+    baselineDocRef.current = config;
     setDraft({ ...config });
   }, [config]);
 
@@ -268,6 +287,42 @@ export function ConnectionDetailPage() {
     );
   }, []);
 
+  /**
+   * Route a type or binding change through the confirmation when it leaves
+   * the stored value, and straight through when it returns to it.
+   */
+  const requestAuthTypeChange = useCallback(
+    (authType: AuthType) => {
+      const stored = baselineDocRef.current;
+      if (!stored || authType === stored.authType) {
+        changeAuthType(authType);
+        return;
+      }
+      setPendingAuthChange({ authType });
+    },
+    [changeAuthType],
+  );
+
+  const requestBindingChange = useCallback(
+    (binding: Binding) => {
+      const stored = baselineDocRef.current;
+      if (!stored || binding === stored.binding) {
+        changeBinding(binding);
+        return;
+      }
+      setPendingAuthChange({ binding });
+    },
+    [changeBinding],
+  );
+
+  const confirmAuthChange = () => {
+    const pending = pendingAuthChange;
+    setPendingAuthChange(null);
+    if (!pending) return;
+    if ("authType" in pending) changeAuthType(pending.authType);
+    else changeBinding(pending.binding);
+  };
+
   const handleSave = async () => {
     if (!outgoing || !id) return;
     setShowErrors(true);
@@ -291,6 +346,7 @@ export function ConnectionDetailPage() {
       setPendingScope("");
       setPendingOrigin("");
       baselineRef.current = JSON.stringify(outgoing);
+      baselineDocRef.current = outgoing;
 
       const location = (result as { location?: string })?.location;
       if (location) {
@@ -304,8 +360,9 @@ export function ConnectionDetailPage() {
     } catch (err) {
       // A 400 here names the field and the fix — a duplicate name, a token URL
       // the operator has not allowlisted, PER_USER on a deployment without
-      // OIDC, an OAuth connection with no vault. None of those are knowable
-      // from the browser, so the backend's sentence is the useful one.
+      // OIDC, an OAuth connection with no vault. A 409 names how many accounts
+      // are still linked and the route that unlinks them. None of those are
+      // knowable from the browser, so the backend's sentence is the useful one.
       toast.error(getErrorMessage(err));
     }
   };
@@ -478,7 +535,7 @@ export function ConnectionDetailPage() {
             data-testid="connection-auth-type-select"
             className="flex h-9 w-full rounded-lg border border-border bg-background px-3 text-sm"
             value={draft.authType}
-            onChange={(e) => changeAuthType(e.target.value as AuthType)}
+            onChange={(e) => requestAuthTypeChange(e.target.value as AuthType)}
           >
             {AUTH_TYPES.map((type) => (
               <option key={type} value={type}>
@@ -583,7 +640,7 @@ export function ConnectionDetailPage() {
           draft={draft}
           onPatchStatic={patchStatic}
           onPatchOAuth={patchOAuth}
-          onBindingChange={changeBinding}
+          onBindingChange={requestBindingChange}
           errors={showErrors ? errors : {}}
           idPrefix="connection"
           dense
@@ -770,6 +827,25 @@ export function ConnectionDetailPage() {
           if (to) navigate(to);
         }}
         onCancel={() => setPendingExit(null)}
+      />
+
+      <AlertDialog
+        open={pendingAuthChange !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingAuthChange(null);
+        }}
+        variant="warning"
+        title={t(
+          "connections.confirmAuthChange",
+          "Change how this connection authenticates?",
+        )}
+        description={t(
+          "connections.confirmAuthChangeDesc",
+          "Accounts linked through this connection will stop resolving — a grant belongs to the flow that produced it. EDDI refuses the change while any account is still linked and says how many; unlink them first, or create a new connection and let people link that instead.",
+        )}
+        onConfirm={confirmAuthChange}
+        confirmLabel={t("connections.confirmAuthChangeAccept", "Change it")}
+        cancelLabel={t("common.cancel", "Cancel")}
       />
 
       <AlertDialog

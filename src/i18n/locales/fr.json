@@ -4611,7 +4611,10 @@
     "callerSuppliedHeaderBody": "Un en-tête par requête : le nom de la connexion, un espace, puis la valeur complète à envoyer comme {{header}} — schéma inclus, donc « Bearer abc » n'a pas besoin d'échappement. L'identifiant ne vit que le temps de cette requête et n'est jamais stocké.",
     "callerSuppliedNeedsAuth": "L'appelant doit être connecté à EDDI. Une requête sans identifiant échoue au lieu de partir sans authentification — y compris à la reprise d'un appel d'outil en pause — et cette connexion est exclue de la découverte MCP et A2A.",
     "bindingCallerSuppliedTitle": "Se résout en la personne qui appelle",
-    "bindingCallerSuppliedBody": "Le système appelant transmet l'identifiant de chaque utilisateur avec la requête et EDDI ne stocke rien. L'agent ne peut faire que ce que cet utilisateur peut faire sur la cible, et cette connexion est exclue de la découverte MCP et A2A."
+    "bindingCallerSuppliedBody": "Le système appelant transmet l'identifiant de chaque utilisateur avec la requête et EDDI ne stocke rien. L'agent ne peut faire que ce que cet utilisateur peut faire sur la cible, et cette connexion est exclue de la découverte MCP et A2A.",
+    "confirmAuthChange": "Changer la façon dont cette connexion s'authentifie ?",
+    "confirmAuthChangeDesc": "Les comptes liés via cette connexion cesseront de se résoudre — une autorisation appartient au flux qui l'a produite. EDDI refuse le changement tant qu'un compte reste lié et indique combien ; déliez-les d'abord, ou créez une nouvelle connexion et laissez les gens lier celle-ci.",
+    "confirmAuthChangeAccept": "Changer"
   },
   "extensionTypes": {
     "parser": "Analyseur d’entrée",

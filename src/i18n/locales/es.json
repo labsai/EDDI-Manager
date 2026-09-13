@@ -4611,7 +4611,10 @@
     "callerSuppliedHeaderBody": "Una cabecera por solicitud: el nombre de la conexión, un espacio y después el valor completo que se enviará como {{header}}, esquema incluido, así que «Bearer abc» no necesita escaparse. La credencial existe solo durante esa solicitud y nunca se almacena.",
     "callerSuppliedNeedsAuth": "El llamante debe haber iniciado sesión en EDDI. Una solicitud sin la credencial falla en lugar de salir sin autenticar, incluso al reanudar una llamada a herramienta en pausa, y esta conexión se excluye del descubrimiento MCP y A2A.",
     "bindingCallerSuppliedTitle": "Se resuelve como quien llama",
-    "bindingCallerSuppliedBody": "El sistema que llama entrega la credencial de cada usuario con la solicitud y EDDI no almacena nada. El agente solo puede hacer lo que ese usuario puede hacer en el destino, y esta conexión se excluye del descubrimiento MCP y A2A."
+    "bindingCallerSuppliedBody": "El sistema que llama entrega la credencial de cada usuario con la solicitud y EDDI no almacena nada. El agente solo puede hacer lo que ese usuario puede hacer en el destino, y esta conexión se excluye del descubrimiento MCP y A2A.",
+    "confirmAuthChange": "¿Cambiar cómo se autentica esta conexión?",
+    "confirmAuthChangeDesc": "Las cuentas vinculadas a través de esta conexión dejarán de resolverse: una concesión pertenece al flujo que la produjo. EDDI rechaza el cambio mientras quede alguna cuenta vinculada e indica cuántas; desvincúlelas primero, o cree una conexión nueva y deje que la gente vincule esa.",
+    "confirmAuthChangeAccept": "Cambiar"
   },
   "extensionTypes": {
     "parser": "Analizador de entrada",

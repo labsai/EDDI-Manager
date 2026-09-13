@@ -11,6 +11,17 @@ const toastError = vi.spyOn(toast, "error");
 beforeEach(() => toastError.mockClear());
 
 /**
+ * Accept the "change how this connection authenticates?" dialog.
+ *
+ * Leaving the stored auth type or binding interposes it, because either
+ * change strands the accounts linked through the connection and the backend
+ * refuses the save while any are still linked.
+ */
+async function confirmAuthChange(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole("button", { name: "Change it" }));
+}
+
+/**
  * The editor, and the three rules a generated form could not express:
  * `binding` is derived, `name` is immutable, and secrets are references.
  */
@@ -193,6 +204,7 @@ describe("ConnectionDetailPage", () => {
       screen.getByTestId("connection-auth-type-select"),
       "OAUTH2_AUTHORIZATION_CODE",
     );
+    await confirmAuthChange(user);
     // Fill what the new type requires, then save.
     await user.type(
       screen.getByTestId("connection-authorization-url"),
@@ -252,6 +264,7 @@ describe("ConnectionDetailPage", () => {
     await screen.findByTestId("connection-name-input");
 
     await user.click(screen.getByTestId("connection-binding-choice-CALLER_SUPPLIED"));
+    await confirmAuthChange(user);
     // The header value field is gone, replaced by what the caller must send.
     await waitFor(() =>
       expect(screen.queryByTestId("connection-header-value")).not.toBeInTheDocument(),
@@ -265,6 +278,107 @@ describe("ConnectionDetailPage", () => {
     await waitFor(() => expect(sent).toHaveLength(1));
     expect(sent[0]!.binding).toBe("CALLER_SUPPLIED");
     expect(sent[0]!.staticAuth).toEqual({ headerName: "Authorization" });
+  });
+
+  it("asks before the auth type of an existing connection is changed", async () => {
+    // A grant belongs to the flow that produced it, so a type change strands
+    // every account linked through the connection — and the backend refuses
+    // the save with a 409 while any are still linked. The question belongs
+    // before the edits, not after them.
+    const user = userEvent.setup();
+    renderDetail("conn3"); // STATIC
+    await screen.findByTestId("connection-name-input");
+
+    await user.selectOptions(
+      screen.getByTestId("connection-auth-type-select"),
+      "OAUTH2_CLIENT_CREDENTIALS",
+    );
+
+    expect(await screen.findByText(/stop resolving/i)).toBeInTheDocument();
+    // Nothing has changed yet.
+    expect(screen.getByTestId("connection-auth-type-select")).toHaveValue("STATIC");
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.getByTestId("connection-auth-type-select")).toHaveValue("STATIC");
+    expect(screen.queryByText(/stop resolving/i)).not.toBeInTheDocument();
+  });
+
+  it("applies the type change once it is confirmed", async () => {
+    const user = userEvent.setup();
+    renderDetail("conn3");
+    await screen.findByTestId("connection-name-input");
+
+    await user.selectOptions(
+      screen.getByTestId("connection-auth-type-select"),
+      "OAUTH2_CLIENT_CREDENTIALS",
+    );
+    await confirmAuthChange(user);
+
+    expect(screen.getByTestId("connection-auth-type-select")).toHaveValue(
+      "OAUTH2_CLIENT_CREDENTIALS",
+    );
+  });
+
+  it("does not ask again when switching back to the stored type", async () => {
+    // Returning to what is saved cannot strand anything.
+    const user = userEvent.setup();
+    renderDetail("conn3");
+    await screen.findByTestId("connection-name-input");
+
+    await user.selectOptions(screen.getByTestId("connection-auth-type-select"), "BASIC");
+    await confirmAuthChange(user);
+    await user.selectOptions(screen.getByTestId("connection-auth-type-select"), "STATIC");
+
+    expect(screen.queryByText(/stop resolving/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId("connection-auth-type-select")).toHaveValue("STATIC");
+  });
+
+  it("asks before a shared key becomes caller-supplied, for the same reason", async () => {
+    const user = userEvent.setup();
+    renderDetail("conn3"); // STATIC / SERVICE
+    await screen.findByTestId("connection-name-input");
+
+    await user.click(screen.getByTestId("connection-binding-choice-CALLER_SUPPLIED"));
+
+    expect(await screen.findByText(/stop resolving/i)).toBeInTheDocument();
+    expect(screen.getByTestId("connection-binding-explainer-SERVICE")).toBeInTheDocument();
+
+    await confirmAuthChange(user);
+
+    expect(
+      screen.getByTestId("connection-binding-explainer-CALLER_SUPPLIED"),
+    ).toBeInTheDocument();
+  });
+
+  it("puts the backend's 409 about linked accounts in the toast, verbatim", async () => {
+    // The message names the count and the unlink route; paraphrasing it would
+    // lose exactly the two facts the administrator needs.
+    const user = userEvent.setup();
+    const refusal =
+      "authType cannot change while 3 accounts are linked to 'jira'. Unlink them first: DELETE /connections/jira/grant.";
+    server.use(
+      http.put(
+        "*/connectionstore/connections/:id",
+        () => new HttpResponse(refusal, { status: 409 }),
+      ),
+    );
+    renderDetail("conn1"); // OAUTH2_AUTHORIZATION_CODE, with linked accounts
+    await screen.findByTestId("connection-name-input");
+
+    await user.selectOptions(
+      screen.getByTestId("connection-auth-type-select"),
+      "OAUTH2_CLIENT_CREDENTIALS",
+    );
+    await confirmAuthChange(user);
+    await user.click(screen.getByTestId("save-connection-btn"));
+
+    await waitFor(() => expect(toastError).toHaveBeenCalled());
+    expect(toastError.mock.calls[0]![0]).toContain(refusal);
+    // And the edit is still on screen to be reconsidered, not reverted.
+    expect(screen.getByTestId("connection-auth-type-select")).toHaveValue(
+      "OAUTH2_CLIENT_CREDENTIALS",
+    );
   });
 
   it("sends only the auth block its type uses", async () => {
@@ -361,6 +475,7 @@ describe("ConnectionDetailPage", () => {
       screen.getByTestId("connection-auth-type-select"),
       "STATIC",
     );
+    await confirmAuthChange(user);
     // An empty template opens in the guided view, which is the path a real
     // author takes: a prefix plus a stored secret.
     await user.type(screen.getByTestId("connection-header-value-prefix"), "Bearer ");

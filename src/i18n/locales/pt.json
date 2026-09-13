@@ -4611,7 +4611,10 @@
     "callerSuppliedHeaderBody": "Um cabeçalho por pedido: o nome da ligação, um espaço e depois o valor completo a enviar como {{header}} — esquema incluído, por isso “Bearer abc” não precisa de escape. A credencial existe apenas durante esse pedido e nunca é armazenada.",
     "callerSuppliedNeedsAuth": "O chamador tem de ter sessão iniciada no EDDI. Um pedido sem a credencial falha em vez de sair sem autenticação — inclusive ao retomar uma chamada de ferramenta em pausa — e esta ligação é excluída da descoberta MCP e A2A.",
     "bindingCallerSuppliedTitle": "Resolve-se como quem está a chamar",
-    "bindingCallerSuppliedBody": "O sistema chamador entrega a credencial de cada utilizador com o pedido e o EDDI não armazena nada. O agente só pode fazer o que esse utilizador pode fazer no destino, e esta ligação é excluída da descoberta MCP e A2A."
+    "bindingCallerSuppliedBody": "O sistema chamador entrega a credencial de cada utilizador com o pedido e o EDDI não armazena nada. O agente só pode fazer o que esse utilizador pode fazer no destino, e esta ligação é excluída da descoberta MCP e A2A.",
+    "confirmAuthChange": "Alterar a forma como esta ligação se autentica?",
+    "confirmAuthChangeDesc": "As contas ligadas através desta ligação deixarão de se resolver — uma concessão pertence ao fluxo que a produziu. O EDDI recusa a alteração enquanto alguma conta continuar ligada e diz quantas; desligue-as primeiro, ou crie uma nova ligação e deixe as pessoas ligarem essa.",
+    "confirmAuthChangeAccept": "Alterar"
   },
   "extensionTypes": {
     "parser": "Analisador de entrada",

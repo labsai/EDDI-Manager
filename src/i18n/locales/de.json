@@ -4573,7 +4573,10 @@
     "callerSuppliedHeaderBody": "Ein Header pro Anfrage: der Verbindungsname, ein Leerzeichen, dann der vollständige Wert, der als {{header}} gesendet wird – inklusive Schema, sodass „Bearer abc“ kein Escaping braucht. Die Zugangsdaten gelten nur für diese Anfrage und werden nie gespeichert.",
     "callerSuppliedNeedsAuth": "Der Aufrufer muss bei EDDI angemeldet sein. Eine Anfrage ohne Zugangsdaten schlägt fehl, statt unauthentifiziert hinauszugehen – auch beim Fortsetzen eines pausierten Tool-Aufrufs – und diese Verbindung wird bei der MCP- und A2A-Erkennung zurückgehalten.",
     "bindingCallerSuppliedTitle": "Wird als der jeweilige Aufrufer aufgelöst",
-    "bindingCallerSuppliedBody": "Das aufrufende System übergibt mit der Anfrage die Zugangsdaten des jeweiligen Nutzers, und EDDI speichert nichts. Der Agent kann nur tun, was dieser Nutzer im Zielsystem tun darf, und diese Verbindung wird bei der MCP- und A2A-Erkennung zurückgehalten."
+    "bindingCallerSuppliedBody": "Das aufrufende System übergibt mit der Anfrage die Zugangsdaten des jeweiligen Nutzers, und EDDI speichert nichts. Der Agent kann nur tun, was dieser Nutzer im Zielsystem tun darf, und diese Verbindung wird bei der MCP- und A2A-Erkennung zurückgehalten.",
+    "confirmAuthChange": "Ändern, wie sich diese Verbindung authentifiziert?",
+    "confirmAuthChangeDesc": "Über diese Verbindung verknüpfte Konten werden nicht mehr aufgelöst – eine Berechtigung gehört zu dem Ablauf, der sie erzeugt hat. EDDI lehnt die Änderung ab, solange noch ein Konto verknüpft ist, und nennt die Anzahl; heben Sie die Verknüpfungen zuerst auf, oder legen Sie eine neue Verbindung an und lassen Sie die Leute stattdessen diese verknüpfen.",
+    "confirmAuthChangeAccept": "Ändern"
   },
   "extensionTypes": {
     "parser": "Eingabe-Parser",
