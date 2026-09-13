@@ -4,6 +4,7 @@ import { AlertTriangle, ChevronDown, Loader2, Plug, Search } from "lucide-react"
 import { useConnectionDescriptors } from "@/hooks/use-connections";
 import { isApiError } from "@/lib/api-client";
 import { bindingLabel } from "@/lib/connection-labels";
+import { isValidConnectionName } from "@/lib/connection-name";
 import { toConnectionReference } from "@/lib/secret-reference";
 
 interface ConnectionReferenceButtonProps {
@@ -49,7 +50,11 @@ export function ConnectionReferenceButton({
   );
 
   const rows = useMemo(() => {
-    const all = (data ?? []).filter((row) => !row.unreadable);
+    // A name outside the backend's grammar (a document older than the rule)
+    // cannot be carried by a reference, so it is not offered for insertion.
+    const all = (data ?? []).filter(
+      (row) => !row.unreadable && isValidConnectionName(row.connectionName),
+    );
     const q = filter.trim().toLowerCase();
     if (!q) return all;
     return all.filter(
@@ -186,7 +191,8 @@ export function ConnectionReferenceButton({
                   role="option"
                   aria-selected={false}
                   onClick={() => {
-                    onInsert(toConnectionReference(row.connectionName));
+                    const reference = toConnectionReference(row.connectionName);
+                    if (reference) onInsert(reference);
                     close();
                   }}
                   className="flex w-full items-start gap-2 px-3 py-2 text-start text-xs text-foreground transition-colors hover:bg-secondary/50"

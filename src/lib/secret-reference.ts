@@ -34,6 +34,8 @@
  * guaranteed contract for one shared regex serving two different callers.
  */
 
+import { CONNECTION_NAME_SOURCE, isValidConnectionName } from "./connection-name";
+
 /**
  * Schemes EDDI resolves. `eddivault` is the legacy spelling of `vault`; both
  * are accepted by the backend's own pattern, so both are accepted here.
@@ -81,10 +83,17 @@ const UNBRACED = new RegExp(`^(${SCHEME_ALTERNATION}):([^}]{1,256})$`, "i");
  * Only the braced spelling exists. The backend has no unbraced `connection:x`
  * to canonicalise towards, so recognising one here would render a chip for a
  * value that never resolves.
+ *
+ * The name inside the braces follows the backend's connection-name grammar,
+ * shared with `connection-validation.ts` through `connection-name.ts`. A body
+ * of "anything but a brace, up to 256" made `${connection:bad name}` look
+ * valid — a chip, no warning — for a name no connection can ever be saved under.
  */
 export const CONNECTION_SCHEME = "connection";
 const CONNECTION_PREFIX = `\${${CONNECTION_SCHEME}:`;
-const CONNECTION_CANONICAL = new RegExp(`^\\$\\{${CONNECTION_SCHEME}:([^}]{1,256})\\}$`);
+const CONNECTION_CANONICAL = new RegExp(
+  `^\\$\\{${CONNECTION_SCHEME}:(${CONNECTION_NAME_SOURCE})\\}$`,
+);
 const CONNECTION_ANYWHERE = new RegExp(`\\$\\{${CONNECTION_SCHEME}:`);
 
 /**
@@ -113,9 +122,13 @@ export function parseConnectionReference(
   return match ? { name: match[1]! } : null;
 }
 
-/** Build a `${connection:name}` reference. */
-export function toConnectionReference(name: string): string {
-  return `${CONNECTION_PREFIX}${name}}`;
+/**
+ * Build a `${connection:name}` reference, or null when the name is not one the
+ * backend's grammar admits — so this can never produce a value
+ * {@link isConnectionReference} rejects.
+ */
+export function toConnectionReference(name: string): string | null {
+  return isValidConnectionName(name) ? `${CONNECTION_PREFIX}${name}}` : null;
 }
 
 /** Whether a `${connection:` appears anywhere in the value — the placement check. */

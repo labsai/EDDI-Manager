@@ -83,6 +83,17 @@ describe("SecretKeyPicker with a connection reference", () => {
     expect(screen.queryByTitle("This key was not found in the vault")).not.toBeInTheDocument();
   });
 
+  it("keeps a reference with a name the backend refuses as editable text, not a chip", () => {
+    renderWithProviders(
+      <SecretKeyPicker value="${connection:bad name}" onChange={onChange} connections />,
+    );
+
+    const input = screen.getByTestId("secret-key-picker-input");
+    expect(input).toHaveValue("${connection:bad name}");
+    expect(input).toHaveAttribute("type", "text");
+    expect(screen.queryByTestId("secret-key-picker-connection-chip")).not.toBeInTheDocument();
+  });
+
   it("clears the reference like any other chip", async () => {
     const user = userEvent.setup();
     renderWithProviders(<SecretKeyPicker value="${connection:jira}" onChange={onChange} />);
@@ -109,6 +120,48 @@ describe("SecretKeyPicker with a connection reference", () => {
     );
 
     expect(onChange).toHaveBeenCalledWith("${connection:amplitude}");
+  });
+
+  it("does not offer a connection whose name no reference can carry", async () => {
+    // A stored document predating the backend's name grammar. Inserting
+    // `${connection:bad name}` would put a reference in the field that resolves
+    // for nobody, so only the valid one is offered.
+    const configs: Record<string, { name: string }> = {
+      connok: { name: "jira" },
+      connbad: { name: "bad name" },
+    };
+    server.use(
+      http.get("*/connectionstore/connections/descriptors", () =>
+        HttpResponse.json(
+          Object.entries(configs).map(([id, config], i) => ({
+            resource: `eddi://ai.labs.connection/connectionstore/connections/${id}?version=1`,
+            name: config.name,
+            description: "",
+            createdOn: 1,
+            lastModifiedOn: 10 - i,
+          })),
+        ),
+      ),
+      http.get("*/connectionstore/connections/:id", ({ params }) =>
+        HttpResponse.json({
+          ...configs[params.id as string],
+          authType: "STATIC",
+          binding: "SERVICE",
+          baseUrlAllowlist: [],
+        }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<SecretKeyPicker value="" onChange={onChange} connections />);
+
+    await user.click(screen.getByTestId("secret-key-picker-connection-btn"));
+
+    expect(
+      await screen.findByTestId("secret-key-picker-connection-btn-option-jira"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("secret-key-picker-connection-btn-option-bad name"),
+    ).not.toBeInTheDocument();
   });
 
   it("explains a 403 as a role limit, not a failure, and leaves typing open", async () => {

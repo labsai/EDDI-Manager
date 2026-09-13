@@ -240,6 +240,42 @@ describe("connection references — a pointer to a document, not to a secret", (
     expect(isConnectionReference(toConnectionReference("google-drive"))).toBe(true);
   });
 
+  it("carries only a name the backend's connection-name grammar accepts", () => {
+    // `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$` — the grammar a connection is saved
+    // under. A reference naming anything else resolves for nobody, so it must
+    // not look valid here either.
+    const longest = `a${"b".repeat(63)}`;
+    for (const name of ["jira", "google-drive", "team.jira_prod", "7eleven", longest]) {
+      expect(isConnectionReference(`\${connection:${name}}`)).toBe(true);
+      expect(parseConnectionReference(`\${connection:${name}}`)).toEqual({ name });
+      expect(toConnectionReference(name)).toBe(`\${connection:${name}}`);
+    }
+    for (const name of [
+      "bad name",
+      "jira/prod",
+      "jira:prod",
+      "-jira",
+      ".jira",
+      "jira$",
+      "jíra",
+      `${longest}c`,
+      "a".repeat(256),
+      "",
+    ]) {
+      expect(isConnectionReference(`\${connection:${name}}`)).toBe(false);
+      expect(parseConnectionReference(`\${connection:${name}}`)).toBeNull();
+      expect(toConnectionReference(name)).toBeNull();
+    }
+  });
+
+  it("sends a malformed reference down the warning path, not the chip path", () => {
+    // Still recognisably a connection reference being written, so the picker
+    // keeps it as editable text and the editor's placement warning speaks up.
+    expect(hasConnectionPrefix("${connection:bad name}")).toBe(true);
+    expect(containsConnectionReference("${connection:bad name}")).toBe(true);
+    expect(wrapsConnectionReference("${connection:bad name}")).toBe(true);
+  });
+
   it("tells a bare reference from one wrapped in text — the shape the backend refuses", () => {
     expect(wrapsConnectionReference("Bearer ${connection:jira}")).toBe(true);
     expect(wrapsConnectionReference("${connection:a} ${connection:b}")).toBe(true);

@@ -17,6 +17,7 @@
  * the backend would accept, or promises one it will refuse.
  */
 
+import { CONNECTION_NAME_MAX_LENGTH, isValidConnectionName } from "./connection-name";
 import {
   interpolatedSegments,
   isSecretReference as isReference,
@@ -204,15 +205,6 @@ export function validateParamValue(value: string | null | undefined): Validation
   if (PARAM_VALUE_CREDENTIAL_SHAPED.test(candidate)) return "paramValueCredentialShaped";
   return null;
 }
-
-/**
- * The backend's name grammar: a leading letter or digit, then up to 63 of
- * letters, digits, dots, dashes and underscores. A name is what
- * `${connection:name}` carries, and a brace, a slash or a space in it produces
- * a reference that silently never resolves.
- */
-const NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
-const NAME_MAX_LENGTH = 64;
 
 /** The token-endpoint timeout's bounds, in milliseconds — the backend's. */
 export const TIMEOUT_MS_MIN = 1;
@@ -432,9 +424,9 @@ export function validateConnection(config: ValidatableConnection): ConnectionErr
   const name = config.name ?? "";
   if (!name.trim()) {
     errors.name = "nameRequired";
-  } else if (name.length > NAME_MAX_LENGTH) {
+  } else if (name.length > CONNECTION_NAME_MAX_LENGTH) {
     errors.name = "nameTooLong";
-  } else if (!NAME_PATTERN.test(name)) {
+  } else if (!isValidConnectionName(name)) {
     errors.name = "nameFormat";
   }
 
