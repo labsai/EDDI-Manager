@@ -966,11 +966,14 @@ function ExtraParamsField({
   );
 
   return (
-    <div className="space-y-2">
-      <label className="text-xs font-medium">
+    // A fieldset, not a <label> with nothing to point at: the rows below are
+    // several inputs, each with its own aria-label, so the group is named by
+    // its legend and the hint describes the whole of it.
+    <fieldset className="space-y-2" aria-describedby="connection-extra-params-hint">
+      <legend className="text-xs font-medium">
         {t("connections.extraAuthParams", "Extra authorization parameters")}
-      </label>
-      <p className="text-[11px] text-muted-foreground">
+      </legend>
+      <p id="connection-extra-params-hint" className="text-[11px] text-muted-foreground">
         {t(
           "connections.extraAuthParamsHint",
           "Non-secret protocol parameters the provider expects — prompt, audience, access_type. Never a key or a token: this map is stored in the connection document in plain text.",
@@ -1035,6 +1038,6 @@ function ExtraParamsField({
         {t("connections.addParam", "Add parameter")}
       </Button>
       <ValidationMessage code={error} />
-    </div>
+    </fieldset>
   );
 }

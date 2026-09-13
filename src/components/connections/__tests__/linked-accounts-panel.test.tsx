@@ -64,6 +64,25 @@ describe("LinkedAccountsPanel", () => {
     expect(screen.getByText("read:jira-work")).toBeInTheDocument();
   });
 
+  it("shows the token expiry as visible text, not only in a hover title", async () => {
+    // A `title` is unreachable from a keyboard and on touch; the expiry is
+    // quiet by design, but it must be readable.
+    mine([{ ...ONE_ACTIVE[0]!, expiresAt: "2026-06-01T10:00:00Z" }]);
+    renderWithProviders(<LinkedAccountsPanel />);
+
+    expect(await screen.findByTestId("linked-account-expiry-jira")).toHaveTextContent(
+      /valid until/i,
+    );
+  });
+
+  it("omits the expiry line when the provider issued no expiry", async () => {
+    mine(ONE_ACTIVE); // expiresAt: null
+    renderWithProviders(<LinkedAccountsPanel />);
+
+    await screen.findByTestId("linked-account-jira");
+    expect(screen.queryByTestId("linked-account-expiry-jira")).not.toBeInTheDocument();
+  });
+
   it("says linking is switched off rather than showing an error", async () => {
     // A 404 here means the feature is disabled — or that the backend predates
     // it, which from the user's side is the same fact.
