@@ -89,6 +89,52 @@ describe("LinkedAccountsPanel", () => {
     expect(await screen.findByTestId("error-state")).toBeInTheDocument();
   });
 
+  it("treats a 503 as an outage with a Retry, not as linking being switched off", async () => {
+    // These routes never answer 503; one that arrives is a proxy or a store
+    // that is down. The panel used to render the definitive "switched off"
+    // state for it — a sentence about configuration, with nothing to retry.
+    mine(null, 503);
+    renderWithProviders(<LinkedAccountsPanel />);
+
+    expect(await screen.findByTestId("error-state")).toBeInTheDocument();
+    expect(screen.getByTestId("error-state-retry")).toBeInTheDocument();
+    expect(screen.queryByTestId("connections-disabled")).not.toBeInTheDocument();
+  });
+
+  it("recovers from a transient failure on its own before showing the error", async () => {
+    // One retry for an outage; none for the definitive answers, which are
+    // exercised above and would only be delayed by a second attempt.
+    let calls = 0;
+    server.use(
+      http.get("*/connections/mine", () => {
+        calls += 1;
+        return calls === 1
+          ? new HttpResponse(null, { status: 503 })
+          : HttpResponse.json(ONE_ACTIVE);
+      }),
+    );
+    renderWithProviders(<LinkedAccountsPanel />);
+
+    expect(await screen.findByTestId("linked-account-jira", {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(calls).toBe(2);
+    expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+  });
+
+  it("does not retry the answers that cannot change", async () => {
+    let calls = 0;
+    server.use(
+      http.get("*/connections/mine", () => {
+        calls += 1;
+        return new HttpResponse(null, { status: 404 });
+      }),
+    );
+    renderWithProviders(<LinkedAccountsPanel />);
+
+    await screen.findByTestId("connections-disabled");
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    expect(calls).toBe(1);
+  });
+
   it("explains the empty case instead of leaving a blank panel", async () => {
     mine([]);
     renderWithProviders(<LinkedAccountsPanel />);
@@ -201,12 +247,13 @@ describe("LinkedAccountsPanel — starting a link", () => {
     // every non-English user on a screen whose body renders the same fact
     // translated.
     mine([]);
-    // 503 is the unambiguous "feature is off" answer on this route; a 404 here
-    // means the connection is gone, and carries the backend's own message.
+    // A 403 is the coded answer on this route (no verified identity); a 404
+    // here means the connection is gone and carries the backend's own message,
+    // and a 503 is an outage that passes through with its status.
     server.use(
       http.post(
         "*/connections/:name/authorize",
-        () => new HttpResponse(null, { status: 503 }),
+        () => new HttpResponse(null, { status: 403 }),
       ),
     );
     const user = userEvent.setup();
@@ -216,9 +263,7 @@ describe("LinkedAccountsPanel — starting a link", () => {
 
     // The i18n key's English default, not the api layer's hardcoded sentence.
     await waitFor(() =>
-      expect(toastSpy.error).toHaveBeenCalledWith(
-        "Account linking is switched off",
-      ),
+      expect(toastSpy.error).toHaveBeenCalledWith("Sign in to link an account"),
     );
   });
 

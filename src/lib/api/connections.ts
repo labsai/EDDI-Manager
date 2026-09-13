@@ -227,6 +227,12 @@ export class ConnectionsError extends Error {
  * would otherwise render as "not found" on a page that is very much found. The
  * same code covers a backend too old to have these routes at all, which is the
  * same fact from the user's side.
+ *
+ * A 503 is deliberately NOT converted. These routes never answer one; a 503
+ * here is a proxy or a store that is down — an outage, which passes through
+ * with its status so the panel can offer Retry. Mapping it to "linking is
+ * switched off" rendered a definitive statement about the deployment's
+ * configuration over what was a transient failure, with no way to retry.
  */
 function asConnectionsError(
   error: unknown,
@@ -234,7 +240,7 @@ function asConnectionsError(
   { notFoundMeansDisabled = true }: { notFoundMeansDisabled?: boolean } = {},
 ): never {
   if (isApiError(error)) {
-    if ((error.status === 404 && notFoundMeansDisabled) || error.status === 503) {
+    if (error.status === 404 && notFoundMeansDisabled) {
       throw new ConnectionsError(
         "Account linking is not enabled on this deployment.",
         CONNECTIONS_DISABLED,

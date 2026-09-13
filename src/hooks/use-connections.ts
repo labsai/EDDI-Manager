@@ -194,17 +194,23 @@ export function useDuplicateConnection() {
 /**
  * The calling user's linked accounts.
  *
- * `retry: false` because both of its interesting failures are final answers:
- * a 404 means the feature is off and a 403 means there is no verified
- * identity. Neither improves on a second attempt, and both are states the page
- * renders deliberately rather than errors it hides.
+ * Two of its failures are final answers and are not retried: a 404 means the
+ * feature is off and a 403 means there is no verified identity. Neither
+ * improves on a second attempt, and both are states the page renders
+ * deliberately rather than errors it hides.
+ *
+ * Everything else — a 5xx, a network failure — is an outage, and gets one
+ * retry before the panel shows its error state with a Retry button. Retrying
+ * the definitive answers would only delay them; not retrying the transient
+ * ones turned a proxy blip into a page that looked deliberately broken.
  */
 export function useMyConnections(enabled = true) {
   return useQuery({
     queryKey: MINE_KEY,
     queryFn: listMyConnections,
     enabled,
-    retry: false,
+    retry: (failureCount, error) =>
+      failureCount < 1 && !(isApiError(error) && [401, 403, 404].includes(error.status)),
   });
 }
 

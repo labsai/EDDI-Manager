@@ -260,6 +260,10 @@ export function LinkedAccountsPanel({
       );
     }
 
+    // Anything else — a 5xx, a network failure — is an outage rather than a
+    // state. These routes never answer 503 on purpose, so one is a proxy or a
+    // store that is down, and the honest rendering is an error with Retry, not
+    // a sentence claiming the feature is switched off.
     if (showFailureState) {
       return (
         <ErrorState

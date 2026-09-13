@@ -316,12 +316,21 @@ describe("the per-user routes translate their refusals into codes", () => {
     });
   });
 
-  it("treats a 503 the same way, for a deployment that answers with one", async () => {
+  it("passes a 503 through as an outage — never as the feature being off", async () => {
+    // These routes do not answer 503 on purpose (the backend switched to 404
+    // precisely because a 503 body never arrived). One that does arrive is a
+    // proxy or a store that is down, and calling that "switched off" rendered
+    // a definitive statement about the deployment over a transient failure.
     server.use(
-      http.get("*/connections/mine", () => new HttpResponse(null, { status: 503 })),
+      http.get(
+        "*/connections/mine",
+        () => new HttpResponse("upstream unavailable", { status: 503 }),
+      ),
     );
     await expect(listMyConnections()).rejects.toMatchObject({
-      code: CONNECTIONS_DISABLED,
+      code: undefined,
+      status: 503,
+      message: "upstream unavailable",
     });
   });
 
@@ -388,7 +397,7 @@ describe("authorizeConnection", () => {
     });
   });
 
-  it("still reports a 503 as the feature being unavailable", async () => {
+  it("passes a 503 through with its status, so the caller can offer a retry", async () => {
     server.use(
       http.post(
         "*/connections/:name/authorize",
@@ -396,7 +405,8 @@ describe("authorizeConnection", () => {
       ),
     );
     await expect(authorizeConnection("jira", "/x")).rejects.toMatchObject({
-      code: CONNECTIONS_DISABLED,
+      code: undefined,
+      status: 503,
     });
   });
 
