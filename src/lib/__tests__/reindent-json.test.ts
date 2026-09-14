@@ -38,6 +38,15 @@ describe("reindentJsonText", () => {
     expect(reindentJsonText('{"a": true  false, "b": "x"   "y"}')).toBe('{\n  "a": true false,\n  "b": "x" "y"\n}');
   });
 
+  it("keeps text after a closed container apart from its bracket", () => {
+    // Trailing text after a complete document is exactly what the approval
+    // warns about — it must not be printed glued onto the closing brace.
+    expect(reindentJsonText('{"a":1} true')).toBe('{\n  "a": 1\n} true');
+    expect(reindentJsonText('[1]  "x"')).toBe('[\n  1\n] "x"');
+    // No separator was written, so none is invented.
+    expect(reindentJsonText('{"a":1}true')).toBe('{\n  "a": 1\n}true');
+  });
+
   it("indents what follows a stray closer from the margin, not one level short of it", () => {
     expect(reindentJsonText('{"a":1}}{"b":2}')).toBe('{\n  "a": 1\n}\n}{\n  "b": 2\n}');
     expect(reindentJsonText("}")).toBe("}");

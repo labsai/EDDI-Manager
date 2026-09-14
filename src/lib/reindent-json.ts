@@ -75,6 +75,9 @@ export function reindentJsonText(text: string, indent = "  "): string {
       // line; the closer takes that line instead of leaving it blank.
       out = out.replace(/\n[^\S\n]*$/, "");
       punctuation((out === "" ? "" : newline()) + c);
+      // A closed container is a finished value: text after it (`{…} true`)
+      // must stay apart from it, not run into the bracket.
+      afterValue = true;
     } else if (c === ",") {
       punctuation("," + newline());
     } else if (c === ":") {
