@@ -10,7 +10,10 @@ import {
   listMyConnections,
   authorizeConnection,
   disconnectConnection,
+  getConnectionSettings,
+  updateConnectionSettings,
   type ConnectionConfiguration,
+  type ConnectionSettings,
 } from "@/lib/api/connections";
 
 const CONNECTIONS_KEY = ["connections"] as const;
@@ -227,6 +230,45 @@ export function useDisconnectConnection() {
   return useMutation({
     mutationFn: ({ name }: { name: string }) => disconnectConnection(name),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: MINE_KEY });
+    },
+  });
+}
+
+// ─── Deployment settings ────────────────────────────────────────
+
+/**
+ * The effective deployment settings.
+ *
+ * Deliberately NOT a child of `["connections"]`: every connection CRUD
+ * mutation invalidates that key, and a refetch here replaces the form's
+ * baseline — so an administrator halfway through editing the settings would
+ * lose the edit to someone else's unrelated connection save. For the same
+ * reason it does not refetch on focus.
+ */
+export const SETTINGS_KEY = ["connection-settings"] as const;
+
+export function useConnectionSettings(enabled = true) {
+  return useQuery({
+    queryKey: SETTINGS_KEY,
+    queryFn: getConnectionSettings,
+    enabled,
+    refetchOnWindowFocus: false,
+    // 403 (not an admin) and 404 (a backend older than runtime settings) are
+    // answers the panel renders by hiding itself, not failures to retry.
+    retry: (failureCount, error) =>
+      failureCount < 2 && !(isApiError(error) && [401, 403, 404].includes(error.status)),
+  });
+}
+
+export function useUpdateConnectionSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (settings: ConnectionSettings) => updateConnectionSettings(settings),
+    onSuccess: (view) => {
+      // The PUT answers with the effective view, so no refetch is needed for it.
+      queryClient.setQueryData(SETTINGS_KEY, view);
+      // Turning the feature on or off changes what /connections/mine answers.
       queryClient.invalidateQueries({ queryKey: MINE_KEY });
     },
   });

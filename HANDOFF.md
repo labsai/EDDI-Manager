@@ -443,6 +443,14 @@ enumerate a user's remote content, so a picker would need a new backend surface.
 - 112 Backend tenancy tests passing (`mvn test`)
 
 ### Last Commit Focus
+- Frontend: **runtime connection settings** (`feat/connection-settings`, pairs with labsai/EDDI#751). EDDI's four connection deployment settings — `enabled`, `publicBaseUrl`, `credentialEndpointAllowlist`, `allowPlaintextRemoteOrigins` — stopped being restart-only properties and became `GET`/`PUT /connectionstore/settings` (eddi-admin). The Connections page grew a Deployment settings panel above the linked accounts. Worth carrying forward:
+  - **A property still set on the server pins its field.** The backend answers `PINNED` with the property name, refuses a change with 409, and keeps what was stored. The panel renders a pinned field read-only with the property named, and `requestFromDraft` (`src/lib/connection-settings.ts`) sends `null` for it — restating a value is only safe while it equals the pin, and the form cannot know that it still does.
+  - **An untouched default is also sent as `null`.** Otherwise saving one change stores a copy of every default, which would then stop following the default.
+  - **The form is keyed on the server's answer, not synced by an effect.** `SettingsForm` remounts when the view changes (after a save, or another admin's change), so a refetch can never overwrite an edit mid-keystroke. Consequence: save uses `mutateAsync`, because the remount unmounts the observer a per-call `mutate` callback would have fired on.
+  - **`SETTINGS_KEY` is deliberately not a child of `["connections"]`**, which every connection CRUD mutation invalidates — a refetch there would reset the form under an administrator's hands.
+  - **Operator scope:** `tool-scopes.test.ts` asserts no `WRITE_ENDPOINTS` entry touches `/connectionstore/settings`. They decide where a client secret may be sent; an LLM must not.
+  - **OpenAPI snapshot:** the two new operations are EXEMPT in `openapi-contract.test.ts` as anticipated, not drift. Remove them when the snapshot is refreshed against an EDDI that has #751.
+
 - Frontend: the post-6.3.0 EDDI alignment above (#197-#203). Three things worth carrying forward:
   - **A passing test hid several of these bugs.** The GDPR counter typo survived because its test asserted the label and not the value; the MSW fixture had been written to match the page rather than the server. When a fixture and a client agree, neither is evidence. Fixtures here now describe what EDDI actually sends, including an export that answers 207.
   - **Dead API surface is a defect, not spare capacity.** The first cut of #197 shipped a `headerCount` helper, a `postWithResponse` method and a header accessor with no callers anywhere — the same fault the same set of PRs was fixing in `transferOwnership`. All three were cut before merge; `ApiResponse` carries the status and nothing else. Add the accessor with its consumer, not before it.

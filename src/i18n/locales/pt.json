@@ -4589,7 +4589,7 @@
     "linkStartFailed": "Não foi possível iniciar a associação.",
     "loadMineFailed": "Não foi possível carregar as suas contas associadas",
     "disabledTitle": "A associação de contas está desligada",
-    "disabledBody": "Esta instalação não guarda credenciais pessoais. Um administrador liga isso com eddi.connections.enabled=true.",
+    "disabledBody": "Esta instalação não guarda credenciais pessoais. Um administrador pode ligar isso nas configurações de Conexões.",
     "noIdentityTitle": "Entre para associar uma conta",
     "noIdentityBody": "Uma conta associada pertence a uma pessoa específica, então é preciso um login verificado. Esta instalação não pede login a ninguém.",
     "status": {
@@ -4640,7 +4640,28 @@
     "discardNewBody": "O que você preencheu até aqui será perdido. Nada foi criado ainda.",
     "confirmReconnect": "Conectar esta conta de novo?",
     "confirmReconnectDesc": "Esta conta está funcionando, então não há nada a reparar. Continuar leva você para fora do EDDI, até a página de login do provedor, e substitui o acesso que você concedeu antes.",
-    "paramDuplicate": "Outro parâmetro já usa este nome. Apenas o último é guardado."
+    "paramDuplicate": "Outro parâmetro já usa este nome. Apenas o último é guardado.",
+    "settings": {
+      "title": "Configurações da implantação",
+      "subtitle": "Alteradas aqui sem reinício — cada instância do EDDI aplica uma alteração em até cinco segundos.",
+      "enabled": "Conexões habilitadas",
+      "enabledHint": "Enquanto estiver desligado, nenhuma conexão é resolvida e ninguém pode vincular uma conta.",
+      "publicBaseUrl": "URL base pública",
+      "publicBaseUrlHint": "O endereço do próprio EDDI, como https://eddi.example.com. A URI de redirecionamento OAuth é construída a partir dele, e os provedores a comparam exatamente.",
+      "redirectUri": "URI de redirecionamento a registrar em cada provedor OAuth",
+      "allowlist": "Lista de permissão de endpoints de credenciais",
+      "allowlistHint": "Origens para as quais um segredo de cliente pode ser enviado: os endpoints de token e autorização das suas conexões OAuth. Enquanto estiver vazia, nenhuma conexão OAuth pode ser resolvida.",
+      "allowPlaintext": "Permitir origens remotas sem criptografia",
+      "allowPlaintextHint": "Permite que uma conexão envie sua credencial por http sem criptografia para outro host, atravessando a rede sem criptografia. Loopback é sempre permitido.",
+      "pinned": "Fixado por {{property}}",
+      "pinnedHint": "Definido na configuração do servidor, portanto só pode ser alterado lá.",
+      "warningsTitle": "Salvo, mas nem tudo funcionará ainda",
+      "save": "Salvar configurações",
+      "discard": "Descartar alterações",
+      "saved": "Configurações de conexão salvas",
+      "lastUpdated": "Última alteração por {{by}} · {{when}}",
+      "loadFailed": "Não foi possível carregar as configurações de conexão."
+    }
   },
   "extensionTypes": {
     "parser": "Analisador de entrada",

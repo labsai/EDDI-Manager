@@ -367,6 +367,74 @@ export async function disconnectConnection(name: string): Promise<void> {
   }
 }
 
+// ─── Deployment settings (eddi-admin) ───────────────────────────
+
+/**
+ * Where an effective setting came from.
+ *
+ * - `PINNED` — a property or environment variable sets it. The backend refuses
+ *   to change it (409), so the form renders it read-only.
+ * - `STORED` — an administrator saved it through this page.
+ * - `DEFAULT` — nothing sets it; the built-in default applies. Every default
+ *   fails closed.
+ */
+export type ConnectionSettingSource = "PINNED" | "STORED" | "DEFAULT";
+
+export interface ConnectionSetting<T> {
+  value: T;
+  source: ConnectionSettingSource;
+  /** The property that pins this setting — named whatever the source. */
+  property: string;
+}
+
+/** `GET /connectionstore/settings` — the effective values, with provenance. */
+export interface ConnectionSettingsView {
+  enabled: ConnectionSetting<boolean>;
+  publicBaseUrl: ConnectionSetting<string | null>;
+  credentialEndpointAllowlist: ConnectionSetting<string[]>;
+  allowPlaintextRemoteOrigins: ConnectionSetting<boolean>;
+  /** What to register at each OAuth provider; null while no usable base URL is set. */
+  redirectUri: string | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
+  /** Server-composed sentences for a configuration that saves but will not fully work. */
+  warnings: string[];
+}
+
+/**
+ * `PUT /connectionstore/settings` — a whole-document replace.
+ *
+ * A `null` field **unsets** the stored value. Send `null` for a pinned field:
+ * the backend keeps whatever is stored for it, whereas restating a value that
+ * differs from the pin is refused with 409.
+ */
+export interface ConnectionSettings {
+  enabled: boolean | null;
+  publicBaseUrl: string | null;
+  credentialEndpointAllowlist: string[] | null;
+  allowPlaintextRemoteOrigins: boolean | null;
+}
+
+const SETTINGS = "/connectionstore/settings";
+
+/**
+ * These used to be backend properties, so changing any of them meant a
+ * restart. They are runtime settings now; a property still set on the server
+ * pins its value and shows up here as `PINNED`.
+ *
+ * A 404 means a backend older than runtime settings — the caller hides the
+ * panel rather than rendering an error for a feature that is not there.
+ */
+export function getConnectionSettings(): Promise<ConnectionSettingsView> {
+  return api.get<ConnectionSettingsView>(SETTINGS);
+}
+
+export function updateConnectionSettings(
+  settings: ConnectionSettings,
+): Promise<ConnectionSettingsView> {
+  return api.put<ConnectionSettingsView>(SETTINGS, settings);
+}
+
 // ─── Helpers ────────────────────────────────────────────────────
 
 /**

@@ -224,7 +224,7 @@ export function LinkedAccountsPanel({
               <p className="text-sm text-muted-foreground">
                 {t(
                   "connections.disabledBody",
-                  "This deployment does not store per-user credentials. An administrator turns it on with eddi.connections.enabled=true.",
+                  "This deployment does not store per-user credentials. An administrator can turn it on in the Connections settings.",
                 )}
               </p>
             </div>

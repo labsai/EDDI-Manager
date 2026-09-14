@@ -24,6 +24,7 @@ import {
   BindingBadge,
 } from "@/components/connections/connection-badges";
 import { LinkedAccountsPanel } from "@/components/connections/linked-accounts-panel";
+import { ConnectionSettingsPanel } from "@/components/connections/connection-settings-panel";
 import {
   useConnectionDescriptors,
   useDeleteConnection,
@@ -364,6 +365,10 @@ export function ConnectionsPage() {
           )}
         </>
       )}
+
+      {/* Admin-only: a non-admin's GET answers 403 and the panel hides itself,
+          but not asking at all spares them a guaranteed refusal. */}
+      {!notAdmin && <ConnectionSettingsPanel />}
 
       <div ref={panelRef} className="border-t border-border pt-6">
         <LinkedAccountsPanel connectable={connectable} />

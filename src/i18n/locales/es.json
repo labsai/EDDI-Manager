@@ -4589,7 +4589,7 @@
     "linkStartFailed": "No se ha podido iniciar la vinculación.",
     "loadMineFailed": "No se han podido cargar sus cuentas vinculadas",
     "disabledTitle": "La vinculación de cuentas está desactivada",
-    "disabledBody": "Este despliegue no guarda credenciales personales. Un administrador lo activa con eddi.connections.enabled=true.",
+    "disabledBody": "Este despliegue no guarda credenciales personales. Un administrador puede activarlo en la configuración de Conexiones.",
     "noIdentityTitle": "Inicia sesión para vincular una cuenta",
     "noIdentityBody": "Una cuenta vinculada pertenece a una persona concreta, así que hace falta un inicio de sesión verificado. Este despliegue no pide a nadie que inicie sesión.",
     "status": {
@@ -4640,7 +4640,28 @@
     "discardNewBody": "Se perderá lo que haya rellenado hasta ahora. Todavía no se ha creado nada.",
     "confirmReconnect": "¿Volver a conectar esta cuenta?",
     "confirmReconnectDesc": "Esta cuenta funciona, así que no hay nada que reparar. Si continúa, saldrá de EDDI a la página de inicio de sesión del proveedor y se reemplazará el acceso que concedió antes.",
-    "paramDuplicate": "Otro parámetro ya usa este nombre. Solo se guarda el último."
+    "paramDuplicate": "Otro parámetro ya usa este nombre. Solo se guarda el último.",
+    "settings": {
+      "title": "Configuración del despliegue",
+      "subtitle": "Se cambia aquí sin reiniciar: cada instancia de EDDI aplica un cambio en menos de cinco segundos.",
+      "enabled": "Conexiones habilitadas",
+      "enabledHint": "Mientras esté desactivado, ninguna conexión se resuelve y nadie puede vincular una cuenta.",
+      "publicBaseUrl": "URL base pública",
+      "publicBaseUrlHint": "La dirección propia de EDDI, como https://eddi.example.com. La URI de redirección de OAuth se construye a partir de ella y los proveedores la comparan exactamente.",
+      "redirectUri": "URI de redirección que debe registrarse en cada proveedor OAuth",
+      "allowlist": "Lista de permitidos de endpoints de credenciales",
+      "allowlistHint": "Orígenes a los que se puede enviar un secreto de cliente: los endpoints de token y autorización de sus conexiones OAuth. Mientras esté vacía, ninguna conexión OAuth puede resolverse.",
+      "allowPlaintext": "Permitir orígenes remotos sin cifrar",
+      "allowPlaintextHint": "Permite que una conexión envíe su credencial por http sin cifrar a otro host, cruzando la red sin cifrado. Loopback siempre está permitido.",
+      "pinned": "Fijado por {{property}}",
+      "pinnedHint": "Definido en la configuración del servidor, por lo que solo puede cambiarse allí.",
+      "warningsTitle": "Guardado, pero todavía no todo funcionará",
+      "save": "Guardar configuración",
+      "discard": "Descartar cambios",
+      "saved": "Configuración de conexiones guardada",
+      "lastUpdated": "Último cambio de {{by}} · {{when}}",
+      "loadFailed": "No se pudo cargar la configuración de conexiones."
+    }
   },
   "extensionTypes": {
     "parser": "Analizador de entrada",

@@ -4589,7 +4589,7 @@
     "linkStartFailed": "Impossible de démarrer la liaison.",
     "loadMineFailed": "Impossible de charger vos comptes liés",
     "disabledTitle": "La liaison de comptes est désactivée",
-    "disabledBody": "Ce déploiement ne conserve pas d'identifiants personnels. Un administrateur l'active avec eddi.connections.enabled=true.",
+    "disabledBody": "Ce déploiement ne conserve pas d'identifiants personnels. Un administrateur peut l'activer dans les paramètres des connexions.",
     "noIdentityTitle": "Connectez-vous pour lier un compte",
     "noIdentityBody": "Un compte lié appartient à une personne précise : il faut donc une authentification vérifiée. Ce déploiement ne demande à personne de s'authentifier.",
     "status": {
@@ -4640,7 +4640,28 @@
     "discardNewBody": "Ce que vous avez saisi jusqu'ici sera perdu. Rien n'a encore été créé.",
     "confirmReconnect": "Reconnecter ce compte ?",
     "confirmReconnectDesc": "Ce compte fonctionne, il n'y a donc rien à réparer. Continuer vous fait quitter EDDI vers la page de connexion du fournisseur et remplace l'accès que vous aviez accordé.",
-    "paramDuplicate": "Un autre paramètre porte déjà ce nom. Seul le dernier est enregistré."
+    "paramDuplicate": "Un autre paramètre porte déjà ce nom. Seul le dernier est enregistré.",
+    "settings": {
+      "title": "Paramètres du déploiement",
+      "subtitle": "Modifiés ici sans redémarrage — chaque instance EDDI applique un changement en moins de cinq secondes.",
+      "enabled": "Connexions activées",
+      "enabledHint": "Tant que c'est désactivé, aucune connexion n'est résolue et personne ne peut lier de compte.",
+      "publicBaseUrl": "URL de base publique",
+      "publicBaseUrlHint": "L'adresse d'EDDI, par exemple https://eddi.example.com. L'URI de redirection OAuth en est dérivée, et les fournisseurs la comparent à l'identique.",
+      "redirectUri": "URI de redirection à enregistrer auprès de chaque fournisseur OAuth",
+      "allowlist": "Liste d'autorisation des points de terminaison d'identifiants",
+      "allowlistHint": "Origines auxquelles un secret client peut être envoyé : les points de terminaison de jeton et d'autorisation de vos connexions OAuth. Tant qu'elle est vide, aucune connexion OAuth ne peut être résolue.",
+      "allowPlaintext": "Autoriser les origines distantes en clair",
+      "allowPlaintextHint": "Permet à une connexion d'envoyer son identifiant en http non chiffré vers un autre hôte, où il traverse le réseau sans chiffrement. Le loopback est toujours autorisé.",
+      "pinned": "Fixé par {{property}}",
+      "pinnedHint": "Défini dans la configuration du serveur, et modifiable uniquement là.",
+      "warningsTitle": "Enregistré, mais tout ne fonctionnera pas encore",
+      "save": "Enregistrer les paramètres",
+      "discard": "Annuler les modifications",
+      "saved": "Paramètres de connexion enregistrés",
+      "lastUpdated": "Dernière modification par {{by}} · {{when}}",
+      "loadFailed": "Impossible de charger les paramètres de connexion."
+    }
   },
   "extensionTypes": {
     "parser": "Analyseur d’entrée",

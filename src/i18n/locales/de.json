@@ -4549,7 +4549,7 @@
     "linkStartFailed": "Die Verknüpfung konnte nicht gestartet werden.",
     "loadMineFailed": "Ihre verknüpften Konten konnten nicht geladen werden",
     "disabledTitle": "Kontoverknüpfung ist deaktiviert",
-    "disabledBody": "Diese Installation speichert keine personenbezogenen Zugangsdaten. Eine Administratorin oder ein Administrator aktiviert das mit eddi.connections.enabled=true.",
+    "disabledBody": "Diese Installation speichert keine personenbezogenen Zugangsdaten. Eine Administratorin oder ein Administrator kann das in den Verbindungseinstellungen aktivieren.",
     "noIdentityTitle": "Zum Verknüpfen bitte anmelden",
     "noIdentityBody": "Ein verknüpftes Konto gehört zu einer bestimmten Person und braucht daher eine geprüfte Anmeldung. Diese Installation verlangt von niemandem eine Anmeldung.",
     "status": {
@@ -4600,7 +4600,28 @@
     "discardNewBody": "Was Sie bisher eingetragen haben, geht verloren. Es wurde noch nichts angelegt.",
     "confirmReconnect": "Dieses Konto erneut verknüpfen?",
     "confirmReconnectDesc": "Dieses Konto funktioniert, es gibt also nichts zu reparieren. Wenn Sie fortfahren, verlassen Sie EDDI und gelangen zur Anmeldeseite des Anbieters; der zuvor erteilte Zugriff wird ersetzt.",
-    "paramDuplicate": "Ein anderer Parameter verwendet diesen Namen bereits. Nur der letzte wird gespeichert."
+    "paramDuplicate": "Ein anderer Parameter verwendet diesen Namen bereits. Nur der letzte wird gespeichert.",
+    "settings": {
+      "title": "Bereitstellungseinstellungen",
+      "subtitle": "Hier ohne Neustart geändert — jede EDDI-Instanz übernimmt eine Änderung innerhalb von fünf Sekunden.",
+      "enabled": "Verbindungen aktiviert",
+      "enabledHint": "Solange ausgeschaltet, wird keine Verbindung aufgelöst und niemand kann ein Konto verknüpfen.",
+      "publicBaseUrl": "Öffentliche Basis-URL",
+      "publicBaseUrlHint": "Die eigene Adresse von EDDI, etwa https://eddi.example.com. Daraus wird die OAuth-Redirect-URI gebildet, und Anbieter vergleichen sie exakt.",
+      "redirectUri": "Bei jedem OAuth-Anbieter zu registrierende Redirect-URI",
+      "allowlist": "Allowlist für Credential-Endpunkte",
+      "allowlistHint": "Origins, an die ein Client-Secret gesendet werden darf: die Token- und Autorisierungsendpunkte Ihrer OAuth-Verbindungen. Solange sie leer ist, kann keine OAuth-Verbindung aufgelöst werden.",
+      "allowPlaintext": "Unverschlüsselte entfernte Origins erlauben",
+      "allowPlaintextHint": "Erlaubt einer Verbindung, ihre Anmeldedaten per unverschlüsseltem http an einen anderen Host zu senden, wobei sie unverschlüsselt durchs Netz gehen. Loopback ist immer erlaubt.",
+      "pinned": "Festgelegt durch {{property}}",
+      "pinnedHint": "In der Serverkonfiguration gesetzt und daher nur dort änderbar.",
+      "warningsTitle": "Gespeichert, aber noch funktioniert nicht alles",
+      "save": "Einstellungen speichern",
+      "discard": "Änderungen verwerfen",
+      "saved": "Verbindungseinstellungen gespeichert",
+      "lastUpdated": "Zuletzt geändert von {{by}} · {{when}}",
+      "loadFailed": "Die Verbindungseinstellungen konnten nicht geladen werden."
+    }
   },
   "extensionTypes": {
     "parser": "Eingabe-Parser",

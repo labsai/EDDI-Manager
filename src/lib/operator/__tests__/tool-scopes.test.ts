@@ -246,6 +246,17 @@ describe("tool-scopes", () => {
       expect(WRITE_ENDPOINTS).not.toContain(excluded);
     });
 
+    it("never writes the connection settings, whatever else is added", () => {
+      // They decide where a client secret may be sent and whether a credential
+      // may cross the network in the clear. EDDI made them runtime settings so an
+      // administrator could change them without a restart — not so an LLM could.
+      // Matched on the path rather than one method, so a PATCH or POST variant
+      // added later is caught as well.
+      expect(
+        WRITE_ENDPOINTS.filter((entry) => entry.includes("/connectionstore/settings")),
+      ).toEqual([]);
+    });
+
     it("is offered now that WRITE_ENDPOINTS is populated", () => {
       // The seam no longer gates on a previously verified gate or auth mode —
       // activation itself proves the gate about the agent it actually creates

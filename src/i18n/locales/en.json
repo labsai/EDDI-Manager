@@ -4549,7 +4549,7 @@
     "linkStartFailed": "Could not start linking.",
     "loadMineFailed": "Could not load your linked accounts",
     "disabledTitle": "Account linking is switched off",
-    "disabledBody": "This deployment does not store per-user credentials. An administrator turns it on with eddi.connections.enabled=true.",
+    "disabledBody": "This deployment does not store per-user credentials. An administrator can turn it on in the Connections settings.",
     "noIdentityTitle": "Sign in to link an account",
     "noIdentityBody": "A linked account belongs to a specific person, so it needs a verified sign-in. This deployment is not asking anyone to sign in.",
     "status": {
@@ -4600,7 +4600,28 @@
     "discardNewBody": "What you have filled in so far will be lost. Nothing has been created yet.",
     "confirmReconnect": "Connect this account again?",
     "confirmReconnectDesc": "This account is working, so there is nothing to repair. Continuing takes you out of EDDI to the provider's sign-in page and replaces the access you granted before.",
-    "paramDuplicate": "Another parameter already uses this name. Only the last one is saved."
+    "paramDuplicate": "Another parameter already uses this name. Only the last one is saved.",
+    "settings": {
+      "title": "Deployment settings",
+      "subtitle": "Changed here without a restart — every EDDI instance picks up a change within five seconds.",
+      "enabled": "Connections enabled",
+      "enabledHint": "While off, no connection resolves and nobody can link an account.",
+      "publicBaseUrl": "Public base URL",
+      "publicBaseUrlHint": "EDDI's own address, such as https://eddi.example.com. The OAuth redirect URI is built from it, and providers match that exactly.",
+      "redirectUri": "Redirect URI to register at each OAuth provider",
+      "allowlist": "Credential endpoint allowlist",
+      "allowlistHint": "Origins a client secret may be sent to: the token and authorization endpoints of your OAuth connections. While empty, no OAuth connection can resolve.",
+      "allowPlaintext": "Allow plaintext remote origins",
+      "allowPlaintextHint": "Lets a connection send its credential over plain http to a host other than this one, where it crosses the network unencrypted. Loopback is always allowed.",
+      "pinned": "Pinned by {{property}}",
+      "pinnedHint": "Set in the server's configuration, so it can only be changed there.",
+      "warningsTitle": "Saved, but not everything will work yet",
+      "save": "Save settings",
+      "discard": "Discard changes",
+      "saved": "Connection settings saved",
+      "lastUpdated": "Last changed by {{by}} · {{when}}",
+      "loadFailed": "The connection settings could not be loaded."
+    }
   },
   "extensionTypes": {
     "parser": "Input Parser",

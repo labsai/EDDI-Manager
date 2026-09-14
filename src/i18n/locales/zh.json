@@ -4549,7 +4549,7 @@
     "linkStartFailed": "无法开始关联。",
     "loadMineFailed": "无法加载你的已关联账户",
     "disabledTitle": "账户关联已关闭",
-    "disabledBody": "本部署不保存个人凭据。管理员可通过 eddi.connections.enabled=true 开启。",
+    "disabledBody": "本部署不保存个人凭据。管理员可在“连接”设置中开启。",
     "noIdentityTitle": "登录后即可关联账户",
     "noIdentityBody": "已关联账户属于具体的某个人，因此需要经过验证的登录。本部署并未要求任何人登录。",
     "status": {
@@ -4600,7 +4600,28 @@
     "discardNewBody": "你目前填写的内容将会丢失。目前尚未创建任何内容。",
     "confirmReconnect": "重新关联此账户？",
     "confirmReconnectDesc": "该账户运行正常，无需修复。继续将带你离开 EDDI 前往服务商的登录页面，并替换你此前授予的访问权限。",
-    "paramDuplicate": "已有另一个参数使用此名称。只会保存最后一个。"
+    "paramDuplicate": "已有另一个参数使用此名称。只会保存最后一个。",
+    "settings": {
+      "title": "部署设置",
+      "subtitle": "在此修改无需重启——每个 EDDI 实例会在五秒内应用更改。",
+      "enabled": "启用连接",
+      "enabledHint": "关闭时，任何连接都不会解析，也无人能关联账户。",
+      "publicBaseUrl": "公共基础 URL",
+      "publicBaseUrlHint": "EDDI 自身的地址，例如 https://eddi.example.com。OAuth 重定向 URI 由它生成，提供方会进行精确匹配。",
+      "redirectUri": "需在每个 OAuth 提供方处注册的重定向 URI",
+      "allowlist": "凭据端点允许列表",
+      "allowlistHint": "客户端密钥可以发送到的源：您的 OAuth 连接的令牌端点和授权端点。列表为空时，任何 OAuth 连接都无法解析。",
+      "allowPlaintext": "允许明文远程源",
+      "allowPlaintextHint": "允许连接通过未加密的 http 将凭据发送到其他主机，凭据会以明文穿越网络。回环地址始终允许。",
+      "pinned": "由 {{property}} 固定",
+      "pinnedHint": "已在服务器配置中设置，只能在那里更改。",
+      "warningsTitle": "已保存，但部分功能尚无法工作",
+      "save": "保存设置",
+      "discard": "放弃更改",
+      "saved": "连接设置已保存",
+      "lastUpdated": "最后由 {{by}} 修改 · {{when}}",
+      "loadFailed": "无法加载连接设置。"
+    }
   },
   "extensionTypes": {
     "parser": "输入解析器",

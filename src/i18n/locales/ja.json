@@ -4549,7 +4549,7 @@
     "linkStartFailed": "連携を開始できませんでした。",
     "loadMineFailed": "連携アカウントを読み込めませんでした",
     "disabledTitle": "アカウント連携は無効です",
-    "disabledBody": "この環境では個人ごとの資格情報を保存しません。管理者が eddi.connections.enabled=true で有効にできます。",
+    "disabledBody": "この環境では個人ごとの資格情報を保存しません。管理者が「接続」の設定で有効にできます。",
     "noIdentityTitle": "連携するにはログインしてください",
     "noIdentityBody": "連携アカウントは特定の個人に属するため、検証されたログインが必要です。この環境では誰にもログインを求めていません。",
     "status": {
@@ -4600,7 +4600,28 @@
     "discardNewBody": "ここまで入力した内容は失われます。まだ何も作成されていません。",
     "confirmReconnect": "このアカウントを連携し直しますか？",
     "confirmReconnectDesc": "このアカウントは正常に動作しているため、直すものはありません。続けると EDDI を離れてプロバイダーのサインイン画面に移動し、以前許可したアクセスが置き換わります。",
-    "paramDuplicate": "この名前は別のパラメーターがすでに使用しています。保存されるのは最後の 1 つだけです。"
+    "paramDuplicate": "この名前は別のパラメーターがすでに使用しています。保存されるのは最後の 1 つだけです。",
+    "settings": {
+      "title": "デプロイ設定",
+      "subtitle": "ここで再起動なしに変更できます。すべての EDDI インスタンスが 5 秒以内に変更を反映します。",
+      "enabled": "接続を有効にする",
+      "enabledHint": "オフの間は接続が解決されず、誰もアカウントを連携できません。",
+      "publicBaseUrl": "公開ベース URL",
+      "publicBaseUrlHint": "EDDI 自身のアドレス（例: https://eddi.example.com）。OAuth のリダイレクト URI はここから作られ、プロバイダーは完全一致で照合します。",
+      "redirectUri": "各 OAuth プロバイダーに登録するリダイレクト URI",
+      "allowlist": "認証情報エンドポイントの許可リスト",
+      "allowlistHint": "クライアントシークレットの送信先として許可するオリジン: OAuth 接続のトークンエンドポイントと認可エンドポイントです。空の間はどの OAuth 接続も解決できません。",
+      "allowPlaintext": "平文のリモートオリジンを許可",
+      "allowPlaintextHint": "接続が認証情報を暗号化されていない http で別のホストへ送ることを許可します。認証情報は暗号化されずにネットワークを通ります。ループバックは常に許可されます。",
+      "pinned": "{{property}} で固定",
+      "pinnedHint": "サーバーの設定で指定されているため、そこでのみ変更できます。",
+      "warningsTitle": "保存しましたが、まだすべては動作しません",
+      "save": "設定を保存",
+      "discard": "変更を破棄",
+      "saved": "接続設定を保存しました",
+      "lastUpdated": "最終変更: {{by}} · {{when}}",
+      "loadFailed": "接続設定を読み込めませんでした。"
+    }
   },
   "extensionTypes": {
     "parser": "入力パーサー",

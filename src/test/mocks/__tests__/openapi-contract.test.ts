@@ -72,6 +72,12 @@ const EXEMPT: Record<string, string> = {
   "POST */snippetstore/snippets/:id":
     "DRIFT, tracked: the backend exposes put/get/delete on {id} for snippets, not post. parserstore does have post, which is probably where this was copied from.",
 
+  "GET */connectionstore/settings":
+    "Anticipated, not drift: runtime connection settings land in EDDI with labsai/EDDI#751, after the 6.3.0 snapshot was taken. Remove this entry when the snapshot is refreshed against a backend that has them.",
+
+  "PUT */connectionstore/settings":
+    "Anticipated, not drift: see GET */connectionstore/settings.",
+
   "POST */secretstore/secrets/:tenantId/:keyName/rotate":
     "Anticipated absence, not drift: secrets.ts falls back to a plain PUT on 404/405, and says so. Worth knowing that the mock answering 200 means the fallback — the live path against a 6.3.0 backend — is never exercised by a test.",
 

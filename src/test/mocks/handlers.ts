@@ -5787,6 +5787,67 @@ export const connectionHandlers = [
     });
   }),
 
+  // Deployment settings. Stateless on purpose: GET answers a configured
+  // deployment, PUT answers as if every field it was sent had been stored. A test
+  // that needs a pinned field or a warning overrides these with server.use().
+  http.get("*/connectionstore/settings", () =>
+    HttpResponse.json({
+      enabled: { value: true, source: "STORED", property: "eddi.connections.enabled" },
+      publicBaseUrl: {
+        value: "https://eddi.example.com",
+        source: "STORED",
+        property: "eddi.connections.public-base-url",
+      },
+      credentialEndpointAllowlist: {
+        value: ["https://auth.atlassian.com"],
+        source: "STORED",
+        property: "eddi.connections.credential-endpoint-allowlist",
+      },
+      allowPlaintextRemoteOrigins: {
+        value: false,
+        source: "DEFAULT",
+        property: "eddi.connections.allow-plaintext-remote-origins",
+      },
+      redirectUri: "https://eddi.example.com/connections/callback",
+      updatedAt: "2026-09-14T10:00:00Z",
+      updatedBy: "admin",
+      warnings: [],
+    }),
+  ),
+
+  http.put("*/connectionstore/settings", async ({ request }) => {
+    const body = (await request.json()) as {
+      enabled: boolean | null;
+      publicBaseUrl: string | null;
+      credentialEndpointAllowlist: string[] | null;
+      allowPlaintextRemoteOrigins: boolean | null;
+    };
+    const setting = <T,>(value: T | null, fallback: T, property: string) => ({
+      value: value ?? fallback,
+      source: value === null ? "DEFAULT" : "STORED",
+      property,
+    });
+    const base = body.publicBaseUrl?.replace(/\/$/, "") ?? null;
+    return HttpResponse.json({
+      enabled: setting(body.enabled, false, "eddi.connections.enabled"),
+      publicBaseUrl: setting(body.publicBaseUrl, null, "eddi.connections.public-base-url"),
+      credentialEndpointAllowlist: setting(
+        body.credentialEndpointAllowlist,
+        [],
+        "eddi.connections.credential-endpoint-allowlist",
+      ),
+      allowPlaintextRemoteOrigins: setting(
+        body.allowPlaintextRemoteOrigins,
+        false,
+        "eddi.connections.allow-plaintext-remote-origins",
+      ),
+      redirectUri: base ? `${base}/connections/callback` : null,
+      updatedAt: new Date().toISOString(),
+      updatedBy: "admin",
+      warnings: [],
+    });
+  }),
+
   http.post("*/connectionstore/connections/:id", ({ params }) => {
     return new HttpResponse(null, {
       status: 201,
