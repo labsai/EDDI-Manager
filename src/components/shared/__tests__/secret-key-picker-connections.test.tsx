@@ -208,15 +208,10 @@ describe("SecretKeyPicker with a connection reference", () => {
     server.use(
       http.get("*/connectionstore/connections/descriptors", () => {
         listed += 1;
-        return listed === 1
-          ? new HttpResponse(null, { status: 400 })
-          : HttpResponse.json([
-              {
-                resource: "eddi://ai.labs.connection/connectionstore/connections/aaaaaaaaaaaaaaaaaaaaaaaa?version=1",
-                name: "jira",
-                description: "",
-              },
-            ]);
+        // Fail once; returning nothing afterwards falls through to the default
+        // handler, which serves the real mock connections, "jira" among them.
+        if (listed === 1) return new HttpResponse(null, { status: 400 });
+        return undefined;
       }),
     );
     const user = userEvent.setup();
@@ -230,10 +225,17 @@ describe("SecretKeyPicker with a connection reference", () => {
 
     await user.click(screen.getByTestId("secret-key-picker-connection-btn-retry"));
 
-    await waitFor(() => expect(listed).toBe(2));
+    // A second request reaching the mock is not the list on screen: wait for the
+    // failed state to go and the refetched option to render.
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("secret-key-picker-connection-btn-failed"),
+      ).not.toBeInTheDocument(),
+    );
     expect(
-      screen.queryByTestId("secret-key-picker-connection-btn-failed"),
-    ).not.toBeInTheDocument();
+      await screen.findByTestId("secret-key-picker-connection-btn-option-jira"),
+    ).toBeInTheDocument();
+    expect(listed).toBe(2);
   });
 
   it("does not fetch the list until the popup opens", async () => {
