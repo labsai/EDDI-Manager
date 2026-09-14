@@ -320,7 +320,7 @@ function McpRetryEditor({
 
   return (
     <div
-      className="rounded-lg border border-border/60 bg-card/50 p-2.5 space-y-2"
+      className="rounded-lg border border-border/60 bg-card/50 p-3 space-y-2"
       data-testid="mcp-retry-editor"
     >
       <div className="grid grid-cols-2 gap-2">

@@ -1078,7 +1078,7 @@ function TaskEditor({
 
                     {/* Strict mode info */}
                     {task.counterweight?.level === "strict" && (
-                      <div className="flex items-start gap-2 rounded-md border border-amber-400/30 bg-amber-50 p-2.5 dark:bg-amber-900/15 dark:border-amber-700/30">
+                      <div className="flex items-start gap-2 rounded-md border border-amber-400/30 bg-amber-50 p-3 dark:bg-amber-900/15 dark:border-amber-700/30">
                         <Info className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
                         <p className="text-[10px] text-amber-800 dark:text-amber-300 leading-relaxed">
                           {t(
@@ -1223,7 +1223,7 @@ function TaskEditor({
                   <div className="space-y-2 ps-5">
                     {/* Validation warning: enabled but no rules */}
                     {(task.identityMasking?.rules ?? []).filter(r => r.trim()).length === 0 && (
-                      <div className="flex items-start gap-2 rounded-md border border-amber-400/30 bg-amber-50 p-2 dark:bg-amber-900/15 dark:border-amber-700/30">
+                      <div className="flex items-start gap-2 rounded-md border border-amber-400/30 bg-amber-50 p-3 dark:bg-amber-900/15 dark:border-amber-700/30">
                         <Info className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
                         <p className="text-[10px] text-amber-800 dark:text-amber-300">
                           {t(

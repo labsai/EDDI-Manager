@@ -257,137 +257,139 @@ export function CreateConnectionDialog({
         testId="create-connection-dialog"
         maxWidth="max-w-xl"
       >
-        <StepDots total={STEPS.length} current={stepIndex} />
+        <div className="p-5">
+          <StepDots total={STEPS.length} current={stepIndex} />
 
-        <div className="min-h-[18rem] space-y-4">
-          {step === "basics" && (
-            <>
-              <div className="space-y-1.5">
-                <label
-                  className="text-sm font-medium text-foreground"
-                  htmlFor="create-connection-name"
-                >
-                  {t("connections.name", "Name")}
-                </label>
-                <Input
-                  id="create-connection-name"
-                  data-testid="create-connection-name"
-                  value={draft.name}
-                  // Functional, like every other update here: a non-functional spread
-                  // captures the draft from its render, so two changes landing in one
-                  // batch (a type click and a keystroke) lose the first.
-                  onChange={(e) =>
-                    setDraft((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  placeholder="jira"
-                  autoComplete="off"
-                  aria-invalid={(touched && errors.name !== undefined) || undefined}
-                  aria-describedby="create-connection-name-error"
+          <div className="min-h-[18rem] space-y-4">
+            {step === "basics" && (
+              <>
+                <div className="space-y-1.5">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="create-connection-name"
+                  >
+                    {t("connections.name", "Name")}
+                  </label>
+                  <Input
+                    id="create-connection-name"
+                    data-testid="create-connection-name"
+                    value={draft.name}
+                    // Functional, like every other update here: a non-functional spread
+                    // captures the draft from its render, so two changes landing in one
+                    // batch (a type click and a keystroke) lose the first.
+                    onChange={(e) =>
+                      setDraft((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                    placeholder="jira"
+                    autoComplete="off"
+                    aria-invalid={(touched && errors.name !== undefined) || undefined}
+                    aria-describedby="create-connection-name-error"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "connections.nameHint",
+                      "Agents refer to this connection by name — ${connection:jira}. It cannot be changed later.",
+                    )}
+                  </p>
+                  {touched && (
+                    <ValidationMessage
+                      code={errors.name}
+                      id="create-connection-name-error"
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="create-connection-description"
+                  >
+                    {t("connections.description", "Description")}
+                  </label>
+                  <Input
+                    id="create-connection-description"
+                    data-testid="create-connection-description"
+                    value={draft.description ?? ""}
+                    onChange={(e) =>
+                      setDraft((prev) => ({ ...prev, description: e.target.value }))
+                    }
+                    placeholder={t(
+                      "connections.descriptionPlaceholder",
+                      "What this connects to, for whoever reads the list",
+                    )}
+                  />
+                </div>
+
+                <AuthTypeChooser
+                  value={draft.authType}
+                  onChange={changeAuthType}
                 />
+              </>
+            )}
+
+            {step === "credentials" && (
+              <ConnectionCredentialFields
+                draft={draft}
+                onPatchStatic={patchStatic}
+                onPatchOAuth={patchOAuth}
+                onBindingChange={changeBinding}
+                errors={touched ? errors : {}}
+                idPrefix="create-connection"
+              />
+            )}
+
+            {step === "origins" && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  {t("connections.allowedOrigins", "Where the credential may be sent")}
+                </label>
                 <p className="text-xs text-muted-foreground">
                   {t(
-                    "connections.nameHint",
-                    "Agents refer to this connection by name — ${connection:jira}. It cannot be changed later.",
+                    "connections.allowedOriginsHint",
+                    "List every origin this credential is allowed to reach. Anything not listed is refused, so a later config edit cannot redirect it somewhere else.",
                   )}
                 </p>
-                {touched && (
-                  <ValidationMessage
-                    code={errors.name}
-                    id="create-connection-name-error"
-                  />
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label
-                  className="text-sm font-medium text-foreground"
-                  htmlFor="create-connection-description"
-                >
-                  {t("connections.description", "Description")}
-                </label>
-                <Input
-                  id="create-connection-description"
-                  data-testid="create-connection-description"
-                  value={draft.description ?? ""}
-                  onChange={(e) =>
-                    setDraft((prev) => ({ ...prev, description: e.target.value }))
+                <OriginAllowlistField
+                  value={draft.baseUrlAllowlist}
+                  onChange={(baseUrlAllowlist) =>
+                    setDraft((prev) => ({ ...prev, baseUrlAllowlist }))
                   }
-                  placeholder={t(
-                    "connections.descriptionPlaceholder",
-                    "What this connects to, for whoever reads the list",
-                  )}
+                  pending={pendingOrigin}
+                  onPendingChange={setPendingOrigin}
+                  error={touched ? errors.baseUrlAllowlist : undefined}
+                  testId="create-connection-origins"
                 />
               </div>
+            )}
+          </div>
 
-              <AuthTypeChooser
-                value={draft.authType}
-                onChange={changeAuthType}
-              />
-            </>
-          )}
-
-          {step === "credentials" && (
-            <ConnectionCredentialFields
-              draft={draft}
-              onPatchStatic={patchStatic}
-              onPatchOAuth={patchOAuth}
-              onBindingChange={changeBinding}
-              errors={touched ? errors : {}}
-              idPrefix="create-connection"
-            />
-          )}
-
-          {step === "origins" && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                {t("connections.allowedOrigins", "Where the credential may be sent")}
-              </label>
-              <p className="text-xs text-muted-foreground">
-                {t(
-                  "connections.allowedOriginsHint",
-                  "List every origin this credential is allowed to reach. Anything not listed is refused, so a later config edit cannot redirect it somewhere else.",
-                )}
-              </p>
-              <OriginAllowlistField
-                value={draft.baseUrlAllowlist}
-                onChange={(baseUrlAllowlist) =>
-                  setDraft((prev) => ({ ...prev, baseUrlAllowlist }))
-                }
-                pending={pendingOrigin}
-                onPendingChange={setPendingOrigin}
-                error={touched ? errors.baseUrlAllowlist : undefined}
-                testId="create-connection-origins"
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="mt-6 flex justify-between">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={isFirst}
-            className={isFirst ? "invisible" : ""}
-          >
-            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-            {t("common.back", "Back")}
-          </Button>
-          {isLast ? (
+          <div className="mt-6 flex justify-between">
             <Button
-              onClick={() => void handleCreate()}
-              disabled={createMutation.isPending}
-              data-testid="create-connection-submit"
+              variant="outline"
+              onClick={handleBack}
+              disabled={isFirst}
+              className={isFirst ? "invisible" : ""}
             >
-              {createMutation.isPending
-                ? t("common.saving", "Saving…")
-                : t("connections.createSubmit", "Create connection")}
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              {t("common.back", "Back")}
             </Button>
-          ) : (
-            <Button onClick={handleNext} data-testid="create-connection-next">
-              {t("common.next", "Next")}
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          )}
+            {isLast ? (
+              <Button
+                onClick={() => void handleCreate()}
+                disabled={createMutation.isPending}
+                data-testid="create-connection-submit"
+              >
+                {createMutation.isPending
+                  ? t("common.saving", "Saving…")
+                  : t("connections.createSubmit", "Create connection")}
+              </Button>
+            ) : (
+              <Button onClick={handleNext} data-testid="create-connection-next">
+                {t("common.next", "Next")}
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            )}
+          </div>
         </div>
       </AccessibleDialog>
 

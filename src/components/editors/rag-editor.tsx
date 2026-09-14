@@ -889,7 +889,7 @@ export function RagEditor({ data, onChange, readOnly, resourceId, version = 1 }:
           </div>
 
           {/* Visual chunk preview */}
-          <div className="rounded-md border border-dashed border-muted-foreground/20 p-2.5">
+          <div className="rounded-md border border-dashed border-muted-foreground/20 p-3">
             <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">
               {t("ragEditor.chunkPreview", "Preview (how a document gets split)")}
             </p>

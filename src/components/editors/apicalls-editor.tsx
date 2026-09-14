@@ -439,7 +439,7 @@ function PropertyInstructionRow({
   );
 
   return (
-    <div className="rounded-lg border border-border/60 bg-card/50 p-2.5 space-y-2" data-testid="property-instruction-row">
+    <div className="rounded-lg border border-border/60 bg-card/50 p-3 space-y-2" data-testid="property-instruction-row">
       <div className="flex items-center gap-1.5">
         <input
           type="text"
@@ -628,7 +628,7 @@ function OutputBuildInstructionRow({
   const { t } = useTranslation();
 
   return (
-    <div className="rounded-lg border border-border/60 bg-card/50 p-2.5 space-y-2" data-testid="output-build-instruction-row">
+    <div className="rounded-lg border border-border/60 bg-card/50 p-3 space-y-2" data-testid="output-build-instruction-row">
       <div className="flex items-center gap-1.5">
         <div className="flex-1 grid grid-cols-3 gap-1.5">
           <div>
@@ -783,7 +783,7 @@ function QrBuildInstructionRow({
   const { t } = useTranslation();
 
   return (
-    <div className="rounded-lg border border-border/60 bg-card/50 p-2.5 space-y-2" data-testid="qr-build-instruction-row">
+    <div className="rounded-lg border border-border/60 bg-card/50 p-3 space-y-2" data-testid="qr-build-instruction-row">
       <div className="flex items-center gap-1.5">
         <div className="flex-1 grid grid-cols-3 gap-1.5">
           <div>
@@ -972,7 +972,7 @@ export function RetryApiCallEditor({
 
   return (
     <div
-      className="rounded-lg border border-border/60 bg-card/50 p-2.5 space-y-2.5"
+      className="rounded-lg border border-border/60 bg-card/50 p-3 space-y-2.5"
       data-testid="retry-apicall-editor"
     >
       <div className="grid grid-cols-2 gap-2">
@@ -1042,7 +1042,7 @@ export function RetryApiCallEditor({
         {matchers.map((m, i) => (
           <div
             key={i}
-            className="rounded-md border border-border/50 bg-background p-2 space-y-1.5"
+            className="rounded-md border border-border/50 bg-background p-3 space-y-1.5"
             data-testid="retry-matcher-row"
           >
             <div className="flex items-center gap-1.5">
