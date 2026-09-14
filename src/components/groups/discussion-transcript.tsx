@@ -11,7 +11,8 @@ import { AgentResponseCard } from "./agent-response-card";
 import { TaskBoard, PersistedTaskBoard } from "./task-board";
 import { DecisionRecordCard } from "./decision-record-card";
 import { hasDisplayableDecision } from "@/lib/group-config";
-import { parseTranscriptContent, safeFormatDate } from "./group-utils";
+import { isAgentFailurePlaceholder, parseTranscriptContent, safeFormatDate } from "./group-utils";
+import { AgentFailedNotice } from "./structured-entry-body";
 import type { GroupConversation, TranscriptEntry, PhaseType, TranscriptEntryType, DiscussionStyle, TaskDefinition } from "@/lib/api/groups";
 import type { HitlVerdict } from "@/lib/api/hitl";
 import type { GroupStreamState } from "@/hooks/use-group-discussion-stream";
@@ -281,6 +282,7 @@ export function DiscussionTranscript({
   // A live stream learns the decision from `decision_reached`; a reloaded
   // conversation carries it on the document.
   const effectiveDecision = isStreaming ? streamState!.decision : conversation?.decision;
+  const [questionExpanded, setQuestionExpanded] = useState(false);
   // S3 fix: memoize question extraction to avoid scanning transcript on every render
   const effectiveQuestion = useMemo(
     () => isStreaming
@@ -288,6 +290,8 @@ export function DiscussionTranscript({
       : (conversation?.originalQuestion ?? ""),
     [isStreaming, effectiveTranscript, conversation?.originalQuestion]
   );
+  // Roughly four lines of the header's width; a short question never gets a toggle.
+  const questionIsLong = effectiveQuestion.length > 280;
   // C6 fix: use stable startedAt from stream state instead of new Date() per render
   const effectiveCreated = isStreaming
     ? (streamState!.startedAt ?? new Date().toISOString())
@@ -458,16 +462,47 @@ export function DiscussionTranscript({
                 {safeFormatDate(effectiveCreated, "full")}
               </span>
             </div>
-            <p className="text-base font-medium text-foreground">
+            {/* Clamped when long: this header is pinned above the transcript, and
+                a teaching case's full brief took 70% of a tablet's height —
+                leaving the discussion itself a sliver to scroll in. */}
+            <p
+              className={cn(
+                "text-sm sm:text-base font-medium text-foreground whitespace-pre-line",
+                questionIsLong && !questionExpanded && "line-clamp-4",
+              )}
+              data-testid="discussion-question"
+            >
               {effectiveQuestion}
             </p>
+            {questionIsLong && (
+              <button
+                type="button"
+                onClick={() => setQuestionExpanded((v) => !v)}
+                className="mt-1 flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/80"
+                data-testid="discussion-question-toggle"
+              >
+                {questionExpanded ? (
+                  <>
+                    <ChevronUp className="h-3 w-3" />
+                    {t("common.showLess", "Show less")}
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-3 w-3" />
+                    {t("common.showMore", "Show more")}
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Phase flow indicator — shows the style's phases as breadcrumb with progress */}
       {style !== "CUSTOM" && flowSteps.length > 0 && (
-        <div className={cn("flex items-center gap-1 px-4 py-1.5 border-b border-border shrink-0", theme.flowBg)}>
+        // Wraps: a five-step flow (NEGOTIATION) ran past a phone's edge inside an
+        // overflow-hidden column, so the last steps were clipped out of reach.
+        <div className={cn("flex flex-wrap items-center gap-x-1 gap-y-0.5 px-4 py-1.5 border-b border-border shrink-0", theme.flowBg)}>
           {flowSteps.map((step, idx) => {
             const isActive = effectiveCurrentPhase?.toLowerCase().includes(step.toLowerCase());
             const isCompleted = effectiveState === "COMPLETED"
@@ -559,6 +594,7 @@ export function DiscussionTranscript({
                 allowHtml={allowHtml}
                 discussionStyle={style}
                 preConfiguredTasks={preConfiguredTasks}
+                memberDisplayNames={conversation?.memberDisplayNames}
               />
             ))}
           </PhaseHeader>
@@ -613,9 +649,13 @@ export function DiscussionTranscript({
               <div className="prose prose-sm dark:prose-invert max-w-none text-foreground [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs">
                 {/* Deliberately NO rehypeRaw: agent-produced synthesis text is
                     untrusted, so raw HTML stays escaped rather than injected. */}
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {parsedSynthesis}
-                </ReactMarkdown>
+                {isAgentFailurePlaceholder(effectiveSynthesis) ? (
+                  <AgentFailedNotice />
+                ) : (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {parsedSynthesis}
+                  </ReactMarkdown>
+                )}
               </div>
               {/* Fade gradient when collapsed */}
               {synthCollapsible && !synthExpanded && (

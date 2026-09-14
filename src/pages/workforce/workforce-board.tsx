@@ -659,6 +659,7 @@ function WorkforceBoard() {
               className="flex-1 min-h-0 ps-4 pe-4 pt-4 pb-4"
               // Debate verdict / vote tally / agreement, with minority report.
               decision={displayDecision}
+              memberDisplayNames={selectedConversation?.memberDisplayNames}
               // Per-phase convergence checks (I2) — live-stream state only.
               convergence={viewingStream ? streamState.convergence : undefined}
               // Task board + artifacts / negotiation ledger / windowing summary,
