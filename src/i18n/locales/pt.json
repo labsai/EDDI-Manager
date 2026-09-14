@@ -4660,7 +4660,10 @@
       "discard": "Descartar alterações",
       "saved": "Configurações de conexão salvas",
       "lastUpdated": "Última alteração por {{by}} · {{when}}",
-      "loadFailed": "Não foi possível carregar as configurações de conexão."
+      "loadFailed": "Não foi possível carregar as configurações de conexão.",
+      "shadowed": "Um valor salvo diferente ({{value}}) está oculto por esta fixação e passa a valer se a propriedade for removida.",
+      "valueOn": "ligado",
+      "valueOff": "desligado"
     }
   },
   "extensionTypes": {

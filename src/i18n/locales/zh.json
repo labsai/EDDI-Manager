@@ -4620,7 +4620,10 @@
       "discard": "放弃更改",
       "saved": "连接设置已保存",
       "lastUpdated": "最后由 {{by}} 修改 · {{when}}",
-      "loadFailed": "无法加载连接设置。"
+      "loadFailed": "无法加载连接设置。",
+      "shadowed": "此固定值遮蔽了一个不同的已存储值（{{value}}），移除该属性后它将生效。",
+      "valueOn": "开",
+      "valueOff": "关"
     }
   },
   "extensionTypes": {

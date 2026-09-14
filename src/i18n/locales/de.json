@@ -4620,7 +4620,10 @@
       "discard": "Änderungen verwerfen",
       "saved": "Verbindungseinstellungen gespeichert",
       "lastUpdated": "Zuletzt geändert von {{by}} · {{when}}",
-      "loadFailed": "Die Verbindungseinstellungen konnten nicht geladen werden."
+      "loadFailed": "Die Verbindungseinstellungen konnten nicht geladen werden.",
+      "shadowed": "Ein abweichender gespeicherter Wert ({{value}}) wird von dieser Festlegung verdeckt und gilt, sobald die Property entfernt wird.",
+      "valueOn": "an",
+      "valueOff": "aus"
     }
   },
   "extensionTypes": {

@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AlertTriangle, Lock, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OriginAllowlistField } from "@/components/connections/origin-allowlist-field";
 import {
+  SETTINGS_KEY,
   useConnectionSettings,
   useUpdateConnectionSettings,
 } from "@/hooks/use-connections";
 import { getErrorMessage, isApiError } from "@/lib/api-client";
 import { commitPending } from "@/lib/chip-values";
+import { validateOrigin, type ValidationCode } from "@/lib/connection-validation";
 import {
   draftFromView,
   requestFromDraft,
@@ -99,11 +102,13 @@ export function ConnectionSettingsPanel() {
 
 function SettingsForm({ view }: { view: ConnectionSettingsView }) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const update = useUpdateConnectionSettings();
   const baseline = useMemo(() => draftFromView(view), [view]);
   const [draft, setDraft] = useState<SettingsDraft>(baseline);
   // Uncommitted allowlist text, owned here so a save can never drop it.
   const [pendingOrigin, setPendingOrigin] = useState("");
+  const [allowlistError, setAllowlistError] = useState<ValidationCode | undefined>();
 
   const committed: SettingsDraft = {
     ...draft,
@@ -120,6 +125,14 @@ function SettingsForm({ view }: { view: ConnectionSettingsView }) {
     committed.allowPlaintextRemoteOrigins !== baseline.allowPlaintextRemoteOrigins;
 
   const save = async () => {
+    // Text still in the allowlist box is saved along with the list, so it gets
+    // the check an added chip gets — otherwise it would skip straight to the
+    // backend's 400 and the field's own error slot would stay empty.
+    const pendingProblem = pendingOrigin.trim() ? validateOrigin(pendingOrigin) : null;
+    if (pendingProblem) {
+      setAllowlistError(pendingProblem);
+      return;
+    }
     try {
       // mutateAsync rather than mutate's per-call callbacks: a successful save
       // replaces the query data, which remounts this form (see formKey), and a
@@ -130,6 +143,11 @@ function SettingsForm({ view }: { view: ConnectionSettingsView }) {
       // The backend names the field and the fix — a 400 for a malformed value,
       // a 409 naming the property that pins it — so its message is the toast.
       toast.error(getErrorMessage(err));
+      if (isApiError(err) && err.status === 409) {
+        // A property was pinned after this page loaded. Without a refetch the
+        // field stays editable and every retry answers 409 again.
+        void queryClient.invalidateQueries({ queryKey: SETTINGS_KEY });
+      }
     }
   };
 
@@ -217,20 +235,21 @@ function SettingsForm({ view }: { view: ConnectionSettingsView }) {
           readOnly={view.publicBaseUrl.source === "PINNED"}
         />
         {view.redirectUri && (
-          <p className="text-xs text-muted-foreground">
-            {t(
-              "connections.settings.redirectUri",
-              "Redirect URI to register at each OAuth provider",
-            )}
-            {": "}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "connections.settings.redirectUri",
+                "Redirect URI to register at each OAuth provider",
+              )}
+            </p>
             <code
-              className="rounded bg-muted px-1.5 py-0.5 font-mono text-foreground"
+              className="block w-fit max-w-full break-all rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground"
               dir="ltr"
               data-testid="settings-redirect-uri"
             >
               {view.redirectUri}
             </code>
-          </p>
+          </div>
         )}
       </SettingRow>
 
@@ -244,12 +263,17 @@ function SettingsForm({ view }: { view: ConnectionSettingsView }) {
       >
         <OriginAllowlistField
           value={draft.credentialEndpointAllowlist}
-          onChange={(origins) =>
-            setDraft((prev) => ({ ...prev, credentialEndpointAllowlist: origins }))
-          }
+          onChange={(origins) => {
+            setAllowlistError(undefined);
+            setDraft((prev) => ({ ...prev, credentialEndpointAllowlist: origins }));
+          }}
           pending={pendingOrigin}
-          onPendingChange={setPendingOrigin}
+          onPendingChange={(pending) => {
+            setAllowlistError(undefined);
+            setPendingOrigin(pending);
+          }}
           readOnly={view.credentialEndpointAllowlist.source === "PINNED"}
+          error={allowlistError}
           testId="settings-allowlist"
         />
       </SettingRow>
@@ -290,6 +314,7 @@ function SettingsForm({ view }: { view: ConnectionSettingsView }) {
             onClick={() => {
               setDraft(baseline);
               setPendingOrigin("");
+              setAllowlistError(undefined);
             }}
             disabled={!dirty || update.isPending}
             data-testid="settings-discard"
@@ -326,19 +351,38 @@ function SettingRow({
 }) {
   const { t } = useTranslation();
   const pinned = setting.source === "PINNED";
+  const pinnedHint = t(
+    "connections.settings.pinnedHint",
+    "Set in the server's configuration, so it can only be changed there.",
+  );
+  const labelClass = "text-sm font-medium text-foreground";
+
+  const formatValue = (value: unknown): string => {
+    if (typeof value === "boolean") {
+      return value
+        ? t("connections.settings.valueOn", "on")
+        : t("connections.settings.valueOff", "off");
+    }
+    if (Array.isArray(value)) return value.join(", ");
+    return String(value);
+  };
+
   const heading = (
     <div className="space-y-1">
       <div className="flex flex-wrap items-center gap-2">
-        <label className="text-sm font-medium text-foreground" htmlFor={htmlFor}>
-          {label}
-        </label>
+        {/* A <label> only where there is a control to point it at; the switches
+            and the chip list carry their own accessible names. */}
+        {htmlFor ? (
+          <label className={labelClass} htmlFor={htmlFor}>
+            {label}
+          </label>
+        ) : (
+          <span className={labelClass}>{label}</span>
+        )}
         {pinned && (
           <span
             className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-            title={t(
-              "connections.settings.pinnedHint",
-              "Set in the server's configuration, so it can only be changed there.",
-            )}
+            title={pinnedHint}
             data-testid={`pinned-${setting.property}`}
           >
             <Lock className="h-3 w-3" aria-hidden="true" />
@@ -348,10 +392,20 @@ function SettingRow({
                 defaultValue: "Pinned by {{property}}",
               })}
             </span>
+            <span className="sr-only">{pinnedHint}</span>
           </span>
         )}
       </div>
       <p className="text-xs text-muted-foreground">{hint}</p>
+      {pinned && setting.shadowedStoredValue !== undefined && (
+        <p className="text-xs text-warning" data-testid={`shadowed-${setting.property}`}>
+          {t("connections.settings.shadowed", {
+            value: formatValue(setting.shadowedStoredValue),
+            defaultValue:
+              "A different stored value ({{value}}) is hidden by this pin and takes effect if the property is removed.",
+          })}
+        </p>
+      )}
     </div>
   );
 

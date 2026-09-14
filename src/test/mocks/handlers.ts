@@ -5822,15 +5822,20 @@ export const connectionHandlers = [
       credentialEndpointAllowlist: string[] | null;
       allowPlaintextRemoteOrigins: boolean | null;
     };
-    const setting = <T,>(value: T | null, fallback: T, property: string) => ({
-      value: value ?? fallback,
-      source: value === null ? "DEFAULT" : "STORED",
-      property,
-    });
-    const base = body.publicBaseUrl?.replace(/\/$/, "") ?? null;
+    // Shaped as EDDI serializes it: Jackson NON_NULL omits a null field instead
+    // of sending null, so an unset value or redirect URI is simply absent.
+    const setting = <T,>(value: T | null, fallback: T | undefined, property: string) => {
+      const effective = value ?? fallback;
+      return {
+        ...(effective === undefined ? {} : { value: effective }),
+        source: value === null ? "DEFAULT" : "STORED",
+        property,
+      };
+    };
+    const base = body.publicBaseUrl?.replace(/\/$/, "");
     return HttpResponse.json({
       enabled: setting(body.enabled, false, "eddi.connections.enabled"),
-      publicBaseUrl: setting(body.publicBaseUrl, null, "eddi.connections.public-base-url"),
+      publicBaseUrl: setting(body.publicBaseUrl, undefined, "eddi.connections.public-base-url"),
       credentialEndpointAllowlist: setting(
         body.credentialEndpointAllowlist,
         [],
@@ -5841,7 +5846,7 @@ export const connectionHandlers = [
         false,
         "eddi.connections.allow-plaintext-remote-origins",
       ),
-      redirectUri: base ? `${base}/connections/callback` : null,
+      ...(base ? { redirectUri: `${base}/connections/callback` } : {}),
       updatedAt: new Date().toISOString(),
       updatedBy: "admin",
       warnings: [],

@@ -4620,7 +4620,10 @@
       "discard": "Discard changes",
       "saved": "Connection settings saved",
       "lastUpdated": "Last changed by {{by}} · {{when}}",
-      "loadFailed": "The connection settings could not be loaded."
+      "loadFailed": "The connection settings could not be loaded.",
+      "shadowed": "A different stored value ({{value}}) is hidden by this pin and takes effect if the property is removed.",
+      "valueOn": "on",
+      "valueOff": "off"
     }
   },
   "extensionTypes": {

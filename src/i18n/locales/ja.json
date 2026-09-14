@@ -4620,7 +4620,10 @@
       "discard": "変更を破棄",
       "saved": "接続設定を保存しました",
       "lastUpdated": "最終変更: {{by}} · {{when}}",
-      "loadFailed": "接続設定を読み込めませんでした。"
+      "loadFailed": "接続設定を読み込めませんでした。",
+      "shadowed": "この固定により別の保存済みの値（{{value}}）が隠れています。プロパティを外すとその値が有効になります。",
+      "valueOn": "オン",
+      "valueOff": "オフ"
     }
   },
   "extensionTypes": {

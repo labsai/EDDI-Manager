@@ -4660,7 +4660,10 @@
       "discard": "Descartar cambios",
       "saved": "Configuración de conexiones guardada",
       "lastUpdated": "Último cambio de {{by}} · {{when}}",
-      "loadFailed": "No se pudo cargar la configuración de conexiones."
+      "loadFailed": "No se pudo cargar la configuración de conexiones.",
+      "shadowed": "Un valor guardado distinto ({{value}}) queda oculto por esta fijación y se aplicará si se elimina la propiedad.",
+      "valueOn": "activado",
+      "valueOff": "desactivado"
     }
   },
   "extensionTypes": {

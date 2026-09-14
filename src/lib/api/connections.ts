@@ -380,23 +380,36 @@ export async function disconnectConnection(name: string): Promise<void> {
  */
 export type ConnectionSettingSource = "PINNED" | "STORED" | "DEFAULT";
 
+/**
+ * One effective setting.
+ *
+ * **Absent, not null.** EDDI serializes with Jackson `NON_NULL`, so an unset
+ * value is a *missing key* — a fresh deployment's `publicBaseUrl` arrives as
+ * `{"source":"DEFAULT","property":"…"}` with no `value` at all. The types say
+ * so, so no caller can assume a `null` that never comes.
+ */
 export interface ConnectionSetting<T> {
-  value: T;
+  value?: T;
   source: ConnectionSettingSource;
   /** The property that pins this setting — named whatever the source. */
   property: string;
+  /**
+   * For a `PINNED` setting only: a different stored value the pin hides. It
+   * takes effect the moment the property is removed.
+   */
+  shadowedStoredValue?: T;
 }
 
 /** `GET /connectionstore/settings` — the effective values, with provenance. */
 export interface ConnectionSettingsView {
   enabled: ConnectionSetting<boolean>;
-  publicBaseUrl: ConnectionSetting<string | null>;
+  publicBaseUrl: ConnectionSetting<string>;
   credentialEndpointAllowlist: ConnectionSetting<string[]>;
   allowPlaintextRemoteOrigins: ConnectionSetting<boolean>;
-  /** What to register at each OAuth provider; null while no usable base URL is set. */
-  redirectUri: string | null;
-  updatedAt: string | null;
-  updatedBy: string | null;
+  /** What to register at each OAuth provider; absent while no usable base URL is set. */
+  redirectUri?: string;
+  updatedAt?: string;
+  updatedBy?: string;
   /** Server-composed sentences for a configuration that saves but will not fully work. */
   warnings: string[];
 }

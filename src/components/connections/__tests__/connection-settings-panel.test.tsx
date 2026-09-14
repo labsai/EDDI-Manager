@@ -47,12 +47,33 @@ function view(overrides: Partial<ConnectionSettingsView> = {}): ConnectionSettin
   };
 }
 
-function serve(body: ConnectionSettingsView) {
+/**
+ * A fresh deployment, byte-for-byte as EDDI answers it (captured from a live
+ * boot): Jackson NON_NULL omits every null, so the unset base URL has no
+ * `value` key, and `redirectUri`, `updatedAt` and `updatedBy` are absent.
+ */
+const FRESH_DEPLOYMENT_AS_EDDI_SENDS_IT = {
+  enabled: { value: false, source: "DEFAULT", property: "eddi.connections.enabled" },
+  publicBaseUrl: { source: "DEFAULT", property: "eddi.connections.public-base-url" },
+  credentialEndpointAllowlist: {
+    value: [],
+    source: "DEFAULT",
+    property: "eddi.connections.credential-endpoint-allowlist",
+  },
+  allowPlaintextRemoteOrigins: {
+    value: false,
+    source: "DEFAULT",
+    property: "eddi.connections.allow-plaintext-remote-origins",
+  },
+  warnings: [],
+};
+
+function serve(body: object) {
   server.use(http.get("*/connectionstore/settings", () => HttpResponse.json(body)));
 }
 
 /** Captures the PUT body and answers with `answer`. */
-function capturePut(answer: ConnectionSettingsView = view()) {
+function capturePut(answer: object = view()) {
   const sent: ConnectionSettings[] = [];
   server.use(
     http.put("*/connectionstore/settings", async ({ request }) => {
@@ -83,6 +104,28 @@ describe("ConnectionSettingsPanel", () => {
     expect(screen.getByText("https://auth.atlassian.com")).toBeInTheDocument();
   });
 
+  it("renders a fresh deployment exactly as EDDI serializes it, and saves only what changed", async () => {
+    serve(FRESH_DEPLOYMENT_AS_EDDI_SENDS_IT);
+    const sent = capturePut();
+    const user = userEvent.setup();
+    renderWithProviders(<ConnectionSettingsPanel />);
+
+    expect(await screen.findByTestId("settings-public-base-url")).toHaveValue("");
+    expect(screen.queryByTestId("settings-redirect-uri")).not.toBeInTheDocument();
+    expect(screen.getByTestId("settings-last-updated")).toBeEmptyDOMElement();
+
+    await user.click(screen.getByTestId("settings-enabled"));
+    await user.click(screen.getByTestId("settings-save"));
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]).toEqual({
+      enabled: true,
+      publicBaseUrl: null,
+      credentialEndpointAllowlist: null,
+      allowPlaintextRemoteOrigins: null,
+    });
+  });
+
   it("renders a pinned setting read-only and names the property that pins it", async () => {
     serve(
       view({
@@ -101,6 +144,24 @@ describe("ConnectionSettingsPanel", () => {
     expect(screen.getByTestId("pinned-eddi.connections.public-base-url")).toHaveTextContent(
       "eddi.connections.public-base-url",
     );
+  });
+
+  it("says when a pin hides a different stored value, which would return if the pin went", async () => {
+    serve(
+      view({
+        allowPlaintextRemoteOrigins: {
+          value: false,
+          source: "PINNED",
+          property: "eddi.connections.allow-plaintext-remote-origins",
+          shadowedStoredValue: true,
+        },
+      }),
+    );
+    renderWithProviders(<ConnectionSettingsPanel />);
+
+    expect(
+      await screen.findByTestId("shadowed-eddi.connections.allow-plaintext-remote-origins"),
+    ).toBeInTheDocument();
   });
 
   it("keeps Save disabled until something actually changes", async () => {
@@ -143,6 +204,19 @@ describe("ConnectionSettingsPanel", () => {
     await waitFor(() => expect(toastSpy.success).toHaveBeenCalled());
   });
 
+  it("checks origin text left in the allowlist box before saving, instead of sending it", async () => {
+    serve(view());
+    const sent = capturePut();
+    const user = userEvent.setup();
+    renderWithProviders(<ConnectionSettingsPanel />);
+
+    await user.type(await screen.findByTestId("settings-allowlist-input"), "auth.example.com/token");
+    await user.click(screen.getByTestId("settings-save"));
+
+    expect(await screen.findByTestId("settings-allowlist-error")).not.toBeEmptyDOMElement();
+    expect(sent).toHaveLength(0);
+  });
+
   it("surfaces the backend's reason when a save is refused, and keeps the edit", async () => {
     serve(view());
     // Shaped as EDDI sends it: ClientErrorExceptionMapper writes a 4xx message as
@@ -170,8 +244,47 @@ describe("ConnectionSettingsPanel", () => {
     const shown = String(toastSpy.error.mock.calls[0]?.[0]);
     expect(shown).toContain("eddi.connections.allow-plaintext-remote-origins");
     expect(shown).toContain("409");
-    // The edit survives a refused save, so it can be corrected rather than retyped.
+    // The server's view did not change, so the edit survives the refusal and can
+    // be corrected rather than retyped.
     expect(screen.getByTestId("settings-allow-plaintext")).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("refetches after a 409, so a property pinned since the page loaded shows up as pinned", async () => {
+    let reads = 0;
+    server.use(
+      http.get("*/connectionstore/settings", () => {
+        reads += 1;
+        return HttpResponse.json(
+          reads === 1
+            ? view()
+            : view({
+                allowPlaintextRemoteOrigins: {
+                  value: false,
+                  source: "PINNED",
+                  property: "eddi.connections.allow-plaintext-remote-origins",
+                },
+              }),
+        );
+      }),
+      http.put(
+        "*/connectionstore/settings",
+        () =>
+          new HttpResponse("allowPlaintextRemoteOrigins is pinned", {
+            status: 409,
+            headers: { "Content-Type": "text/plain" },
+          }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<ConnectionSettingsPanel />);
+
+    await user.click(await screen.findByTestId("settings-allow-plaintext"));
+    await user.click(screen.getByTestId("settings-save"));
+
+    expect(
+      await screen.findByTestId("pinned-eddi.connections.allow-plaintext-remote-origins"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("settings-allow-plaintext")).toBeDisabled();
   });
 
   it("lists the warnings for a configuration that saves but will not fully work", async () => {
@@ -224,6 +337,17 @@ describe("requestFromDraft", () => {
       requestFromDraft({ ...draft, allowPlaintextRemoteOrigins: true }, current)
         .allowPlaintextRemoteOrigins,
     ).toBe(true);
+  });
+
+  it("treats a default whose value is absent as unset, not as a change", () => {
+    const current = FRESH_DEPLOYMENT_AS_EDDI_SENDS_IT as unknown as ConnectionSettingsView;
+
+    expect(requestFromDraft(draftFromView(current), current)).toEqual({
+      enabled: null,
+      publicBaseUrl: null,
+      credentialEndpointAllowlist: null,
+      allowPlaintextRemoteOrigins: null,
+    });
   });
 
   it("unsets an emptied base URL rather than storing an empty string", () => {

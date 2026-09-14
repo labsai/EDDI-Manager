@@ -4660,7 +4660,10 @@
       "discard": "Annuler les modifications",
       "saved": "Paramètres de connexion enregistrés",
       "lastUpdated": "Dernière modification par {{by}} · {{when}}",
-      "loadFailed": "Impossible de charger les paramètres de connexion."
+      "loadFailed": "Impossible de charger les paramètres de connexion.",
+      "shadowed": "Une valeur enregistrée différente ({{value}}) est masquée par ce paramètre fixé et s'appliquera si la propriété est retirée.",
+      "valueOn": "activé",
+      "valueOff": "désactivé"
     }
   },
   "extensionTypes": {
