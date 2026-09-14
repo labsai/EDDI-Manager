@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { AlertCircle, CheckCircle2, ListOrdered, User2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { EntryBody } from "@/lib/group-entry-body";
 import type { StructuredItem } from "./group-utils";
 import { StructuredTurnCard } from "./structured-turn-card";
@@ -112,7 +113,7 @@ export function StructuredItemsList({
             </div>
             {item.priority != null && (
               <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[10px]">
-                P{item.priority}
+                {t("groups.priorityShort", "P{{priority}}", { priority: item.priority })}
               </Badge>
             )}
           </div>
@@ -134,13 +135,15 @@ function ExpandableText({ text, className }: { text: string; className?: string 
         {text}
       </p>
       {isLong && (
-        <button
+        <Button
           type="button"
+          variant="link"
+          size="sm"
           onClick={() => setExpanded(!expanded)}
-          className="mt-0.5 text-[10px] font-medium text-primary/70 transition-colors hover:text-primary"
+          className="mt-0.5 h-auto px-0 py-0 text-[10px] text-primary/70 hover:text-primary"
         >
           {expanded ? t("common.showLess", "Show less") : t("common.showMore", "Show more")}
-        </button>
+        </Button>
       )}
     </div>
   );

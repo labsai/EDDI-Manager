@@ -19,6 +19,7 @@ import { DecisionRecordCard } from "@/components/groups/decision-record-card";
 import { hasDisplayableDecision } from "@/lib/group-config";
 import {
   entryTypeInfo,
+  type TaskDefinition,
   type TranscriptEntry,
   type GroupConversationState,
 } from "@/lib/api/groups";
@@ -30,6 +31,8 @@ interface ConversationViewerProps {
   conversationId: string;
   /** Titles the exported file. Without it the export is headed "Discussion". */
   groupName?: string;
+  /** The group's configured tasks, which a pre-configured PLAN entry's one-line summary stands for. */
+  preConfiguredTasks?: TaskDefinition[];
   onClose?: () => void;
   className?: string;
 }
@@ -211,10 +214,12 @@ function AgentEntryCard({
   entry,
   index,
   memberDisplayNames,
+  preConfiguredTasks,
 }: {
   entry: TranscriptEntry;
   index: number;
   memberDisplayNames?: Record<string, string>;
+  preConfiguredTasks?: TaskDefinition[];
 }) {
   const { t } = useTranslation();
   const typeInfo = entryTypeInfo(entry.type);
@@ -222,7 +227,7 @@ function AgentEntryCard({
   // The same reading the Manager transcript and the Workforce board do — a
   // contract card, a task plan or verification sheet, a failure notice, or
   // prose. See `readEntryBody`.
-  const body = readEntryBody(entry, { memberNames: memberDisplayNames });
+  const body = readEntryBody(entry, { memberNames: memberDisplayNames, preConfiguredTasks });
   const parsedContent = body.kind === "markdown" ? body.text : "";
   const hasContent = parsedContent.trim().length > 0;
   const { contentRef, isCollapsible, isExpanded, setIsExpanded } = useCollapsibleContent(parsedContent);
@@ -576,6 +581,7 @@ function ConversationViewer({
   groupId,
   conversationId,
   groupName,
+  preConfiguredTasks,
   onClose,
   className,
 }: ConversationViewerProps) {
@@ -825,7 +831,12 @@ function ConversationViewer({
               return (
                 <div key={`r-${idx}`}>
                   {phaseHeader}
-                  <AgentEntryCard entry={entry} index={idx} memberDisplayNames={conversation.memberDisplayNames} />
+                  <AgentEntryCard
+                    entry={entry}
+                    index={idx}
+                    memberDisplayNames={conversation.memberDisplayNames}
+                    preConfiguredTasks={preConfiguredTasks}
+                  />
                 </div>
               );
           }

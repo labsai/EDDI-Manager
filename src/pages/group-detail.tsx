@@ -449,6 +449,9 @@ export function GroupDetailPage() {
   const safeConfig: AgentGroupConfiguration = groupConfig.members
     ? groupConfig
     : { ...groupConfig, members: [] };
+  // For a live stream's planned tasks, which name their assignee by agent id
+  // before any conversation document exists to map it.
+  const rosterDisplayNames = Object.fromEntries(safeConfig.members.map((m) => [m.agentId, m.displayName]));
 
   // Determine whether to show streaming or static transcript
   const isStreamActive = streamState.isStreaming || (streamState.state !== "CREATED" && !selectedConvId);
@@ -769,6 +772,7 @@ export function GroupDetailPage() {
               isLoading={convLoading && !!selectedConvId && !showStreamFallback}
               discussionStyle={groupConfig.style as DiscussionStyle}
               preConfiguredTasks={groupConfig.tasks}
+              rosterDisplayNames={rosterDisplayNames}
               onApprove={handleApproveDiscussion}
               onCancelDiscussion={handleCancelDiscussion}
               isDeciding={cancelDiscussionMutation.isPending}

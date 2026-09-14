@@ -507,6 +507,7 @@ function WorkforceHistory() {
               groupId={boardId}
               conversationId={selectedId}
               groupName={boardConfig?.name}
+              preConfiguredTasks={boardConfig?.tasks}
               onClose={() => {
                 setSelectedId(null);
                 setShowViewer(false);

@@ -2527,6 +2527,7 @@
     "decisionBallots": "{{valid}} bulletins valides sur {{participants}}",
     "decisionTerms": "Conditions convenues",
     "agentFailedOutput": "Cet agent n’a pas pu produire de réponse.",
+    "priorityShort": "P{{priority}}",
     "decisionDecidedAt": "Décidé lors de {{phase}}",
     "decisionUnparsed": "La réponse du juge n'a pas pu être lue comme un verdict structuré : elle figure telle quelle ci-dessous et la conclusion reste en prose.",
     "minorityReport": "Avis minoritaire ({{total}})",

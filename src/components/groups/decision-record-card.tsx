@@ -5,6 +5,7 @@ import remarkGfm from "remark-gfm";
 import { ChevronDown, ChevronUp, Gavel, MessageSquareWarning, Scale } from "lucide-react";
 import { cn, hashColor, getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { DecisionRecord, DecisionType } from "@/lib/api/groups";
 import { describeDecision } from "@/lib/group-decision";
 import { formatMarkdownText } from "./group-utils";
@@ -102,10 +103,12 @@ export function DecisionRecordCard({ decision, className }: DecisionRecordCardPr
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{formatMarkdownText(view.body)}</ReactMarkdown>
           </div>
           {bodyCollapsible && (
-            <button
+            <Button
               type="button"
+              variant="link"
+              size="sm"
               onClick={() => setBodyExpanded((v) => !v)}
-              className="mt-1 flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/80"
+              className="mt-1 h-auto gap-1 px-0 py-0 text-xs hover:text-primary/80 [&_svg]:h-3 [&_svg]:w-3"
             >
               {bodyExpanded ? (
                 <>
@@ -118,7 +121,7 @@ export function DecisionRecordCard({ decision, className }: DecisionRecordCardPr
                   {t("common.showMore", "Show more")}
                 </>
               )}
-            </button>
+            </Button>
           )}
         </div>
       )}

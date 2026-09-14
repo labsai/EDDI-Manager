@@ -7,7 +7,7 @@ import { cn, getInitials } from "@/lib/utils";
 import { AdvisorResponseCard } from "@/components/workforce/advisor-response-card";
 import { DecisionRecordCard } from "@/components/groups/decision-record-card";
 import { hasDisplayableDecision } from "@/lib/group-config";
-import type { DecisionRecord, TranscriptEntry, TranscriptEntryType } from "@/lib/api/groups";
+import type { DecisionRecord, TaskDefinition, TranscriptEntry, TranscriptEntryType } from "@/lib/api/groups";
 import { entryTypeInfo } from "@/lib/api/groups";
 import type { ConvergenceProgress } from "@/hooks/use-group-discussion-stream";
 import { isAgentFailurePlaceholder, parseTranscriptContent } from "@/components/groups/group-utils";
@@ -44,6 +44,8 @@ interface BoardTranscriptProps {
   convergence?: Map<number, ConvergenceProgress> | null;
   /** agentId → display name, so a planned task names its assignee rather than an id. */
   memberDisplayNames?: Record<string, string>;
+  /** The group's configured tasks, which a pre-configured PLAN entry's one-line summary stands for. */
+  preConfiguredTasks?: TaskDefinition[];
 
   className?: string;
 }
@@ -419,11 +421,13 @@ function EnhancedResponseEntry({
   boardId,
   delay,
   memberDisplayNames,
+  preConfiguredTasks,
 }: {
   entry: TranscriptEntry;
   boardId: string;
   delay: number;
   memberDisplayNames?: Record<string, string>;
+  preConfiguredTasks?: TaskDefinition[];
 }) {
   const { t } = useTranslation();
   // `entryTypeInfo`, not a raw ENTRY_TYPE_INFO lookup: the backend's entry-type
@@ -446,6 +450,7 @@ function EnhancedResponseEntry({
         content={entry.content}
         entryType={entry.type}
         memberDisplayNames={memberDisplayNames}
+        preConfiguredTasks={preConfiguredTasks}
         boardId={boardId}
         timestamp={time}
       />
@@ -485,6 +490,7 @@ function BoardTranscript({
   decision,
   convergence,
   memberDisplayNames,
+  preConfiguredTasks,
   className,
 }: BoardTranscriptProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -600,7 +606,13 @@ function BoardTranscript({
               <div key={`a-${idx}`}>
                 {phaseHeader}
                 {entry.content?.trim() ? (
-                  <EnhancedResponseEntry entry={entry} boardId={boardId} delay={delay} memberDisplayNames={memberDisplayNames} />
+                  <EnhancedResponseEntry
+                    entry={entry}
+                    boardId={boardId}
+                    delay={delay}
+                    memberDisplayNames={memberDisplayNames}
+                    preConfiguredTasks={preConfiguredTasks}
+                  />
                 ) : (
                   <NoticeCard entry={entry} tone="abstained" delay={delay} />
                 )}
@@ -625,6 +637,7 @@ function BoardTranscript({
                   boardId={boardId}
                   delay={delay}
                   memberDisplayNames={memberDisplayNames}
+                  preConfiguredTasks={preConfiguredTasks}
                 />
               </div>
             );

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { truncateContent } from "@/components/groups/group-utils";
 import { StructuredEntryBody } from "@/components/groups/structured-entry-body";
 import { entryBodyToMarkdown, isStructuredBody, readEntryBody } from "@/lib/group-entry-body";
-import type { TranscriptEntryType } from "@/lib/api/groups";
+import type { TaskDefinition, TranscriptEntryType } from "@/lib/api/groups";
 
 // ─── Pin Types & Hook ────────────────────────────────────────────
 
@@ -86,6 +86,8 @@ interface AdvisorResponseCardProps {
   entryType?: TranscriptEntryType | string | null;
   /** agentId → display name, so a planned task names its assignee rather than an id. */
   memberDisplayNames?: Record<string, string>;
+  /** The group's configured tasks, which a pre-configured PLAN entry's one-line summary stands for. */
+  preConfiguredTasks?: TaskDefinition[];
 
   boardId: string;
   /** Optional session ID for pin storage */
@@ -163,6 +165,7 @@ const AdvisorResponseCard = memo(function AdvisorResponseCard({
   content,
   entryType,
   memberDisplayNames,
+  preConfiguredTasks,
   boardId,
   sessionId = "",
   timestamp,
@@ -180,8 +183,8 @@ const AdvisorResponseCard = memo(function AdvisorResponseCard({
    * JSON document on screen in the middle of a discussion — and copied it.
    */
   const body = useMemo(
-    () => readEntryBody({ type: entryType, content }, { memberNames: memberDisplayNames }),
-    [entryType, content, memberDisplayNames],
+    () => readEntryBody({ type: entryType, content }, { memberNames: memberDisplayNames, preConfiguredTasks }),
+    [entryType, content, memberDisplayNames, preConfiguredTasks],
   );
   const readable = body.kind === "markdown" ? body.text : null;
   // The body as markdown — what Copy and the "Ask more" hand-off carry, so a

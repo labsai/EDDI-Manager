@@ -302,11 +302,13 @@ describe("every group message reads cleanly on every surface", () => {
 
   it("the markdown export", () => {
     const md = generateMarkdown(
-      conversation([...MESSAGES.map((m) => m.entry), FAILED_MEMBER], { decision: DECISIONS[5]!.decision }),
+      conversation([...MESSAGES.map((m) => m.entry), FAILED_MEMBER], { decision: decisionCase("negotiated agreement").decision }),
       "Matrix",
     );
     MESSAGES.flatMap((m) => m.facts).forEach((fact) => expect(md).toContain(fact));
     expect(md).toContain("**Ballot:** Ship it (80% confident)");
+    // Ties the assertion to the decision it exported, not just the transcript.
+    expect(md).toContain("**Agreed terms:** 55/45 with support included");
     expect(md).not.toMatch(/\((VOTE|BID|BARGAIN|RETRO|ABSTAINED|HUMAN_INPUT|FOLLOW_UP|TASK_RESULT)\)/);
     expectReadable(md, { allowHeadings: true });
   });
@@ -326,6 +328,34 @@ describe("every group message reads cleanly on every surface", () => {
     expect(screen.getByTestId("board-error-entry")).toHaveTextContent("Model timed out");
     expect(screen.getByTestId("board-abstained-entry")).toHaveTextContent("Declined to add anything new this round.");
     expect(screen.queryByText("No response generated")).not.toBeInTheDocument();
+  });
+
+  it("expands a pre-configured plan's one-line summary into its tasks on the Workforce board", () => {
+    renderWithProviders(
+      <BoardTranscript
+        transcript={[entry("PLAN", "Pre-configured task plan: 2 tasks", { speakerAgentId: "system", speakerDisplayName: "System" })]}
+        boardId="board-1"
+        preConfiguredTasks={[
+          { subject: "Unit economics sketch", description: "Per-bike P&L", assignToRole: "ALL", dependsOn: [], priority: 1 },
+          { subject: "Operational risk list", description: "Top three risks", assignToRole: "ALL", dependsOn: [], priority: 1 },
+        ]}
+      />,
+    );
+    expect(screen.getByTestId("structured-items")).toHaveTextContent("Unit economics sketch");
+    expect(screen.getByText("Operational risk list")).toBeInTheDocument();
+    expect(screen.queryByText("Pre-configured task plan: 2 tasks")).not.toBeInTheDocument();
+  });
+
+  it("names a live stream's planned assignees from the roster on the Manager transcript", () => {
+    const plan = '```json\n[{"subject": "Unit economics", "assignedTo": "agent-cfo", "priority": 1}]\n```';
+    renderWithProviders(
+      <DiscussionTranscript
+        conversation={conversation([entry("PLAN", plan)], { memberDisplayNames: undefined })}
+        rosterDisplayNames={{ "agent-cfo": "Impact CFO" }}
+      />,
+    );
+    expect(screen.getByTestId("structured-items")).toHaveTextContent("Impact CFO");
+    expect(screen.queryByText("agent-cfo")).not.toBeInTheDocument();
   });
 });
 
@@ -365,6 +395,13 @@ describe("the Workforce 'Ask more' context card", () => {
 });
 
 // ─── Decisions × surfaces ────────────────────────────────────────
+
+/** A decision fixture by name, so reordering `DECISIONS` cannot silently swap one. */
+function decisionCase(name: string): DecisionCase {
+  const found = DECISIONS.find((d) => d.name === name);
+  if (!found) throw new Error(`unknown decision case: ${name}`);
+  return found;
+}
 
 describe("every decision reads cleanly", () => {
   it.each(DECISIONS)("$name on the verdict card", ({ decision, facts, tie, forbid = [] }) => {
@@ -407,7 +444,7 @@ describe("every decision reads cleanly", () => {
     server.use(
       http.get("*/groups/:groupId/conversations/:convId", () =>
         HttpResponse.json(
-          conversation([entry("SYNTHESIS", "The board votes to ship.")], { decision: DECISIONS[3]!.decision }),
+          conversation([entry("SYNTHESIS", "The board votes to ship.")], { decision: decisionCase("vote").decision }),
         ),
       ),
     );

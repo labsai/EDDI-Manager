@@ -18,6 +18,7 @@ import type { HitlVerdict } from "@/lib/api/hitl";
 import type { GroupStreamState } from "@/hooks/use-group-discussion-stream";
 import { cn, formatUsd } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { styleInfo as localizedStyleInfo } from "@/lib/discussion-styles";
 
@@ -50,6 +51,12 @@ interface DiscussionTranscriptProps {
   isSubmittingHumanInput?: boolean;
   /** The group's `humanMemberConfig.turnTimeout` (I6), for the pending-turn countdown. */
   humanTurnTimeout?: string | null;
+  /**
+   * agentId → display name from the group's roster. The fallback for a live
+   * stream, where no conversation document exists yet to carry
+   * `memberDisplayNames` — without it a planned task named its assignee by id.
+   */
+  rosterDisplayNames?: Record<string, string>;
 }
 
 interface PhaseGroup {
@@ -253,6 +260,7 @@ export function DiscussionTranscript({
   onSubmitHumanInput,
   isSubmittingHumanInput,
   humanTurnTimeout,
+  rosterDisplayNames,
 }: DiscussionTranscriptProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
@@ -475,10 +483,12 @@ export function DiscussionTranscript({
               {effectiveQuestion}
             </p>
             {questionIsLong && (
-              <button
+              <Button
                 type="button"
+                variant="link"
+                size="sm"
                 onClick={() => setQuestionExpanded((v) => !v)}
-                className="mt-1 flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/80"
+                className="mt-1 h-auto gap-1 px-0 py-0 text-xs hover:text-primary/80 [&_svg]:h-3 [&_svg]:w-3"
                 data-testid="discussion-question-toggle"
               >
                 {questionExpanded ? (
@@ -492,7 +502,7 @@ export function DiscussionTranscript({
                     {t("common.showMore", "Show more")}
                   </>
                 )}
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -594,7 +604,7 @@ export function DiscussionTranscript({
                 allowHtml={allowHtml}
                 discussionStyle={style}
                 preConfiguredTasks={preConfiguredTasks}
-                memberDisplayNames={conversation?.memberDisplayNames}
+                memberDisplayNames={conversation?.memberDisplayNames ?? rosterDisplayNames}
               />
             ))}
           </PhaseHeader>
