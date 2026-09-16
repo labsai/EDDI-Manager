@@ -1,76 +1,75 @@
-# EDDI Manager
+# EDDI Manager — moved to labsai/EDDI
 
-> Admin dashboard for [**EDDI**](https://github.com/labsai/EDDI) — the open-source multi-agent orchestration middleware for conversational AI.
+> [!IMPORTANT]
+> **This repository is archived and read-only.** The EDDI Manager now lives in the main EDDI
+> repository, at **[`labsai/EDDI` → `ui/manager`](https://github.com/labsai/EDDI/tree/main/ui/manager)**.
+> Its full commit history came with it. Nothing here is maintained any more.
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+The EDDI Manager is the admin dashboard for [EDDI](https://github.com/labsai/EDDI), the open-source
+multi-agent orchestration middleware for conversational AI. It has always shipped inside the EDDI
+Docker image. Since September 2026 it is also developed, tested and released there, in the same
+repository as the backend it talks to.
 
-EDDI Manager is a modern React SPA that ships **inside** the EDDI Docker image. It provides a visual workspace for building, testing, deploying, and monitoring AI agents — no code required.
-
-**🌐 Website:** [eddi.labs.ai](https://eddi.labs.ai/) · **📖 Docs:** [docs.labs.ai](https://docs.labs.ai/) · **🐳 Docker:** [hub.docker.com/r/labsai/eddi](https://hub.docker.com/r/labsai/eddi)
+**🌐 Website:** [eddi.technology](https://eddi.technology/) · **📖 Docs:** [docs.labs.ai](https://docs.labs.ai/) · **🐳 Docker:** [hub.docker.com/r/labsai/eddi](https://hub.docker.com/r/labsai/eddi)
 
 ---
 
-## What It Does
+## Where everything went
 
-- **Agent Builder** — Create and configure agents with a drag-and-drop workflow pipeline
-- **Agent Studio** — 3-panel workspace with live chat, debug drawer, and pipeline inspector
-- **Group Discussions** — Orchestrate multi-agent conversations across 8 discussion styles
-- **LLM Configuration** — Connect to 11 providers (OpenAI, Anthropic, Gemini, Ollama, etc.)
-- **Resource Editors** — Form-based editors for rules, API calls, LLM configs, dictionaries, RAG, MCP, and more
-- **Secrets Vault** — Manage encrypted API keys with vault references
-- **Global Variables** — Deploy-wide configuration values for all agents (`${vars:<key>}` / `{{vars.<key>}}`)
-- **Audit Trail** — Timeline-based compliance and debugging viewer
-- **11 Languages** — English, German, French, Spanish, Portuguese, Chinese, Japanese, Korean, Arabic (RTL), Hindi, Thai
+| You are looking for | It is now |
+| --- | --- |
+| The source | [`labsai/EDDI/ui/manager`](https://github.com/labsai/EDDI/tree/main/ui/manager) |
+| The README: features, development, tech stack | [`ui/manager/README.md`](https://github.com/labsai/EDDI/blob/main/ui/manager/README.md) |
+| How to contribute | [`ui/manager/CONTRIBUTING.md`](https://github.com/labsai/EDDI/blob/main/ui/manager/CONTRIBUTING.md) and the repository-wide [`CONTRIBUTING.md`](https://github.com/labsai/EDDI/blob/main/CONTRIBUTING.md) |
+| Instructions for AI coding assistants | [`ui/manager/AGENTS.md`](https://github.com/labsai/EDDI/blob/main/ui/manager/AGENTS.md) |
+| Bug reports and feature requests | [`labsai/EDDI` issues](https://github.com/labsai/EDDI/issues) |
+| Pull requests | [`labsai/EDDI` pull requests](https://github.com/labsai/EDDI/pulls), changing files under `ui/manager/` |
+| Reporting a security vulnerability | [`SECURITY.md`](https://github.com/labsai/EDDI/blob/main/SECURITY.md): privately, to **security@labs.ai**, never in a public issue |
+| A running Manager | Install EDDI and open `http://localhost:7070/manage`: [EDDI quick start](https://github.com/labsai/EDDI#-quick-start) |
 
-## Quick Start
+## What changed for developers
 
-The easiest way to use EDDI Manager is via the main EDDI project:
+- **One repository, one pull request.** A change that touches both the backend API and the
+  Manager is now one pull request, tested together in CI against the image built from that commit.
+- **The Manager is built by Maven.** `./mvnw package` in `labsai/EDDI` runs `npm ci` and
+  `npm run build` for the Manager and copies the bundle into the jar. The
+  `deploy-to-local-eddi-repo` scripts in this repository are obsolete, and nothing is committed as a
+  build output any more.
+- **Frontend development is unchanged.** In a clone of `labsai/EDDI`, `cd ui/manager`, then
+  `npm install` and `npm run dev` (port 3000, proxying the API to an EDDI on port 7070).
 
-```bash
-# One-command installer (includes Manager)
-curl -fsSL https://raw.githubusercontent.com/labsai/EDDI/main/install.sh | bash
-```
+## The history
 
-Then open [http://localhost:7070/manage](http://localhost:7070/manage).
-
-See the [EDDI README](https://github.com/labsai/EDDI#-quick-start) for full setup instructions.
-
-## Development
-
-If you want to develop the Manager UI itself:
-
-```bash
-# Prerequisites: Node.js ≥ 20, EDDI backend on localhost:7070
-npm install
-npm run dev          # Vite dev server on http://localhost:3000
-```
-
-The Vite dev proxy forwards API calls to the EDDI backend. If no backend is available, the Manager auto-starts in **standalone mode** with mock data (via [MSW](https://mswjs.io/)).
+Every commit from this repository is in `labsai/EDDI` under `ui/manager/`, with its original author,
+date and message:
 
 ```bash
-npm run test         # Vitest unit/component suite (run it for the current count)
-npm run build        # Production build
+git clone https://github.com/labsai/EDDI.git
+cd EDDI
+git log -- ui/manager
 ```
 
-## Tech Stack
+`git blame` and `git log --follow` work on those files as they did here. **Commit hashes are not the
+same**, though: moving the files into `ui/manager/` rewrote every commit, so a link to a commit in
+this repository does not resolve in `labsai/EDDI`. Search that history by message instead:
+`git log --grep="<words from the message>" -- ui/manager`.
 
-| Layer      | Technology                                      |
-| ---------- | ----------------------------------------------- |
-| Build      | Vite 6                                          |
-| UI         | React 19 + TypeScript 5 (strict)                |
-| Styling    | Tailwind CSS v4                                 |
-| State      | TanStack Query v5 + Zustand                     |
-| Routing    | React Router v7                                 |
-| Editor     | Monaco                                          |
-| DnD        | @dnd-kit                                        |
-| Auth       | Keycloak 26 (optional)                          |
-| Tests      | Vitest + React Testing Library + MSW + Playwright |
+## Moving an unmerged branch across
 
-## Related
+Pull requests still open here were not carried over. To bring a branch into `labsai/EDDI`, export
+its commits as patches and apply them under the new path:
 
-- [**EDDI**](https://github.com/labsai/EDDI) — Backend engine (Java 25, Quarkus)
-- [**eddi-chat-ui**](https://github.com/labsai/eddi-chat-ui) — Embeddable chat widget
-- [**quarkus-eddi**](https://github.com/quarkiverse/quarkus-eddi) — Quarkus SDK
+```bash
+# In your clone of this repository, on the branch
+git format-patch main --output-directory ../manager-patches
+
+# In a clone of labsai/EDDI, on a new branch from main
+git switch -c my-branch origin/main
+git am --directory=ui/manager ../manager-patches/*.patch
+```
+
+`--directory=ui/manager` is what places the changes under the new path. If a patch no longer applies
+because the code has moved on, `git am --3way` usually resolves it.
 
 ## License
 

@@ -1,5 +1,10 @@
 # CLAUDE.md — EDDI Manager
 
+> [!CAUTION]
+> **This repository is archived. Do not make changes here.** The EDDI Manager moved to
+> [`labsai/EDDI` → `ui/manager`](https://github.com/labsai/EDDI/tree/main/ui/manager). Work in a clone of `labsai/EDDI`, where
+> [`ui/manager/CLAUDE.md`](https://github.com/labsai/EDDI/blob/main/ui/manager/CLAUDE.md) applies.
+
 Start with **[AGENTS.md](AGENTS.md)**. It owns workflow, branch policy, quality gates, the
 i18n mandate, architecture, API conventions and constraints — all of it applies. This file
 adds the layer AGENTS.md does not cover: **what UI should be built from and what it should

@@ -1,5 +1,11 @@
 # Security Policy
 
+> [!IMPORTANT]
+> **This repository is archived; the supported-versions table below is no longer maintained.** The
+> EDDI Manager moved to [`labsai/EDDI` → `ui/manager`](https://github.com/labsai/EDDI/tree/main/ui/manager). Report vulnerabilities as
+> [`labsai/EDDI`'s `SECURITY.md`](https://github.com/labsai/EDDI/blob/main/SECURITY.md) describes:
+> privately, to **security@labs.ai**, never in a public issue.
+
 ## Supported Versions
 
 | Version | Supported              |

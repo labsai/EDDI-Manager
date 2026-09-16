@@ -1,5 +1,13 @@
 # EDDI Manager — AI Agent Instructions
 
+> [!CAUTION]
+> **This repository is archived. Do not make changes here.** The EDDI Manager moved to
+> [`labsai/EDDI` → `ui/manager`](https://github.com/labsai/EDDI/tree/main/ui/manager) in September 2026, with its full history. Work in a
+> clone of `labsai/EDDI` and follow
+> [`ui/manager/AGENTS.md`](https://github.com/labsai/EDDI/blob/main/ui/manager/AGENTS.md) and the
+> repository's root [`AGENTS.md`](https://github.com/labsai/EDDI/blob/main/AGENTS.md). The instructions
+> below are kept only as a historical record and are no longer maintained.
+
 > **This file is automatically loaded by AI coding assistants. Follow ALL rules below.**
 
 ## 1. Project Context
