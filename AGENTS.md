@@ -8,7 +8,8 @@
 > repository's root [`AGENTS.md`](https://github.com/labsai/EDDI/blob/main/AGENTS.md). The instructions
 > below are kept only as a historical record and are no longer maintained.
 
-> **This file is automatically loaded by AI coding assistants. Follow ALL rules below.**
+> **Historical record only. Do not follow the rules below** — they describe this archived repository,
+> not `labsai/EDDI`, and following them would mean working in the wrong place.
 
 ## 1. Project Context
 

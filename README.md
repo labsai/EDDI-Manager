@@ -65,11 +65,28 @@ git format-patch main --output-directory ../manager-patches
 
 # In a clone of labsai/EDDI, on a new branch from main
 git switch -c my-branch origin/main
-git am --directory=ui/manager ../manager-patches/*.patch
+git am --directory=ui/manager \
+  --exclude='ui/manager/.github/*' --exclude='ui/manager/.husky/*' \
+  --exclude=ui/manager/renovate.json --exclude='ui/manager/deploy-to-local-eddi-repo.*' \
+  --exclude='ui/manager/keycloak/*' \
+  ../manager-patches/*.patch
 ```
 
-`--directory=ui/manager` is what places the changes under the new path. If a patch no longer applies
-because the code has moved on, `git am --3way` usually resolves it.
+`--directory=ui/manager` places every path in a patch under `ui/manager/`. That is right for the
+Manager's own files, but a few files in this repository did not move and have no counterpart there:
+
+| Here | In `labsai/EDDI` |
+| --- | --- |
+| `.github/workflows/`, `.github/scripts/` | The root [`.github/workflows/ci.yml`](https://github.com/labsai/EDDI/blob/main/.github/workflows/ci.yml) (`UI Manager Checks`, `UI Manager E2E (MSW)`, `Backend E2E`) |
+| `.husky/` | No pre-commit hook; run `npm run lint` and `npm run typecheck` before pushing |
+| `renovate.json` | The root [`.github/dependabot.yml`](https://github.com/labsai/EDDI/blob/main/.github/dependabot.yml) |
+| `deploy-to-local-eddi-repo.*` | Not needed: `./mvnw package` builds the Manager into the jar |
+| `keycloak/eddi-realm.json` | The realm the Helm chart ships, [`helm/eddi/files/eddi-realm.json`](https://github.com/labsai/EDDI/blob/main/helm/eddi/files/eddi-realm.json) |
+
+Without the `--exclude` options, `git am` stops at the first patch that touches one of those. The
+patterns name the path *after* `--directory` has prefixed it, which is why each starts with
+`ui/manager/`. Changes you excluded have to be redone by hand in the file on the right. If a patch
+no longer applies because the code has moved on, `git am --3way` usually resolves it.
 
 ## License
 
