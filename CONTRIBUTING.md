@@ -1,5 +1,12 @@
 # Contributing to EDDI Manager
 
+> [!IMPORTANT]
+> **This repository is archived and no longer accepts contributions.** The EDDI Manager moved to
+> [`labsai/EDDI` → `ui/manager`](https://github.com/labsai/EDDI/tree/main/ui/manager). Open issues and pull requests there, following
+> [`ui/manager/CONTRIBUTING.md`](https://github.com/labsai/EDDI/blob/main/ui/manager/CONTRIBUTING.md)
+> and the repository-wide [`CONTRIBUTING.md`](https://github.com/labsai/EDDI/blob/main/CONTRIBUTING.md).
+> The guide below is kept only as a historical record.
+
 Thank you for your interest in contributing to EDDI Manager! This is the admin dashboard for the [EDDI](https://github.com/labsai/EDDI) conversational AI platform. This guide will help you get started.
 
 ## Table of Contents

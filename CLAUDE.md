@@ -1,7 +1,14 @@
 # CLAUDE.md — EDDI Manager
 
-Start with **[AGENTS.md](AGENTS.md)**. It owns workflow, branch policy, quality gates, the
-i18n mandate, architecture, API conventions and constraints — all of it applies. This file
+> [!CAUTION]
+> **This repository is archived. Do not make changes here.** The EDDI Manager moved to
+> [`labsai/EDDI` → `ui/manager`](https://github.com/labsai/EDDI/tree/main/ui/manager). Work in a clone of `labsai/EDDI`, where
+> [`ui/manager/CLAUDE.md`](https://github.com/labsai/EDDI/blob/main/ui/manager/CLAUDE.md) applies.
+
+The rest of this file, and the [AGENTS.md](AGENTS.md) it defers to, are a **historical record
+only and do not apply** — they describe this archived repository. What used to follow: AGENTS.md
+owned workflow, branch policy, quality gates, the i18n mandate, architecture, API conventions and
+constraints. This file
 adds the layer AGENTS.md does not cover: **what UI should be built from and what it should
 look like.**
 
